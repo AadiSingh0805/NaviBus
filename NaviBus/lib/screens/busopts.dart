@@ -12,7 +12,6 @@ class BusOptions extends StatefulWidget {
 }
 
 class _BusOptionsState extends State<BusOptions> {
-  TextEditingController sourceController = TextEditingController();
   TextEditingController destinationController = TextEditingController();
   List<dynamic> allBuses = [];
   List<dynamic> filteredBuses = [];
@@ -29,6 +28,7 @@ class _BusOptionsState extends State<BusOptions> {
       final data = json.decode(response);
       setState(() {
         allBuses = data;
+        filteredBuses = allBuses; // Show all buses initially
       });
     } catch (e) {
       print("Error loading buses: $e");
@@ -38,23 +38,13 @@ class _BusOptionsState extends State<BusOptions> {
   void filterBuses() {
     setState(() {
       filteredBuses = allBuses.where((bus) {
-        return (sourceController.text.isEmpty ||
-                bus["source"].toString().toLowerCase().trim() ==
-                    sourceController.text.toLowerCase().trim()) &&
-               (destinationController.text.isEmpty ||
-                bus["destination"].toString().toLowerCase().trim() ==
-                    destinationController.text.toLowerCase().trim());
+        return destinationController.text.isEmpty ||
+            bus["destination"]
+                .toString()
+                .toLowerCase()
+                .contains(destinationController.text.toLowerCase().trim());
       }).toList();
     });
-  }
-
-  void swapSourceDestination() {
-    setState(() {
-      String temp = sourceController.text;
-      sourceController.text = destinationController.text;
-      destinationController.text = temp;
-    });
-    filterBuses();
   }
 
   @override
@@ -90,35 +80,14 @@ class _BusOptionsState extends State<BusOptions> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: sourceController,
-                    decoration: const InputDecoration(
-                      labelText: "Enter Source",
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.location_on, color: Colors.blueAccent),
-                    ),
-                    onChanged: (value) => filterBuses(),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.swap_horiz, size: 30, color: Colors.blueAccent),
-                  onPressed: swapSourceDestination,
-                ),
-                Expanded(
-                  child: TextField(
-                    controller: destinationController,
-                    decoration: const InputDecoration(
-                      labelText: "Enter Destination",
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.flag, color: Colors.redAccent),
-                    ),
-                    onChanged: (value) => filterBuses(),
-                  ),
-                ),
-              ],
+            TextField(
+              controller: destinationController,
+              decoration: const InputDecoration(
+                labelText: "Enter Destination",
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.flag, color: Colors.redAccent),
+              ),
+              onChanged: (value) => filterBuses(),
             ),
             const SizedBox(height: 20),
 
@@ -182,37 +151,22 @@ class _BusOptionsState extends State<BusOptions> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          "${bus['bus_number']} - ${bus['source']} → ${bus['destination']}",
+                                          "Bus ${bus['bus_no']} → ${bus['destination']}",
                                           style: const TextStyle(
                                               fontSize: 18,
                                               fontWeight: FontWeight.bold,
                                               color: Colors.black),
                                         ),
                                         const SizedBox(height: 5),
-                                        Text("🕒 Duration: ${bus['duration']}",
+                                        Text("🛣 Route Length: ${bus['route_length']} km",
+                                            style: const TextStyle(
+                                                fontSize: 14, color: Colors.grey)),
+                                        Text("🕒 Duration: ${bus['journey_time']} min",
                                             style: const TextStyle(
                                                 fontSize: 14, color: Colors.grey)),
                                         Text("💰 Fare: ₹${bus['fare']}",
                                             style: const TextStyle(
                                                 fontSize: 14, color: Colors.green)),
-                                        Text("⏳ Arriving in: ${bus['arriving_in']}",
-                                            style: const TextStyle(
-                                                fontSize: 14, color: Colors.orange)),
-                                        Row(
-                                          children: [
-                                            const Icon(Icons.event_seat,
-                                                color: Colors.purple, size: 18),
-                                            const SizedBox(width: 5),
-                                            Text("Availability: ${bus['availability']}%",
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: bus['availability'] > 50
-                                                      ? Colors.green
-                                                      : Colors.red,
-                                                  fontWeight: FontWeight.bold,
-                                                )),
-                                          ],
-                                        ),
                                       ],
                                     ),
                                   ),
@@ -230,4 +184,3 @@ class _BusOptionsState extends State<BusOptions> {
     );
   }
 }
-// hi
