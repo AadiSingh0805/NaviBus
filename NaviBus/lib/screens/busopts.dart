@@ -24,20 +24,26 @@ class _BusOptionsState extends State<BusOptions> {
   }
 
   Future<void> loadBuses() async {
-    final String response = await rootBundle.loadString('assets/busdata.json');
-    final data = json.decode(response);
-        setState(() {
-          allBuses = data;
-        });
+    try {
+      final String response = await rootBundle.loadString('assets/busdata.json');
+      final data = json.decode(response);
+      setState(() {
+        allBuses = data;
+      });
+    } catch (e) {
+      print("Error loading buses: $e");
+    }
   }
 
   void filterBuses() {
-        setState(() {
+    setState(() {
       filteredBuses = allBuses.where((bus) {
         return (sourceController.text.isEmpty ||
-                bus["source"].toString().toLowerCase().trim() == sourceController.text.toLowerCase().trim()) &&
+                bus["source"].toString().toLowerCase().trim() ==
+                    sourceController.text.toLowerCase().trim()) &&
                (destinationController.text.isEmpty ||
-                bus["destination"].toString().toLowerCase().trim() == destinationController.text.toLowerCase().trim());
+                bus["destination"].toString().toLowerCase().trim() ==
+                    destinationController.text.toLowerCase().trim());
       }).toList();
     });
   }
@@ -55,15 +61,15 @@ class _BusOptionsState extends State<BusOptions> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           "NAVI BUS",
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
-        backgroundColor: Color(0xFF042F40), // Custom Hex Color
+        backgroundColor: const Color(0xFF042F40),
         actions: [
           IconButton(
-            icon: Icon(Icons.support_agent, color: Colors.white), // Support Icon
+            icon: const Icon(Icons.support_agent, color: Colors.white),
             onPressed: () {
               Navigator.push(
                 context,
@@ -72,9 +78,9 @@ class _BusOptionsState extends State<BusOptions> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.account_circle, color: Colors.white), // Profile Icon
+            icon: const Icon(Icons.account_circle, color: Colors.white),
             onPressed: () {
-              // Navigate to Profile Page
+              // Navigate to Profile Page (To be implemented)
             },
           ),
         ],
@@ -122,7 +128,11 @@ class _BusOptionsState extends State<BusOptions> {
                       children: const [
                         Icon(Icons.bus_alert, size: 80, color: Colors.redAccent),
                         SizedBox(height: 10),
-                        Text("No buses available", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black54)),
+                        Text("No buses available",
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black54)),
                       ],
                     )
                   : ListView.builder(
@@ -135,13 +145,15 @@ class _BusOptionsState extends State<BusOptions> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => Payment(bus: bus), // Passing bus details to Payment
+                                builder: (context) =>
+                                    Payment(bus: bus), // Passing bus details to Payment
                               ),
                             );
                           },
                           child: Card(
                             elevation: 6,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15)),
                             margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                             child: Container(
                               padding: const EdgeInsets.all(15),
@@ -153,12 +165,16 @@ class _BusOptionsState extends State<BusOptions> {
                                   end: Alignment.bottomRight,
                                 ),
                                 boxShadow: [
-                                  BoxShadow(color: Colors.grey.withOpacity(0.3), blurRadius: 5, spreadRadius: 2),
+                                  BoxShadow(
+                                      color: Colors.grey.withOpacity(0.3),
+                                      blurRadius: 5,
+                                      spreadRadius: 2),
                                 ],
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.directions_bus, size: 50, color: Colors.blueAccent),
+                                  const Icon(Icons.directions_bus,
+                                      size: 50, color: Colors.blueAccent),
                                   const SizedBox(width: 15),
                                   Expanded(
                                     child: Column(
@@ -166,21 +182,34 @@ class _BusOptionsState extends State<BusOptions> {
                                       children: [
                                         Text(
                                           "${bus['bus_number']} - ${bus['source']} → ${bus['destination']}",
-                                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                                          style: const TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black),
                                         ),
                                         const SizedBox(height: 5),
-                                        Text("🕒 Duration: ${bus['duration']}", style: const TextStyle(fontSize: 14, color: Colors.grey)),
-                                        Text("💰 Fare: ₹${bus['fare']}", style: const TextStyle(fontSize: 14, color: Colors.green)),
-                                        Text("⏳ Arriving in: ${bus['arriving_in']}", style: const TextStyle(fontSize: 14, color: Colors.orange)),
+                                        Text("🕒 Duration: ${bus['duration']}",
+                                            style: const TextStyle(
+                                                fontSize: 14, color: Colors.grey)),
+                                        Text("💰 Fare: ₹${bus['fare']}",
+                                            style: const TextStyle(
+                                                fontSize: 14, color: Colors.green)),
+                                        Text("⏳ Arriving in: ${bus['arriving_in']}",
+                                            style: const TextStyle(
+                                                fontSize: 14, color: Colors.orange)),
                                         Row(
                                           children: [
-                                            const Icon(Icons.event_seat, color: Colors.purple, size: 18),
+                                            const Icon(Icons.event_seat,
+                                                color: Colors.purple, size: 18),
                                             const SizedBox(width: 5),
-                                            Text("Availability: ${bus['availability']}%", style: TextStyle(
-                                              fontSize: 14,
-                                              color: bus['availability'] > 50 ? Colors.green : Colors.red,
-                                              fontWeight: FontWeight.bold,
-                                            )),
+                                            Text("Availability: ${bus['availability']}%",
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: bus['availability'] > 50
+                                                      ? Colors.green
+                                                      : Colors.red,
+                                                  fontWeight: FontWeight.bold,
+                                                )),
                                           ],
                                         ),
                                       ],

@@ -31,9 +31,9 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^0.13.4  # Use the latest version
+  permission_handler: ^11.0.1
   geolocator: ^9.0.2
   google_maps_flutter: ^2.2.0
-  flutter_typeahead: ^4.0.0  
   path_provider: ^2.1.2
 
 
