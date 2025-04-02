@@ -8,11 +8,7 @@ plugins {
 android {
     namespace = "com.example.bushehe"
     compileSdk = flutter.compileSdkVersion
-<<<<<<< HEAD
-    ndkVersion = "27.0.12077973"
-=======
      ndkVersion = "27.0.12077973"
->>>>>>> 4bf35361c6006634b3610f8fb46052b3e0a89f0c
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
