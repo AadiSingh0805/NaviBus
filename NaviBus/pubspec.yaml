@@ -68,6 +68,7 @@ flutter:
       - assets/paytm.png
       - assets/gpay.png
       - assets/phonepe.png
+      - assets/stops.json
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
