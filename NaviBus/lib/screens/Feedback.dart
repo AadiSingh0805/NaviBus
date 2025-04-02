@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class FeedbackPage extends StatefulWidget {
   @override
@@ -10,24 +12,65 @@ class _FeedbackPageState extends State<FeedbackPage> {
   String? _selectedCategory;
   TextEditingController _customerNameController = TextEditingController();
   TextEditingController _descriptionController = TextEditingController();
-  List<Map<String, String>> _tickets = []; // Only in-memory storage
+  List<Map<String, dynamic>> _tickets = []; // Feedback data
 
-  /// Submit a new ticket
-  void _submitTicket() {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _tickets.add({
-          "name": _customerNameController.text,
-          "category": _selectedCategory!,
-          "description": _descriptionController.text,
+  // Django API URL
+  final String apiUrl = "http://10.0.2.2:8000/feedback/feedback";// Change to your backend URL
+
+  /// ✅ Fetch feedback from the Django backend
+  Future<void> _fetchFeedbacks() async {
+    try {
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        List<dynamic> feedbackList = json.decode(response.body);
+        setState(() {
+          _tickets = feedbackList.cast<Map<String, dynamic>>();
         });
-      });
-      _customerNameController.clear();
-      _descriptionController.clear();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Ticket Submitted Successfully!")),
-      );
+      } else {
+        throw Exception("Failed to load feedback");
+      }
+    } catch (error) {
+      print("Error fetching feedback: $error");
     }
+  }
+
+  /// ✅ Submit feedback to Django backend
+  Future<void> _submitTicket() async {
+    if (_formKey.currentState!.validate()) {
+      final Map<String, String> feedbackData = {
+        "name": _customerNameController.text,
+        "category": _selectedCategory!,
+        "description": _descriptionController.text,
+      };
+
+      try {
+        final response = await http.post(
+          Uri.parse(apiUrl),
+          headers: {"Content-Type": "application/json"},
+          body: json.encode(feedbackData),
+        );
+
+        if (response.statusCode == 201) {
+          _fetchFeedbacks(); // Refresh the list after submitting
+          _customerNameController.clear();
+          _descriptionController.clear();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Feedback submitted successfully!")),
+          );
+        } else {
+          throw Exception("Failed to submit feedback");
+        }
+      } catch (error) {
+        print("Error submitting feedback: $error");
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFeedbacks(); // Load feedback on page load
   }
 
   @override
@@ -37,8 +80,6 @@ class _FeedbackPageState extends State<FeedbackPage> {
         title: Text("Feedback & Support", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
         backgroundColor: Color(0xFF042F40),
         centerTitle: true,
-        elevation: 5,
-        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
@@ -55,10 +96,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Submit a Problem Ticket", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87)),
+                      Text("Submit a Problem Ticket", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                       SizedBox(height: 10),
 
-                      // Customer Name Field
+                      // Name Field
                       TextFormField(
                         controller: _customerNameController,
                         decoration: InputDecoration(
@@ -69,7 +110,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                       ),
                       SizedBox(height: 10),
 
-                      // Issue Category Dropdown
+                      // Category Dropdown
                       DropdownButtonFormField<String>(
                         value: _selectedCategory,
                         decoration: InputDecoration(
@@ -106,10 +147,9 @@ class _FeedbackPageState extends State<FeedbackPage> {
                           onPressed: _submitTicket,
                           style: ElevatedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 15),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             backgroundColor: Color(0xFF042F40),
                           ),
-                          child: Text("Submit Ticket", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                          child: Text("Submit Ticket", style: TextStyle(color: Colors.white, fontSize: 16)),
                         ),
                       ),
                     ],
@@ -120,56 +160,32 @@ class _FeedbackPageState extends State<FeedbackPage> {
 
             SizedBox(height: 20),
 
-            Stack(
-              children: [
-                Opacity(
-                  opacity: 0.1,
-                  child: Center(
-                    child: Image.asset(
-                      "assets/logo.png",
-                      width: 300,
-                      height: 300,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Ongoing Tickets", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87)),
-                    SizedBox(height: 10),
-                    _tickets.isEmpty
-                        ? Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(16),
-                              child: Text("No ongoing tickets", style: TextStyle(color: Colors.grey, fontSize: 16)),
-                            ),
-                          )
-                        : Column(
-                            children: _tickets.map((ticket) {
-                              return Card(
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                elevation: 3,
-                                margin: EdgeInsets.symmetric(vertical: 6),
-                                child: ListTile(
-                                  leading: Icon(Icons.person, color: Colors.blueAccent),
-                                  title: Text(ticket["name"]!, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                                  subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text("Issue: ${ticket["category"]!}", style: TextStyle(fontWeight: FontWeight.bold)),
-                                      Text(ticket["description"]!, style: TextStyle(color: Colors.black54)),
-                                    ],
-                                  ),
-                                  trailing: Icon(Icons.check_circle, color: Colors.green),
-                                ),
-                              );
-                            }).toList(),
+            // Display feedback tickets
+            Text("Ongoing Tickets", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            SizedBox(height: 10),
+            _tickets.isEmpty
+                ? Center(child: Text("No ongoing tickets", style: TextStyle(color: Colors.grey, fontSize: 16)))
+                : Column(
+                    children: _tickets.map((ticket) {
+                      return Card(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 3,
+                        margin: EdgeInsets.symmetric(vertical: 6),
+                        child: ListTile(
+                          leading: Icon(Icons.person, color: Colors.blueAccent),
+                          title: Text(ticket["name"]!, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Issue: ${ticket["category"]!}", style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text(ticket["description"]!, style: TextStyle(color: Colors.black54)),
+                            ],
                           ),
-                  ],
-                ),
-              ],
-            ),
+                          trailing: Icon(Icons.check_circle, color: Colors.green),
+                        ),
+                      );
+                    }).toList(),
+                  ),
           ],
         ),
       ),

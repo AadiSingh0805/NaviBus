@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:navibus/screens/Feedback.dart';
-import 'payment.dart'; // Import the Payment screen
+import 'payment.dart';
 
 class BusOptions extends StatefulWidget {
   const BusOptions({super.key});
@@ -15,13 +16,55 @@ class _BusOptionsState extends State<BusOptions> {
   TextEditingController destinationController = TextEditingController();
   List<dynamic> allBuses = [];
   List<dynamic> filteredBuses = [];
+  Position? currentPosition;
 
   @override
   void initState() {
     super.initState();
     loadBuses();
+    getCurrentLocation();
   }
 
+  /// Get User's GPS Location
+  Future<void> getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if GPS is enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      print("Location services are disabled.");
+      return;
+    }
+
+    // Request permission
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        print("Location permission denied");
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      print("Location permissions are permanently denied.");
+      return;
+    }
+
+    // Get current position
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    
+    setState(() {
+      currentPosition = position;
+    });
+
+    print("Current Location: ${position.latitude}, ${position.longitude}");
+    filterBuses();
+  }
+
+  /// Load bus data from JSON
   Future<void> loadBuses() async {
     try {
       final String response = await rootBundle.loadString('assets/busdata.json');
@@ -35,14 +78,30 @@ class _BusOptionsState extends State<BusOptions> {
     }
   }
 
+  /// Filter buses based on the user's destination & nearest buses
   void filterBuses() {
+    if (currentPosition == null) {
+      return; // No location available yet
+    }
+
     setState(() {
       filteredBuses = allBuses.where((bus) {
-        return destinationController.text.isEmpty ||
+        double busLat = bus["latitude"] ?? 0;
+        double busLng = bus["longitude"] ?? 0;
+        double distance = Geolocator.distanceBetween(
+          currentPosition!.latitude,
+          currentPosition!.longitude,
+          busLat,
+          busLng,
+        );
+
+        bool matchesDestination = destinationController.text.isEmpty ||
             bus["destination"]
                 .toString()
                 .toLowerCase()
                 .contains(destinationController.text.toLowerCase().trim());
+
+        return matchesDestination && distance < 5000; // Buses within 5km radius
       }).toList();
     });
   }
@@ -67,14 +126,8 @@ class _BusOptionsState extends State<BusOptions> {
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.account_circle, color: Colors.white),
-            onPressed: () {
-              // Navigate to Profile Page (To be implemented)
-            },
-          ),
         ],
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -88,6 +141,12 @@ class _BusOptionsState extends State<BusOptions> {
                 prefixIcon: Icon(Icons.flag, color: Colors.redAccent),
               ),
               onChanged: (value) => filterBuses(),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.my_location),
+              label: const Text("Use My Location"),
+              onPressed: getCurrentLocation,
             ),
             const SizedBox(height: 20),
 
@@ -116,7 +175,7 @@ class _BusOptionsState extends State<BusOptions> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    Payment(bus: bus), // Passing bus details to Payment
+                                    Payment(bus: bus),
                               ),
                             );
                           },
