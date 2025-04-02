@@ -8,6 +8,7 @@ class FeedbackPage extends StatefulWidget {
 class _FeedbackPageState extends State<FeedbackPage> {
   final _formKey = GlobalKey<FormState>();
   String? _selectedCategory;
+  TextEditingController _customerNameController = TextEditingController();
   TextEditingController _descriptionController = TextEditingController();
   List<Map<String, String>> _tickets = []; // Only in-memory storage
 
@@ -16,10 +17,12 @@ class _FeedbackPageState extends State<FeedbackPage> {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _tickets.add({
+          "name": _customerNameController.text,
           "category": _selectedCategory!,
           "description": _descriptionController.text,
         });
       });
+      _customerNameController.clear();
       _descriptionController.clear();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Ticket Submitted Successfully!")),
@@ -35,6 +38,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
         backgroundColor: Color(0xFF042F40),
         centerTitle: true,
         elevation: 5,
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
@@ -53,6 +57,19 @@ class _FeedbackPageState extends State<FeedbackPage> {
                     children: [
                       Text("Submit a Problem Ticket", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87)),
                       SizedBox(height: 10),
+
+                      // Customer Name Field
+                      TextFormField(
+                        controller: _customerNameController,
+                        decoration: InputDecoration(
+                          labelText: "Your Name",
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        validator: (value) => value!.isEmpty ? "Please enter your name" : null,
+                      ),
+                      SizedBox(height: 10),
+
+                      // Issue Category Dropdown
                       DropdownButtonFormField<String>(
                         value: _selectedCategory,
                         decoration: InputDecoration(
@@ -69,6 +86,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
                         validator: (value) => value == null ? "Please select a category" : null,
                       ),
                       SizedBox(height: 10),
+
+                      // Description Field
                       TextFormField(
                         controller: _descriptionController,
                         decoration: InputDecoration(
@@ -79,6 +98,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
                         validator: (value) => value!.isEmpty ? "Please enter a description" : null,
                       ),
                       SizedBox(height: 15),
+
+                      // Submit Button
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -131,9 +152,15 @@ class _FeedbackPageState extends State<FeedbackPage> {
                                 elevation: 3,
                                 margin: EdgeInsets.symmetric(vertical: 6),
                                 child: ListTile(
-                                  leading: Icon(Icons.confirmation_number, color: Colors.blueAccent),
-                                  title: Text(ticket["category"]!, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                                  subtitle: Text(ticket["description"]!, style: TextStyle(color: Colors.black54)),
+                                  leading: Icon(Icons.person, color: Colors.blueAccent),
+                                  title: Text(ticket["name"]!, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text("Issue: ${ticket["category"]!}", style: TextStyle(fontWeight: FontWeight.bold)),
+                                      Text(ticket["description"]!, style: TextStyle(color: Colors.black54)),
+                                    ],
+                                  ),
                                   trailing: Icon(Icons.check_circle, color: Colors.green),
                                 ),
                               );

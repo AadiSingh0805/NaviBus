@@ -34,6 +34,7 @@ class Payment extends StatelessWidget {
             },
           ),
         ],
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Column(
         children: [

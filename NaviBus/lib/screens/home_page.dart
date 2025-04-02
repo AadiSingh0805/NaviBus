@@ -30,6 +30,7 @@ class HomePage extends StatelessWidget {
             },
           ),
         ],
+        iconTheme: IconThemeData(color: Colors.white),
       ),
 
       body: Column(
