@@ -4,7 +4,7 @@ import 'home_page.dart';
 class OTPVerificationScreen extends StatefulWidget {
   final String phoneNumber;
 
-  OTPVerificationScreen({required this.phoneNumber});
+  const OTPVerificationScreen({super.key, required this.phoneNumber});
 
   @override
   _OTPVerificationScreenState createState() => _OTPVerificationScreenState();

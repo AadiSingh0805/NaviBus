@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'otpverify.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -10,7 +12,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController phoneController = TextEditingController();
 
   void sendOTP() {
-    String phoneNumber = "+91" + phoneController.text.trim();
+    String phoneNumber = "+91${phoneController.text.trim()}";
 
     // Navigate to OTP screen (Mock verification)
     Navigator.push(

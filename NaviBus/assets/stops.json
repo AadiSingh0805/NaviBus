@@ -1,41 +1,40 @@
 {
-    "3": [
-      "Koperkhairne",
+  "8": [
+      "Vashi Rly. Stn.",
+      "Sector 17",
+      "K.K. Sec.22",
+      "K.K. Sec.23",
+      "Ghansoli Gaon",
+      "Kopar Khairane",
+      "Rabale",
+      "Thane"
+  ],
+  "9 E.AC": [
       "Ghansoli Depot",
-      "Rabale",
-      "Airoli",
-      "Mulund Check Naka",
-      "Teen Haath Naka",
-      "Thane Station"
-    ],
-    "4": [
-      "Vashi Sec.07",
-      "Vashi Depot",
-      "Sanpada",
-      "Turbhe",
-      "Koperkhairne Sec.22/23",
+      "K.K. Sec.7",
+      "K.K. Sec.15",
+      "Kopar Khairane",
+      "Sector 14",
+      "Vashi Rly. Stn."
+  ],
+  "10": [
+      "Ghansoli Depot",
+      "K.K. Sec.7",
+      "APMC Market",
+      "Sanpada Rly. Stn."
+  ],
+  "11": [
+      "Sanpada Rly. Stn.",
+      "Turbhe Naka",
+      "Rabale MIDC",
+      "Kopar Khairane",
       "Ghansoli",
-      "Airoli",
-      "Thane Station"
-    ],
-    "5": [
-      "Airoli Bus Depot",
-      "Rabale",
-      "Thane Station",
-      "Teen Haath Naka",
-      "Kasarvadavli",
-      "Anjurphata",
-      "Chatrapati Shivaji Maharaj Chowk Bhivandi"
-    ],
-    "7": [
-      "Vashi Rly.Stn.",
-      "Sanpada",
-      "Turbhe",
-      "MBP Mahape",
-      "Rabale",
-      "Airoli",
-      "Mulund Check Naka",
-      "Thane Station"
-    ]
-  }
-  
+      "Thane"
+  ],
+  "13": [
+      "Sanpada Rly. Stn.",
+      "Sector 7",
+      "Bonsari Gaon",
+      "Nerul Rly. Stn."
+  ]
+}

@@ -27,41 +27,39 @@ class _BusOptionsState extends State<BusOptions> {
 
   /// Get User's GPS Location
   Future<void> getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Check if GPS is enabled
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      print("Location services are disabled.");
-      return;
-    }
-
-    // Request permission
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        print("Location permission denied");
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        print("Location services are disabled.");
         return;
       }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          print("Location permission denied");
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        print("Location permissions permanently denied.");
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      
+      setState(() {
+        currentPosition = position;
+      });
+
+      print("Current Location: ${position.latitude}, ${position.longitude}");
+      filterBuses();
+    } catch (e) {
+      print("Error fetching location: $e");
     }
-
-    if (permission == LocationPermission.deniedForever) {
-      print("Location permissions are permanently denied.");
-      return;
-    }
-
-    // Get current position
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    
-    setState(() {
-      currentPosition = position;
-    });
-
-    print("Current Location: ${position.latitude}, ${position.longitude}");
-    filterBuses();
   }
 
   /// Load bus data from JSON
@@ -80,14 +78,21 @@ class _BusOptionsState extends State<BusOptions> {
 
   /// Filter buses based on the user's destination & nearest buses
   void filterBuses() {
-    if (currentPosition == null) {
-      return; // No location available yet
-    }
-
     setState(() {
       filteredBuses = allBuses.where((bus) {
-        double busLat = bus["latitude"] ?? 0;
-        double busLng = bus["longitude"] ?? 0;
+        bool matchesDestination = destinationController.text.isEmpty ||
+            bus["destination"]
+                .toString()
+                .toLowerCase()
+                .contains(destinationController.text.toLowerCase().trim());
+
+        if (currentPosition == null || bus["latitude"] == null || bus["longitude"] == null) {
+          return matchesDestination; // No location? Only filter by destination.
+        }
+
+        // Calculate distance if location is available
+        double busLat = bus["latitude"];
+        double busLng = bus["longitude"];
         double distance = Geolocator.distanceBetween(
           currentPosition!.latitude,
           currentPosition!.longitude,
@@ -95,13 +100,7 @@ class _BusOptionsState extends State<BusOptions> {
           busLng,
         );
 
-        bool matchesDestination = destinationController.text.isEmpty ||
-            bus["destination"]
-                .toString()
-                .toLowerCase()
-                .contains(destinationController.text.toLowerCase().trim());
-
-        return matchesDestination && distance < 5000; // Buses within 5km radius
+        return matchesDestination && distance < 5000; // 5km radius filtering
       }).toList();
     });
   }
@@ -110,10 +109,7 @@ class _BusOptionsState extends State<BusOptions> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "NAVI BUS",
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text("NAVI BUS", style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: const Color(0xFF042F40),
         actions: [

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:navibus/screens/Feedback.dart';
 import 'package:navibus/screens/busopts.dart';
+import 'package:navibus/screens/login.dart';
 
 class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,7 +73,10 @@ class HomePage extends StatelessWidget {
           // 🎫 My Tickets/Passes Button
           ElevatedButton(
             onPressed: () {
-              print("Navigate to My Tickets");
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Color(0xFF042F40), // Custom Color

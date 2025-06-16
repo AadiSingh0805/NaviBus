@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class FeedbackPage extends StatefulWidget {
+  const FeedbackPage({super.key});
+
   @override
   _FeedbackPageState createState() => _FeedbackPageState();
 }
@@ -10,8 +12,8 @@ class FeedbackPage extends StatefulWidget {
 class _FeedbackPageState extends State<FeedbackPage> {
   final _formKey = GlobalKey<FormState>();
   String? _selectedCategory;
-  TextEditingController _customerNameController = TextEditingController();
-  TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _customerNameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
   List<Map<String, dynamic>> _tickets = []; // Feedback data
 
   // Django API URL
