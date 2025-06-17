@@ -1,0 +1,36 @@
+/* 🌟 Beautiful Dropdown Styles */
+.beautiful-dropdown {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  #custom-dropdown .btn-info {
+    background-color: #17a2b8;
+    color: white;
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: background 0.3s ease-in-out;
+  }
+  
+  #custom-dropdown .btn-info:hover {
+    background-color: #138496;
+  }
+  
+  /* 🎨 Dropdown Item Customization */
+  .dropdown-item-custom {
+    padding: 12px 15px;
+    font-size: 16px;
+    font-weight: 500;
+    transition: background 0.2s ease-in-out;
+  }
+  
+  .dropdown-item-custom:hover {
+    background-color: #f1f1f1;
+    color: #007bff;
+  }
+  
