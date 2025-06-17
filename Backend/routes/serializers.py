@@ -14,4 +14,3 @@ class BusRouteSerializer(serializers.ModelSerializer):
     class Meta:
         model = BusRoute
         fields = '__all__'
-

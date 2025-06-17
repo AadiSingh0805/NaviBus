@@ -3,13 +3,23 @@ from core.models import Stop  # Importing Stop model from core
 
 class BusRoute(models.Model):
     route_number = models.CharField(max_length=20, unique=True, db_index=True)
-    source_destination = models.CharField(max_length=255, null=True, blank=True)  # Made nullable
+    source_destination = models.CharField(max_length=255, null=True, blank=True)
     start_stop = models.ForeignKey(Stop, related_name='route_starts', on_delete=models.CASCADE)
     end_stop = models.ForeignKey(Stop, related_name='route_ends', on_delete=models.CASCADE)
     active = models.BooleanField(default=True)
 
+    # New fields
+    first_bus_time_weekday = models.TimeField(null=True, blank=True)
+    last_bus_time_weekday = models.TimeField(null=True, blank=True)
+    first_bus_time_sunday = models.TimeField(null=True, blank=True)
+    last_bus_time_sunday = models.TimeField(null=True, blank=True)
+    average_frequency_minutes = models.IntegerField(null=True, blank=True)
+    average_fare = models.FloatField(null=True, blank=True)
+
     def __str__(self):
         return f"Route {self.route_number} ({self.start_stop.name} → {self.end_stop.name})"
+
+
 
 
 class RouteStop(models.Model):
