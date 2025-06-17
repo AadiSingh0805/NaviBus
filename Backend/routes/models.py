@@ -14,6 +14,7 @@ class BusRoute(models.Model):
     first_bus_time_sunday = models.TimeField(null=True, blank=True)
     last_bus_time_sunday = models.TimeField(null=True, blank=True)
     average_frequency_minutes = models.IntegerField(null=True, blank=True)
+    average_frequency_minutes_sunday = models.IntegerField(null=True, blank=True)
     average_fare = models.FloatField(null=True, blank=True)
 
     def __str__(self):
