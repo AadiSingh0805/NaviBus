@@ -1,49 +1,39 @@
 from django.db import models
-from core.models import Stop  # Make sure Stop has latitude & longitude fields handled
+from core.models import Stop  # Importing Stop model from core
 
 class BusRoute(models.Model):
-    """
-    Represents a bus route with a unique route number,
-    start and end stops, and optional distance.
-    """
-    route_number = models.CharField(max_length=20, unique=True)
+    route_number = models.CharField(max_length=20, unique=True, db_index=True)
+    source_destination = models.CharField(max_length=255, null=True, blank=True)  # Made nullable
     start_stop = models.ForeignKey(Stop, related_name='route_starts', on_delete=models.CASCADE)
     end_stop = models.ForeignKey(Stop, related_name='route_ends', on_delete=models.CASCADE)
-    distance_km = models.FloatField(null=True, blank=True)
     active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Route {self.route_number}"
+        return f"Route {self.route_number} ({self.start_stop.name} → {self.end_stop.name})"
 
 
 class RouteStop(models.Model):
-    """
-    Represents an individual stop in a bus route with stop order,
-    timing, and fare details.
-    """
     route = models.ForeignKey(BusRoute, on_delete=models.CASCADE, related_name='route_stops')
     stop = models.ForeignKey(Stop, on_delete=models.CASCADE)
     stop_order = models.PositiveIntegerField()
-    distance_from_start = models.FloatField()
-    fare_from_prev = models.FloatField(null=True, blank=True)
-    arrival_time = models.TimeField(null=True, blank=True)
-    departure_time = models.TimeField(null=True, blank=True)
-    is_major_stop = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('route', 'stop_order')
         ordering = ['stop_order']
+        indexes = [
+            models.Index(fields=['route', 'stop']),
+            models.Index(fields=['stop']),
+        ]
 
     def __str__(self):
         return f"{self.route.route_number} - Stop {self.stop.name} (#{self.stop_order})"
 
 
 class Bus(models.Model):
-    """
-    Represents a physical bus assigned to a route.
-    """
-    bus_identifier = models.CharField(max_length=50, unique=True)  # e.g., "MH-43-A-1234" or "Bus_23"
-    route = models.ForeignKey(BusRoute, on_delete=models.CASCADE)
+    bus_identifier = models.CharField(max_length=50, unique=True, db_index=True)
+    route = models.ForeignKey(BusRoute, on_delete=models.CASCADE, related_name='buses')
+    status = models.CharField(max_length=20, default="In Service")  # e.g., "In Service", "Out of Service"
+    capacity = models.PositiveIntegerField(null=True, blank=True)  # e.g., 50 passengers
 
     def __str__(self):
         return self.bus_identifier
@@ -55,10 +45,10 @@ class Schedule(models.Model):
     """
     route = models.ForeignKey(BusRoute, on_delete=models.CASCADE)
     bus = models.ForeignKey(Bus, on_delete=models.SET_NULL, null=True, blank=True)
-    departure_time = models.TimeField()
-    repeat_pattern = models.CharField(max_length=50, default="Daily")  # Future: convert to choices
-    valid_from = models.DateField()
-    valid_to = models.DateField()
+    departure_time = models.TimeField(null=True, blank=True)  # Not populated now
+    repeat_pattern = models.CharField(max_length=50, default="Daily", null=True, blank=True)  # Future: convert to choices
+    valid_from = models.DateField(null=True, blank=True)
+    valid_to = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.route.route_number} @ {self.departure_time} ({self.repeat_pattern})"

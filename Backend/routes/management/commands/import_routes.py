@@ -1,84 +1,76 @@
 import csv
-import ast
+import json
+
 from django.core.management.base import BaseCommand
-from routes.models import BusRoute, RouteStop
 from core.models import Stop
+from routes.models import BusRoute, RouteStop
 
 class Command(BaseCommand):
-    help = 'Import routes from CSV'
+    help = 'Import bus routes from a CSV file'
 
     def add_arguments(self, parser):
-        parser.add_argument('csv_file', type=str)
+        parser.add_argument('csv_file', type=str, help=r'C:\Users\HP\VEDA\Projects\NaviBus\Backend\merged_routes.csv')
 
     def handle(self, *args, **options):
         csv_file_path = options['csv_file']
 
+        def clean_stop_name(name):
+            return name.strip().replace('"', '').replace('[', '').replace(']', '')
+
+        def parse_stops(stops_str):
+            try:
+                stops = json.loads(stops_str)
+                return [clean_stop_name(stop) for stop in stops]
+            except Exception as e:
+                self.stdout.write(self.style.WARNING(f"Failed to parse stops: {e}"))
+                return []
+
+        def get_or_create_stop(name):
+            stop, _ = Stop.objects.get_or_create(name=name)
+            return stop
+
+        imported_count = 0
+        skipped_count = 0
+
         with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                # Extract fields with flexible header names
-                route_number = row.get("Route Number") or row.get("Route No") or row.get("Route") or row.get("Route Nu")
-                source_dest = row.get("Source and Destination") or row.get("Route Name")
-                stops_raw = row.get("Stops")
+                route_number = row['Route Number'].strip()
+                source_dest = row['Source and Destination'].strip()
+                stop_names = parse_stops(row['Stops'])
 
-                if not (route_number and source_dest and stops_raw):
-                    self.stdout.write(self.style.WARNING(f"Skipping row due to missing data: {row}"))
+                if not stop_names:
+                    self.stdout.write(self.style.WARNING(f"No stops found for route {route_number}, skipping..."))
+                    skipped_count += 1
                     continue
 
-                # Safely parse stops
-                try:
-                    stops = ast.literal_eval(stops_raw)
-                    if not isinstance(stops, list):
-                        raise ValueError("Stops is not a list")
-                except:
-                    stops = [s.strip() for s in stops_raw.split(",") if s.strip()]
+                start_stop = get_or_create_stop(stop_names[0])
+                end_stop = get_or_create_stop(stop_names[-1])
 
-                # Normalize arrows and split source/destination
-                normalized = (source_dest.replace("→", "↔")
-                                          .replace("←", "↔")
-                                          .replace(" to ", "↔")
-                                          .replace("-", "↔")
-                                          .replace("—", "↔"))
-                if "↔" in normalized:
-                    parts = [s.strip() for s in normalized.split("↔", 1)]
-                    if len(parts) != 2:
-                        self.stdout.write(self.style.ERROR(f"Invalid split: {source_dest}"))
-                        continue
-                    source_name, dest_name = parts
-                else:
-                    self.stdout.write(self.style.ERROR(f"Invalid format in source/destination: {source_dest}"))
-                    continue
-
-                # Create or get Stop objects
-                source_stop, _ = Stop.objects.get_or_create(name=source_name)
-                dest_stop, _ = Stop.objects.get_or_create(name=dest_name)
-
-                # Create BusRoute
-                route, created = BusRoute.objects.get_or_create(
+                bus_route, created = BusRoute.objects.get_or_create(
                     route_number=route_number,
                     defaults={
-                        'start_stop': source_stop,
-                        'end_stop': dest_stop
+                        'source_destination': source_dest,
+                        'start_stop': start_stop,
+                        'end_stop': end_stop,
+                        'active': True
                     }
                 )
-                if not created:
-                    route.start_stop = source_stop
-                    route.end_stop = dest_stop
-                    route.save()
 
-                # Add intermediate stops
-                for idx, stop_name in enumerate(stops):
-                    stop_name = stop_name.strip()
-                    if not stop_name:
-                        continue
-                    stop, _ = Stop.objects.get_or_create(name=stop_name)
-                    RouteStop.objects.get_or_create(
-                        route=route,
-                        stop_order=idx,
-                        defaults={
-                            'stop': stop,
-                            'distance_from_start': 0.0  # You can later update this if needed
-                        }
+                if not created:
+                    self.stdout.write(self.style.WARNING(f"Route {route_number} already exists, skipping..."))
+                    skipped_count += 1
+                    continue
+
+                for order, stop_name in enumerate(stop_names, start=1):
+                    stop = get_or_create_stop(stop_name)
+                    RouteStop.objects.create(
+                        route=bus_route,
+                        stop=stop,
+                        stop_order=order
                     )
 
-                self.stdout.write(self.style.SUCCESS(f"Imported route: {route_number}"))
+                self.stdout.write(self.style.SUCCESS(f"Added route {route_number} with {len(stop_names)} stops."))
+                imported_count += 1
+
+        self.stdout.write(self.style.SUCCESS(f"\nFinished! Imported: {imported_count}, Skipped: {skipped_count}"))

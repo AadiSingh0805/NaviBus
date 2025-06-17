@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import BusRoute, RouteStop
 
-# Register your models here.
+admin.site.register(BusRoute)
+admin.site.register(RouteStop)
