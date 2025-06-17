@@ -1,0 +1,68 @@
+/* Apply Bootstrap styles */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+/* Centered form container */
+.feedback-wrapper {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.15);
+    max-width: 600px;
+    margin: 50px auto;
+}
+
+/* Form input & textarea */
+.feedback-wrapper .form-control {
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+}
+
+.feedback-wrapper .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+}
+
+/* Submit button */
+.feedback-wrapper .btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 18px;
+    border-radius: 8px;
+    transition: all 0.3s ease-in-out;
+}
+
+.feedback-wrapper .btn:hover {
+    transform: scale(1.02);
+}
+
+/* Feedback list section */
+.feedback-list {
+    margin-top: 40px;
+}
+
+/* Message for no feedback */
+.no-feedback {
+    text-align: center;
+    font-size: 16px;
+    color: #777;
+}
+
+/* Footer styling */
+.footer {
+    width: 100%;
+    background: #343a40;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    margin-top: auto;
+    font-size: 14px;
+}

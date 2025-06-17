@@ -1,0 +1,67 @@
+[
+    {
+        "route_no": "2",
+        "destination": "Bharataratna Dr.Babasaheb Aambedkar Bhavan, Airoli To Thane",
+        "route_length": 10.1,
+        "first_bus_mon_sat": "7.35-7.10",
+        "first_bus_sunday": "7.35-7.10",
+        "last_bus_mon_sat": "18.30-19.09",
+        "last_bus_sunday": "18.30-19.09",
+        "journey_time": 38,
+        "frequency_mon_sat": "38-40",
+        "frequency_sunday": "38.40",
+        "fare": 15
+    },
+    {
+        "route_no": "3",
+        "destination": "Koperkhairne To Thane ( Via Ghansoli Depot)",
+        "route_length": 14.5,
+        "first_bus_mon_sat": "6.30-7.18",
+        "first_bus_sunday": "6.30-7.18",
+        "last_bus_mon_sat": "19.35-20.25",
+        "last_bus_sunday": "19.35-20.25",
+        "journey_time": 45,
+        "frequency_mon_sat": "35-40-45",
+        "frequency_sunday": "35-40-45",
+        "fare": 21
+    },
+    {
+        "route_no": "4",
+        "destination": "Vashi Sec.07 To Thane via Koparkhairane Sec.22/23",
+        "route_length": 20.7,
+        "first_bus_mon_sat": "6.00-6.00",
+        "first_bus_sunday": "6.00-6.00",
+        "last_bus_mon_sat": "21.45-22.15",
+        "last_bus_sunday": "21.45-22.25",
+        "journey_time": 70,
+        "frequency_mon_sat": "25-30",
+        "frequency_sunday": "30-35",
+        "fare": 29
+    },
+    {
+        "route_no": "5",
+        "destination": "Airoli Bus Depot To Chatrapati Shivaji Maharaj Chowk Bhivandi Via Thane",
+        "route_length": 29.9,
+        "first_bus_mon_sat": "5.40-7.10",
+        "first_bus_sunday": "5.40-7.10",
+        "last_bus_mon_sat": "20.30(T)-22.00",
+        "last_bus_sunday": "20.30(T)-22.00",
+        "journey_time": "93-98-103",
+        "frequency_mon_sat": "20-25",
+        "frequency_sunday": "35-40-35",
+        "fare": 37
+    },
+    {
+        "route_no": "7",
+        "destination": "Vashi Rly.Stn. To Thane Via MBP Mahape",
+        "route_length": 19.7,
+        "first_bus_mon_sat": "7.10-6.05",
+        "first_bus_sunday": "7.10-6.05",
+        "last_bus_mon_sat": "21.30-22.45",
+        "last_bus_sunday": "21.30-22.45",
+        "journey_time": "63-65",
+        "frequency_mon_sat": "25-30-35",
+        "frequency_sunday": "25-30-35",
+        "fare": 27
+    }
+]

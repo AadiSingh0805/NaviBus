@@ -1,0 +1,38 @@
+/* You can put this in a separate CSS file (e.g., BusRoutes.module.css)
+   and import it into your BusRoutes.js component, or directly in a global
+   CSS file (like index.css or App.css). */
+
+   .card-container {
+    align-items: center;
+    display: flex; /* Enable flexbox layout */
+    flex-wrap: wrap; /* Allow cards to wrap to the next line if they don't fit */
+    gap: 20px; /* Adjust the spacing between cards as needed */
+    padding: 20px; /* Add some padding around the container */
+    justify-content: center; /* Align items to the start of the container (left-aligned) */
+    /* If you want cards centered, use: justify-content: center; */
+    /* If you want space between cards, use: justify-content: space-between; */
+    /* If you want space around cards, use: justify-content: space-around; */
+  }
+  
+  /* You might also want to style the individual BasicExample card component */
+  /* Adjust these styles based on the actual structure and classes within BasicExample */
+  .card { /* Assuming your BasicExample component renders a div with the class 'card' */
+    width: 300px; /* Adjust the desired width of each card */
+    /* You might want to use a percentage width for responsiveness, e.g.,
+       width: calc(33.33% - 20px); for roughly three cards per row with gap */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 15px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px; /* Add margin below each card if flex-wrap is not used exclusively */
+  }
+  
+  /* Example styles for elements within the card (adjust based on your BasicExample) */
+  .card-title {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+  }
+  
+  .card-text {
+    color: #555;
+  }

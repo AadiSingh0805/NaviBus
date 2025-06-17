@@ -1,0 +1,16 @@
+/* FullPageCarousel.css */
+
+
+.full-page-carousel-container {
+    height: 92vh;
+    overflow: hidden; /* Prevent potential scrollbars from carousel internals */
+  }
+  
+  .carousel-item-full-height {
+    height: 100%;
+  }
+  
+  .carousel-image-full-height {
+    object-fit: fit;
+    height: 100%;
+  }

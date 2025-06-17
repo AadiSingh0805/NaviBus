@@ -1,0 +1,98 @@
+/* Container for all cards */
+.card-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    margin: 40px auto;
+    max-width: 1200px;
+    overflow-y: auto; /* Enable vertical scrolling */
+    max-height: 600px; /* Limit height to make it scrollable */
+    padding-right: 10px; /* Prevent horizontal overflow */
+  }
+  
+  /* Individual card styling */
+  .bus-card {
+    width: 320px; /* Fixed width */
+    height: 450px; /* Ensures equal height */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    overflow-y: auto; /* Enable scrolling inside the card */
+  }
+  
+  /* Card hover effect */
+  .bus-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Card title styling */
+  .bus-card .card-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  
+  /* Card subtitle */
+  .bus-card .card-subtitle {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #555;
+  }
+  
+  /* Text content inside the card */
+  .bus-card .card-text {
+    font-size: 1rem;
+    color: #444;
+    line-height: 1.5;
+    flex-grow: 1; /* Makes all text expand equally */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow-y: auto; /* Scroll within text */
+    max-height: 300px; /* Prevents text from overflowing */
+  }
+  
+  /* Bold important details */
+  .bus-card .card-text strong {
+    color: #007bff;
+  }
+  
+  /* Scrollbar styling */
+  .bus-card::-webkit-scrollbar,
+  .card-container::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .bus-card::-webkit-scrollbar-thumb,
+  .card-container::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+  }
+  
+  .bus-card::-webkit-scrollbar-track,
+  .card-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .card-container {
+      flex-direction: column;
+      align-items: center;
+      max-height: 500px; /* Adjust height for mobile */
+    }
+  
+    .bus-card {
+      width: 90%;
+      height: auto;
+    }
+  }
+  
