@@ -7,15 +7,23 @@ const BusRoutes = () => {
   const [error, setError] = useState('');
 
   const searchRoutes = async () => {
-    if (!start || !end) return setError("Please enter both stops");
+    if (!start || !end) {
+      setError("Please enter both start and end stops");
+      return;
+    }
 
     try {
-      const res = await fetch(`http://localhost:8000/api/routes/search_path/?start=${start}&end=${end}`);
+      const res = await fetch(
+        `http://localhost:8000/api/routes/search/?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`
+      );
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.error || data.message || "Search failed");
 
-      setResults(data);
+      // Sort by fare (if available)
+      const sorted = data.sort((a, b) => (a.fare || 9999) - (b.fare || 9999));
+
+      setResults(sorted);
       setError('');
     } catch (err) {
       setResults([]);
@@ -25,7 +33,8 @@ const BusRoutes = () => {
 
   return (
     <div className="p-4 max-w-xl mx-auto">
-      <h2 className="text-xl font-semibold mb-4">Search Bus Route</h2>
+      <h2 className="text-xl font-semibold mb-4">Search Bus Routes</h2>
+
       <input
         type="text"
         value={start}
@@ -40,26 +49,43 @@ const BusRoutes = () => {
         placeholder="Enter end stop"
         className="border p-2 mb-2 w-full"
       />
+
       <button
         onClick={searchRoutes}
-        className="bg-blue-600 text-white px-4 py-2 rounded mb-4"
+        className="bg-blue-600 text-white px-4 py-2 rounded mb-4 w-full"
       >
         Search
       </button>
 
-      {error && <p className="text-red-500">{error}</p>}
+      {error && <p className="text-red-500 text-sm">{error}</p>}
 
-      {results.map((route, idx) => (
-        <div key={idx} className="border p-3 my-2 rounded bg-gray-100">
-          <h3 className="font-bold text-lg mb-1">Route: {route.route_number}</h3>
-          <p>Stops:</p>
-          <ul className="list-disc ml-6">
-            {route.sub_path.map((stop, i) => (
-              <li key={i}>{stop}</li>
-            ))}
-          </ul>
+      {results.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Available Routes:</h3>
+          {results.map((route, idx) => (
+            <div key={idx} className="border p-3 my-2 rounded bg-gray-50 shadow">
+              <h4 className="text-lg font-bold mb-1">Route: {route.route_number}</h4>
+
+              <p><span className="font-semibold">Stops:</span></p>
+              <ul className="list-disc ml-6 text-sm mb-2">
+                {route.sub_path.map((stop, i) => (
+                  <li key={i}>{stop}</li>
+                ))}
+              </ul>
+
+              <div className="text-sm space-y-1">
+                <p><strong>Fare:</strong> ₹{route.fare || 'N/A'}</p>
+                <p><strong>Weekday First Bus:</strong> {route.first_bus_time_weekday || 'N/A'}</p>
+                <p><strong>Weekday Last Bus:</strong> {route.last_bus_time_weekday || 'N/A'}</p>
+                <p><strong>Sunday First Bus:</strong> {route.first_bus_time_sunday || 'N/A'}</p>
+                <p><strong>Sunday Last Bus:</strong> {route.last_bus_time_sunday || 'N/A'}</p>
+                <p><strong>Weekday Frequency:</strong> {route.frequency_weekday || 'N/A'} mins</p>
+                <p><strong>Sunday Frequency:</strong> {route.frequency_sunday || 'N/A'} mins</p>
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 };
