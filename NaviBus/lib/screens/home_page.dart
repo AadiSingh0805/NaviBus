@@ -1,10 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:navibus/screens/Feedback.dart';
 import 'package:navibus/screens/busopts.dart';
 import 'package:navibus/screens/login.dart';
+import 'package:navibus/screens/bus_details.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final TextEditingController _searchController = TextEditingController();
+
+  Future<dynamic> fetchBusByRouteNumber(BuildContext context, String routeNumber) async {
+    try {
+      print('Searching for route: $routeNumber');
+      final url = Uri.parse('http://10.0.2.2:8000/api/routes/search/?route_number=$routeNumber');
+      final response = await http.get(url);
+      print('API status: ${response.statusCode}, body: ${response.body}');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('Decoded data: $data');
+        if (data is List && data.isNotEmpty) {
+          final bus = data[0];
+          if (bus['stops'] != null && bus['stops'].isNotEmpty) {
+            bus['source'] = bus['stops'][0];
+            bus['destination'] = bus['stops'].last;
+          }
+          return bus;
+        }
+      }
+    } catch (e) {
+      print('Error fetching bus: $e');
+    }
+    return null;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,14 +83,63 @@ class HomePage extends StatelessWidget {
           // 🔍 Search Box
           Padding(
             padding: EdgeInsets.all(16.0),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: "Search for Buses",
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(50),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: "Search for Buses (Route No.)",
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                    ),
+                    onSubmitted: (value) async {
+                      if (value.trim().isEmpty) return;
+                      final bus = await fetchBusByRouteNumber(context, value.trim());
+                      if (bus != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BusDetails(bus: bus),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('No bus found for route $value')),
+                        );
+                      }
+                    },
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () async {
+                    final value = _searchController.text.trim();
+                    if (value.isEmpty) return;
+                    final bus = await fetchBusByRouteNumber(context, value);
+                    if (bus != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BusDetails(bus: bus),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('No bus found for route $value')),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF042F40),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  ),
+                  child: const Text('Search', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ],
             ),
           ),
 

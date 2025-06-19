@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:navibus/screens/Feedback.dart';
 import 'package:navibus/screens/paymentopts.dart';
+import 'package:http/http.dart' as http;
 
 class Payment extends StatefulWidget {
   final dynamic bus;
@@ -27,23 +28,39 @@ class _PaymentState extends State<Payment> {
 
   Future<void> loadBusData() async {
     try {
-      String stopsData = await rootBundle.loadString('assets/stops.json');
-      Map<String, dynamic> stopsJson = json.decode(stopsData);
-
-      String busData = await rootBundle.loadString('assets/busdata.json');
-      List<dynamic> busList = json.decode(busData);
-
-      String busNo = widget.bus['bus_no'];
-
-      setState(() {
-        stops = stopsJson[busNo]?.cast<String>() ?? ["Unknown"];
-        int retrievedFare = busList.firstWhere(
-          (bus) => bus['bus_no'] == busNo,
-          orElse: () => {"fare": 0},
-        )['fare'];
-        fare = retrievedFare.clamp(20, 30);
-      });
+      // Use backend API to get fare and stops
+      final routeNumber = widget.bus['route_number'] ?? widget.bus['bus_no'];
+      final stopsList = widget.bus['sub_path'] ?? [];
+      final source = stopsList.isNotEmpty ? stopsList.first : '';
+      final destination = stopsList.isNotEmpty ? stopsList.last : '';
+      if (routeNumber == null || source == '' || destination == '') {
+        setState(() {
+          stops = ["Unknown"];
+          fare = 0;
+        });
+        return;
+      }
+      final url = Uri.parse(
+        'http://10.0.2.2:8000/api/routes/fare/?route_number=$routeNumber&source_stop=$source&destination_stop=$destination'
+      );
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          stops = List<String>.from(data['stops'] ?? []);
+          fare = data['fare'] ?? 0;
+        });
+      } else {
+        setState(() {
+          stops = ["Unknown"];
+          fare = 0;
+        });
+      }
     } catch (e) {
+      setState(() {
+        stops = ["Unknown"];
+        fare = 0;
+      });
       print("Error loading bus data: $e");
     }
   }

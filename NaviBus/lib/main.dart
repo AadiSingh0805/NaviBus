@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
-import 'screens/login.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:navibus/screens/auth_page.dart';
 import 'screens/home_page.dart';
 import 'screens/otpverify.dart';
 import 'screens/busopts.dart';
 import 'screens/payment.dart';
 
-void main() {
+// Ensure LoginPage is imported from the correct file
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: 'https://gbkbvwbzwehpioqzleup.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia2J2d2J6d2VocGlvcXpsZXVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzNTU2MjksImV4cCI6MjA2NTkzMTYyOX0.1WA5rcsSQMcejlkJcGJqxHpAajw_9lXSdsBXaKNgUSE',
+  );
   runApp(MyApp());
 }
 
@@ -20,7 +28,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(primarySwatch: Colors.red),
       initialRoute: '/',
       routes: {
-        '/': (context) => HomePage(),
+        '/': (context) => AuthPage(),
         '/home': (context) => HomePage(),
         '/busopts': (context) => BusOptions(),
         '/payment': (context) => const Payment(bus: null),
