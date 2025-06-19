@@ -20,8 +20,21 @@ const BusRoutes = () => {
 
       if (!res.ok) throw new Error(data.error || data.message || "Search failed");
 
+      // For each route, fetch the fare using the new fare API
+      const farePromises = data.map(async (route) => {
+        try {
+          const fareRes = await fetch(
+            `http://localhost:8000/api/routes/fare/?route_number=${encodeURIComponent(route.route_number)}&source_stop=${encodeURIComponent(start)}&destination_stop=${encodeURIComponent(end)}`
+          );
+          const fareData = await fareRes.json();
+          return { ...route, fare: fareData.fare };
+        } catch {
+          return { ...route, fare: null };
+        }
+      });
+      const routesWithFare = await Promise.all(farePromises);
       // Sort by fare (if available)
-      const sorted = data.sort((a, b) => (a.fare || 9999) - (b.fare || 9999));
+      const sorted = routesWithFare.sort((a, b) => (a.fare || 9999) - (b.fare || 9999));
 
       setResults(sorted);
       setError('');

@@ -15,7 +15,7 @@ class Command(BaseCommand):
             type=str,
             help='Full path to the Excel file (e.g., D:/NMMT_FLUTTER/NaviBus/Backend/copied_detailed_routes.xlsx)'
         )
-
+        
     def handle(self, *args, **kwargs):
         file_path = kwargs['excel_file']
 
