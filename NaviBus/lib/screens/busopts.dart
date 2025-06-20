@@ -461,10 +461,15 @@ class _BusOptionsState extends State<BusOptions> {
               const SizedBox(height: 10),
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  icon: Icon(Icons.alt_route, color: Colors.deepPurple),
-                  label: Text("Multi-Route Journey Planner", style: TextStyle(color: Colors.deepPurple)),
-                  style: TextButton.styleFrom(minimumSize: Size(0, 32), padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4)),
+                child: ElevatedButton.icon(
+                  icon: Icon(Icons.alt_route, color: Colors.white),
+                  label: Text("Multi-Route Journey Planner", style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF042F40),
+                    minimumSize: Size(0, 40),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
                   onPressed: () {
                     Navigator.push(
                       context,
