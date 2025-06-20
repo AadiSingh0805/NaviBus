@@ -133,23 +133,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_ALL_ORIGINS = True
 
 CACHES = {
-    "redis": {
+    "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://default:fQsJKKdIbbKNTEhXYNiCQ2xDbbDIzhX4@redis-15810.crce206.ap-south-1-1.ec2.redns.redis-cloud.com:15810/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
-    },
-    "fallback": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "fallback-cache"
-    }
-}
-CACHES["default"] = {
-    "BACKEND": "django.core.cache.backends.fallback.FallbackCache",
-    "LOCATION": "",
-    "OPTIONS": {
-        "BACKENDS": ["redis", "fallback"]
     }
 }
 
