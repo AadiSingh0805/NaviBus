@@ -8,4 +8,5 @@ urlpatterns = [
     path('routes/info/', views.get_route_schedule_info),
     path('routes/fare/', views.get_fare_for_route),  # ?route_number=X&source_stop=Y&destination_stop=Z
     path('stops/autocomplete/', views.autocomplete_stops),
+    path('routes/plan/', views.plan_journey),
 ]

@@ -8,10 +8,15 @@ from core.models import Stop
 from rapidfuzz import process, fuzz
 import redis
 from django.conf import settings
+from collections import defaultdict, deque
+import heapq
 
 # Setup Redis connection (adjust host/port/db as needed)
 try:
-    redis_client = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
+    redis_client = redis.StrictRedis.from_url(
+        "redis://default:fQsJKKdIbbKNTEhXYNiCQ2xDbbDIzhX4@redis-15810.crce206.ap-south-1-1.ec2.redns.redis-cloud.com:15810/0",
+        decode_responses=True
+    )
     redis_available = True
     # Test connection
     redis_client.ping()
@@ -228,4 +233,86 @@ def autocomplete_stops(request):
     results = [name for name, score, _ in matches if score > 60]  # threshold can be tuned
 
     return Response({'results': results})
+
+@api_view(['GET'])
+def plan_journey(request):
+    """
+    Find the best (shortest) path between two stops, possibly using multiple routes (Dijkstra's algorithm).
+    Query params: ?start=StopA&end=StopB
+    Returns: List of segments, each with route_number, stops, and transfer info.
+    """
+    start_name = request.GET.get('start')
+    end_name = request.GET.get('end')
+    if not start_name or not end_name:
+        return Response({'error': "Both 'start' and 'end' parameters are required."}, status=400)
+    start_name = start_name.strip()
+    end_name = end_name.strip()
+
+    # Build graph: stop_name -> list of (neighbor_stop_name, route_number, stop_order)
+    graph = defaultdict(list)
+    stop_to_routes = defaultdict(list)  # stop_name -> list of (route_number, stop_order)
+    route_stops = defaultdict(list)     # route_number -> ordered list of stop names
+
+    for route in BusRoute.objects.prefetch_related('route_stops__stop').all():
+        stops = sorted(route.route_stops.all(), key=lambda rs: rs.stop_order)
+        stop_names = [rs.stop.name for rs in stops]
+        route_stops[route.route_number] = stop_names
+        for i, stop in enumerate(stop_names):
+            stop_to_routes[stop].append((route.route_number, i))
+            if i > 0:
+                graph[stop_names[i-1]].append((stop, route.route_number, i))
+            if i < len(stop_names) - 1:
+                graph[stop].append((stop_names[i+1], route.route_number, i+1))
+
+    # Dijkstra's: (cost, stop, path_so_far, route_so_far, transfer_count)
+    heap = [(0, start_name, [], [], 0)]
+    visited = dict()  # (stop, route) -> cost
+    best_path = None
+    best_cost = float('inf')
+
+    while heap:
+        cost, stop, path, routes, transfers = heapq.heappop(heap)
+        if (stop, tuple(routes)) in visited and visited[(stop, tuple(routes))] <= cost:
+            continue
+        visited[(stop, tuple(routes))] = cost
+        path = path + [stop]
+        if stop == end_name:
+            best_path = (path, routes, transfers)
+            best_cost = cost
+            break
+        for neighbor, route_number, _ in graph[stop]:
+            new_routes = routes.copy()
+            if not routes or routes[-1] != route_number:
+                new_routes.append(route_number)
+                new_transfers = transfers + 1 if routes else 0
+            else:
+                new_transfers = transfers
+            heapq.heappush(heap, (cost + 1, neighbor, path, new_routes, new_transfers))
+
+    if not best_path:
+        return Response({'error': 'No path found between stops.'}, status=404)
+
+    # Reconstruct segments: group consecutive stops by route
+    path, routes, transfers = best_path
+    segments = []
+    if not routes:
+        return Response({'error': 'No route found.'}, status=404)
+    seg_start = path[0]
+    seg_route = routes[0]
+    seg_stops = [seg_start]
+    for i in range(1, len(path)):
+        # If route changes, start new segment
+        prev_stop = path[i-1]
+        curr_stop = path[i]
+        # Find which route connects prev_stop to curr_stop
+        possible_routes = set(r for r, idx in stop_to_routes[prev_stop]) & set(r for r, idx in stop_to_routes[curr_stop])
+        if seg_route not in possible_routes:
+            segments.append({'route_number': seg_route, 'stops': seg_stops})
+            seg_route = list(possible_routes & set(routes))[0] if possible_routes else routes[0]
+            seg_stops = [prev_stop, curr_stop]
+        else:
+            seg_stops.append(curr_stop)
+    segments.append({'route_number': seg_route, 'stops': seg_stops})
+
+    return Response({'segments': segments, 'total_stops': len(path)-1, 'transfers': len(segments)-1})
 
