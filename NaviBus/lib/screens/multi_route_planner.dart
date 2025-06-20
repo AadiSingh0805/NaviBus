@@ -133,228 +133,262 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Multi-Route Journey Planner'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: const Color(0xFF042F40),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            RawAutocomplete<String>(
-              textEditingController: sourceController,
-              focusNode: FocusNode(),
-              optionsBuilder: (TextEditingValue textEditingValue) {
-                final input = textEditingValue.text.toLowerCase();
-                final List<String> recents = recentSources.where((s) => s.toLowerCase().contains(input)).toList();
-                final List<String> frequents = frequentSources.keys
-                    .where((s) => !recents.contains(s) && s.toLowerCase().contains(input))
-                    .toList()
-                  ..sort((a, b) => frequentSources[b]!.compareTo(frequentSources[a]!));
-                final List<String> backend = sourceSuggestions
-                    .where((s) => !recents.contains(s) && !frequents.contains(s) && s.toLowerCase().contains(input))
-                    .toList();
-                return [...recents, ...frequents, ...backend];
-              },
-              fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                return TextField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  decoration: const InputDecoration(
-                    labelText: "Enter Source",
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.location_on, color: Colors.blueAccent),
-                  ),
-                  onChanged: (value) async {
-                    onSourceChanged(value);
-                    setState(() {});
-                  },
-                );
-              },
-              optionsViewBuilder: (context, onSelected, options) {
-                return Align(
-                  alignment: Alignment.topLeft,
-                  child: Material(
-                    elevation: 4.0,
-                    child: SizedBox(
-                      height: 220.0,
-                      child: ListView(
-                        padding: EdgeInsets.zero,
-                        children: [
-                          if (recentSources.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                              child: Text('Recent', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
-                            ),
-                          ...options.where((s) => recentSources.contains(s)).map((s) => ListTile(
-                                leading: Icon(Icons.history, color: Colors.blueGrey),
-                                title: Text(s),
-                                onTap: () {
-                                  onSelected(s);
-                                  sourceController.text = s;
-                                  addRecentSource(s);
-                                },
-                              )),
-                          if (frequentSources.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                              child: Text('Frequent', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
-                            ),
-                          ...options.where((s) => frequentSources.containsKey(s) && !recentSources.contains(s)).map((s) => ListTile(
-                                leading: Icon(Icons.star, color: Colors.green),
-                                title: Text(s),
-                                onTap: () {
-                                  onSelected(s);
-                                  sourceController.text = s;
-                                  addRecentSource(s);
-                                },
-                              )),
-                          if (sourceSuggestions.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                              child: Text('Suggestions', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
-                            ),
-                          ...options.where((s) => !recentSources.contains(s) && !frequentSources.containsKey(s)).map((option) => ListTile(
-                                title: Text(option),
-                                onTap: () {
-                                  onSelected(option);
-                                  sourceController.text = option;
-                                  addRecentSource(option);
-                                },
-                              )),
-                        ],
+      body: Container(
+        color: Colors.blue.shade50,
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Card(
+                elevation: 8,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Plan Your Journey",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Color(0xFF042F40)),
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 10),
-            RawAutocomplete<String>(
-              textEditingController: destinationController,
-              focusNode: FocusNode(),
-              optionsBuilder: (TextEditingValue textEditingValue) {
-                final input = textEditingValue.text.toLowerCase();
-                final List<String> recents = recentDestinations.where((s) => s.toLowerCase().contains(input)).toList();
-                final List<String> frequents = frequentDestinations.keys
-                    .where((s) => !recents.contains(s) && s.toLowerCase().contains(input))
-                    .toList()
-                  ..sort((a, b) => frequentDestinations[b]!.compareTo(frequentDestinations[a]!));
-                final List<String> backend = destinationSuggestions
-                    .where((s) => !recents.contains(s) && !frequents.contains(s) && s.toLowerCase().contains(input))
-                    .toList();
-                return [...recents, ...frequents, ...backend];
-              },
-              fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                return TextField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  decoration: const InputDecoration(
-                    labelText: "Enter Destination",
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.flag, color: Colors.redAccent),
-                  ),
-                  onChanged: (value) async {
-                    onDestinationChanged(value);
-                    setState(() {});
-                  },
-                );
-              },
-              optionsViewBuilder: (context, onSelected, options) {
-                return Align(
-                  alignment: Alignment.topLeft,
-                  child: Material(
-                    elevation: 4.0,
-                    child: SizedBox(
-                      height: 220.0,
-                      child: ListView(
-                        padding: EdgeInsets.zero,
-                        children: [
-                          if (recentDestinations.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                              child: Text('Recent', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+                      const SizedBox(height: 18),
+                      RawAutocomplete<String>(
+                        textEditingController: sourceController,
+                        focusNode: FocusNode(),
+                        optionsBuilder: (TextEditingValue textEditingValue) {
+                          final input = textEditingValue.text.toLowerCase();
+                          final List<String> recents = recentSources.where((s) => s.toLowerCase().contains(input)).toList();
+                          final List<String> frequents = frequentSources.keys
+                              .where((s) => !recents.contains(s) && s.toLowerCase().contains(input))
+                              .toList()
+                            ..sort((a, b) => frequentSources[b]!.compareTo(frequentSources[a]!));
+                          final List<String> backend = sourceSuggestions
+                              .where((s) => !recents.contains(s) && !frequents.contains(s) && s.toLowerCase().contains(input))
+                              .toList();
+                          return [...recents, ...frequents, ...backend];
+                        },
+                        fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                          return TextField(
+                            controller: controller,
+                            focusNode: focusNode,
+                            decoration: const InputDecoration(
+                              labelText: "Enter Source",
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.location_on, color: Colors.blueAccent),
                             ),
-                          ...options.where((s) => recentDestinations.contains(s)).map((s) => ListTile(
-                                leading: Icon(Icons.history, color: Colors.blueGrey),
-                                title: Text(s),
-                                onTap: () {
-                                  onSelected(s);
-                                  destinationController.text = s;
-                                  addRecentDestination(s);
-                                },
-                              )),
-                          if (frequentDestinations.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                              child: Text('Frequent', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                            onChanged: (value) async {
+                              onSourceChanged(value);
+                              setState(() {});
+                            },
+                          );
+                        },
+                        optionsViewBuilder: (context, onSelected, options) {
+                          return Align(
+                            alignment: Alignment.topLeft,
+                            child: Material(
+                              elevation: 4.0,
+                              child: SizedBox(
+                                height: 220.0,
+                                child: ListView(
+                                  padding: EdgeInsets.zero,
+                                  children: [
+                                    if (recentSources.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                        child: Text('Recent', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+                                      ),
+                                    ...options.where((s) => recentSources.contains(s)).map((s) => ListTile(
+                                          leading: Icon(Icons.history, color: Colors.blueGrey),
+                                          title: Text(s),
+                                          onTap: () {
+                                            onSelected(s);
+                                            sourceController.text = s;
+                                            addRecentSource(s);
+                                          },
+                                        )),
+                                    if (frequentSources.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                        child: Text('Frequent', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                                      ),
+                                    ...options.where((s) => frequentSources.containsKey(s) && !recentSources.contains(s)).map((s) => ListTile(
+                                          leading: Icon(Icons.star, color: Colors.green),
+                                          title: Text(s),
+                                          onTap: () {
+                                            onSelected(s);
+                                            sourceController.text = s;
+                                            addRecentSource(s);
+                                          },
+                                        )),
+                                    if (sourceSuggestions.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                        child: Text('Suggestions', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+                                      ),
+                                    ...options.where((s) => !recentSources.contains(s) && !frequentSources.containsKey(s)).map((option) => ListTile(
+                                          title: Text(option),
+                                          onTap: () {
+                                            onSelected(option);
+                                            sourceController.text = option;
+                                            addRecentSource(option);
+                                          },
+                                        )),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ...options.where((s) => frequentDestinations.containsKey(s) && !recentDestinations.contains(s)).map((s) => ListTile(
-                                leading: Icon(Icons.star, color: Colors.green),
-                                title: Text(s),
-                                onTap: () {
-                                  onSelected(s);
-                                  destinationController.text = s;
-                                  addRecentDestination(s);
-                                },
-                              )),
-                          if (destinationSuggestions.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                              child: Text('Suggestions', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
-                            ),
-                          ...options.where((s) => !recentDestinations.contains(s) && !frequentDestinations.containsKey(s)).map((option) => ListTile(
-                                title: Text(option),
-                                onTap: () {
-                                  onSelected(option);
-                                  destinationController.text = option;
-                                  addRecentDestination(option);
-                                },
-                              )),
-                        ],
+                          );
+                        },
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.alt_route),
-              label: const Text('Plan Journey'),
-              onPressed: () {
-                addRecentSource(sourceController.text.trim());
-                addRecentDestination(destinationController.text.trim());
-                searchBestJourney();
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
-            ),
-            const SizedBox(height: 10),
-            if (loading) Center(child: CircularProgressIndicator()),
-            if (errorMsg != null) Text(errorMsg!, style: TextStyle(color: Colors.red)),
-            if (plannedSegments.isNotEmpty)
-              Expanded(
-                child: ListView(
-                  children: [
-                    Text('Total Stops: $totalStops, Transfers: $transfers', style: TextStyle(color: Colors.black54)),
-                    const SizedBox(height: 8),
-                    ...plannedSegments.map((seg) => Card(
-                      margin: const EdgeInsets.symmetric(vertical: 6),
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Route: ${seg['route_number']}', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
-                            const SizedBox(height: 4),
-                            Text('Stops: ${(seg['stops'] as List).join(' → ')}'),
-                          ],
+                      const SizedBox(height: 14),
+                      RawAutocomplete<String>(
+                        textEditingController: destinationController,
+                        focusNode: FocusNode(),
+                        optionsBuilder: (TextEditingValue textEditingValue) {
+                          final input = textEditingValue.text.toLowerCase();
+                          final List<String> recents = recentDestinations.where((s) => s.toLowerCase().contains(input)).toList();
+                          final List<String> frequents = frequentDestinations.keys
+                              .where((s) => !recents.contains(s) && s.toLowerCase().contains(input))
+                              .toList()
+                            ..sort((a, b) => frequentDestinations[b]!.compareTo(frequentDestinations[a]!));
+                          final List<String> backend = destinationSuggestions
+                              .where((s) => !recents.contains(s) && !frequents.contains(s) && s.toLowerCase().contains(input))
+                              .toList();
+                          return [...recents, ...frequents, ...backend];
+                        },
+                        fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                          return TextField(
+                            controller: controller,
+                            focusNode: focusNode,
+                            decoration: const InputDecoration(
+                              labelText: "Enter Destination",
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.flag, color: Colors.redAccent),
+                            ),
+                            onChanged: (value) async {
+                              onDestinationChanged(value);
+                              setState(() {});
+                            },
+                          );
+                        },
+                        optionsViewBuilder: (context, onSelected, options) {
+                          return Align(
+                            alignment: Alignment.topLeft,
+                            child: Material(
+                              elevation: 4.0,
+                              child: SizedBox(
+                                height: 220.0,
+                                child: ListView(
+                                  padding: EdgeInsets.zero,
+                                  children: [
+                                    if (recentDestinations.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                        child: Text('Recent', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+                                      ),
+                                    ...options.where((s) => recentDestinations.contains(s)).map((s) => ListTile(
+                                          leading: Icon(Icons.history, color: Colors.blueGrey),
+                                          title: Text(s),
+                                          onTap: () {
+                                            onSelected(s);
+                                            destinationController.text = s;
+                                            addRecentDestination(s);
+                                          },
+                                        )),
+                                    if (frequentDestinations.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                        child: Text('Frequent', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                                      ),
+                                    ...options.where((s) => frequentDestinations.containsKey(s) && !recentDestinations.contains(s)).map((s) => ListTile(
+                                          leading: Icon(Icons.star, color: Colors.green),
+                                          title: Text(s),
+                                          onTap: () {
+                                            onSelected(s);
+                                            destinationController.text = s;
+                                            addRecentDestination(s);
+                                          },
+                                        )),
+                                    if (destinationSuggestions.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                        child: Text('Suggestions', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+                                      ),
+                                    ...options.where((s) => !recentDestinations.contains(s) && !frequentDestinations.containsKey(s)).map((option) => ListTile(
+                                          title: Text(option),
+                                          onTap: () {
+                                            onSelected(option);
+                                            destinationController.text = option;
+                                            addRecentDestination(option);
+                                          },
+                                        )),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 18),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.alt_route, color: Colors.white),
+                          label: const Text('Plan Journey', style: TextStyle(color: Colors.white)),
+                          onPressed: () {
+                            addRecentSource(sourceController.text.trim());
+                            addRecentDestination(destinationController.text.trim());
+                            searchBestJourney();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF042F40),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
                         ),
                       ),
-                    )),
-                  ],
+                      const SizedBox(height: 16),
+                      if (loading) Center(child: CircularProgressIndicator()),
+                      if (errorMsg != null) Text(errorMsg!, style: TextStyle(color: Colors.red)),
+                      if (plannedSegments.isNotEmpty)
+                        Card(
+                          color: Colors.deepPurple.shade50,
+                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Best Journey Plan",
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.deepPurple),
+                                ),
+                                SizedBox(height: 6),
+                                Text("Total Stops: $totalStops, Transfers: $transfers", style: TextStyle(color: Colors.black54)),
+                                SizedBox(height: 8),
+                                ...plannedSegments.map((seg) => Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("Route: \\${seg['route_number']}", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 8.0, bottom: 6.0),
+                                      child: Text("Stops: \\${(seg['stops'] as List).join(' → ')}", style: TextStyle(color: Colors.black87)),
+                                    ),
+                                  ],
+                                )),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-          ],
+            ),
+          ),
         ),
       ),
     );

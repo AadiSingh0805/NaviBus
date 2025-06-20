@@ -10,6 +10,8 @@ import redis
 from django.conf import settings
 from collections import defaultdict, deque
 import heapq
+import time
+import pickle
 
 # Setup Redis connection (adjust host/port/db as needed)
 try:
@@ -207,32 +209,102 @@ def autocomplete_stops(request):
     Query param: ?q=partial_stop_name
     Returns: List of matching stop names (max 10)
     """
+    start_time = time.time()
     query = request.GET.get('q', '').strip()
     if not query:
         return Response({'error': 'Missing query parameter q'}, status=400)
 
+    cache_key = f'autocomplete:{query.lower()}'
+    results = None
+    # Try to get cached results for this query
+    if redis_available and redis_client:
+        try:
+            cached = redis_client.get(cache_key)
+            if cached:
+                results = cached.split('|')
+        except Exception as e:
+            print(f"[Redis] Error fetching autocomplete cache: {e}")
+            results = None
+    if results is not None:
+        elapsed = time.time() - start_time
+        print(f"[Autocomplete] Query '{query}' served from cache in {elapsed:.3f}s")
+        return Response({'results': results, 'cached': True, 'time': elapsed})
+
+    # Get stop names (from Redis or DB)
     stop_names = None
     if redis_available and redis_client:
         try:
             stop_names = redis_client.get('all_stop_names')
             if stop_names:
                 stop_names = stop_names.split('|')
-        except Exception:
+        except Exception as e:
+            print(f"[Redis] Error fetching all_stop_names: {e}")
             stop_names = None
     if not stop_names:
-        # Fetch from DB and cache if possible
         stop_names = list(Stop.objects.values_list('name', flat=True))
         if redis_available and redis_client:
             try:
-                redis_client.set('all_stop_names', '|'.join(stop_names), ex=3600)  # cache for 1 hour
-            except Exception:
-                pass
+                redis_client.set('all_stop_names', '|'.join(stop_names), ex=3600)
+            except Exception as e:
+                print(f"[Redis] Error setting all_stop_names: {e}")
 
     # Fuzzy match using rapidfuzz
     matches = process.extract(query, stop_names, scorer=fuzz.WRatio, limit=10)
-    results = [name for name, score, _ in matches if score > 60]  # threshold can be tuned
+    results = [name for name, score, _ in matches if score > 60]
 
-    return Response({'results': results})
+    # Cache the results for this query
+    if redis_available and redis_client:
+        try:
+            redis_client.set(cache_key, '|'.join(results), ex=300)  # cache for 5 minutes
+        except Exception as e:
+            print(f"[Redis] Error setting autocomplete cache: {e}")
+
+    elapsed = time.time() - start_time
+    print(f"[Autocomplete] Query '{query}' processed in {elapsed:.3f}s")
+    return Response({'results': results, 'cached': False, 'time': elapsed})
+
+def get_cached_stop_graph():
+    """Get or build the stop graph for Dijkstra's, using Redis if available."""
+    graph_key = 'stop_graph_v1'
+    stop_to_routes_key = 'stop_to_routes_v1'
+    route_stops_key = 'route_stops_v1'
+    graph = stop_to_routes = route_stops = None
+    if redis_available and redis_client:
+        try:
+            g = redis_client.get(graph_key)
+            s2r = redis_client.get(stop_to_routes_key)
+            rs = redis_client.get(route_stops_key)
+            if g and s2r and rs:
+                graph = pickle.loads(bytes.fromhex(g))
+                stop_to_routes = pickle.loads(bytes.fromhex(s2r))
+                route_stops = pickle.loads(bytes.fromhex(rs))
+        except Exception as e:
+            print(f"[Redis] Error fetching stop graph: {e}")
+    if graph is None or stop_to_routes is None or route_stops is None:
+        # Build from DB
+        from collections import defaultdict
+        graph = defaultdict(list)
+        stop_to_routes = defaultdict(list)
+        route_stops = defaultdict(list)
+        for route in BusRoute.objects.prefetch_related('route_stops__stop').all():
+            stops = sorted(route.route_stops.all(), key=lambda rs: rs.stop_order)
+            stop_names = [rs.stop.name for rs in stops]
+            route_stops[route.route_number] = stop_names
+            for i, stop in enumerate(stop_names):
+                stop_to_routes[stop].append((route.route_number, i))
+                if i > 0:
+                    graph[stop_names[i-1]].append((stop, route.route_number, i))
+                if i < len(stop_names) - 1:
+                    graph[stop].append((stop_names[i+1], route.route_number, i+1))
+        # Cache in Redis
+        if redis_available and redis_client:
+            try:
+                redis_client.set(graph_key, pickle.dumps(graph).hex(), ex=3600)
+                redis_client.set(stop_to_routes_key, pickle.dumps(stop_to_routes).hex(), ex=3600)
+                redis_client.set(route_stops_key, pickle.dumps(route_stops).hex(), ex=3600)
+            except Exception as e:
+                print(f"[Redis] Error setting stop graph: {e}")
+    return graph, stop_to_routes, route_stops
 
 @api_view(['GET'])
 def plan_journey(request):
@@ -241,6 +313,8 @@ def plan_journey(request):
     Query params: ?start=StopA&end=StopB
     Returns: List of segments, each with route_number, stops, and transfer info.
     """
+    import time
+    start_time = time.time()
     start_name = request.GET.get('start')
     end_name = request.GET.get('end')
     if not start_name or not end_name:
@@ -248,23 +322,11 @@ def plan_journey(request):
     start_name = start_name.strip()
     end_name = end_name.strip()
 
-    # Build graph: stop_name -> list of (neighbor_stop_name, route_number, stop_order)
-    graph = defaultdict(list)
-    stop_to_routes = defaultdict(list)  # stop_name -> list of (route_number, stop_order)
-    route_stops = defaultdict(list)     # route_number -> ordered list of stop names
-
-    for route in BusRoute.objects.prefetch_related('route_stops__stop').all():
-        stops = sorted(route.route_stops.all(), key=lambda rs: rs.stop_order)
-        stop_names = [rs.stop.name for rs in stops]
-        route_stops[route.route_number] = stop_names
-        for i, stop in enumerate(stop_names):
-            stop_to_routes[stop].append((route.route_number, i))
-            if i > 0:
-                graph[stop_names[i-1]].append((stop, route.route_number, i))
-            if i < len(stop_names) - 1:
-                graph[stop].append((stop_names[i+1], route.route_number, i+1))
+    # Use cached stop graph
+    graph, stop_to_routes, route_stops = get_cached_stop_graph()
 
     # Dijkstra's: (cost, stop, path_so_far, route_so_far, transfer_count)
+    import heapq
     heap = [(0, start_name, [], [], 0)]
     visited = dict()  # (stop, route) -> cost
     best_path = None
@@ -290,21 +352,23 @@ def plan_journey(request):
             heapq.heappush(heap, (cost + 1, neighbor, path, new_routes, new_transfers))
 
     if not best_path:
+        elapsed = time.time() - start_time
+        print(f"[PlanJourney] No path found in {elapsed:.3f}s")
         return Response({'error': 'No path found between stops.'}, status=404)
 
     # Reconstruct segments: group consecutive stops by route
     path, routes, transfers = best_path
     segments = []
     if not routes:
+        elapsed = time.time() - start_time
+        print(f"[PlanJourney] No route found in {elapsed:.3f}s")
         return Response({'error': 'No route found.'}, status=404)
     seg_start = path[0]
     seg_route = routes[0]
     seg_stops = [seg_start]
     for i in range(1, len(path)):
-        # If route changes, start new segment
         prev_stop = path[i-1]
         curr_stop = path[i]
-        # Find which route connects prev_stop to curr_stop
         possible_routes = set(r for r, idx in stop_to_routes[prev_stop]) & set(r for r, idx in stop_to_routes[curr_stop])
         if seg_route not in possible_routes:
             segments.append({'route_number': seg_route, 'stops': seg_stops})
@@ -314,5 +378,7 @@ def plan_journey(request):
             seg_stops.append(curr_stop)
     segments.append({'route_number': seg_route, 'stops': seg_stops})
 
-    return Response({'segments': segments, 'total_stops': len(path)-1, 'transfers': len(segments)-1})
+    elapsed = time.time() - start_time
+    print(f"[PlanJourney] Path found in {elapsed:.3f}s")
+    return Response({'segments': segments, 'total_stops': len(path)-1, 'transfers': len(segments)-1, 'time': elapsed})
 

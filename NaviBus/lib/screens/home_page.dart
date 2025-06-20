@@ -5,6 +5,7 @@ import 'package:navibus/screens/Feedback.dart';
 import 'package:navibus/screens/busopts.dart';
 import 'package:navibus/screens/login.dart';
 import 'package:navibus/screens/bus_details.dart';
+import 'package:navibus/screens/profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -69,7 +70,10 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: Icon(Icons.account_circle, color: Colors.white), // Profile Icon
             onPressed: () {
-              // Navigate to Profile Page
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfilePage()),
+              );
             },
           ),
         ],
