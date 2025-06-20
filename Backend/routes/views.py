@@ -5,6 +5,19 @@ from django.db.models import Prefetch
 from .models import BusRoute, RouteStop
 from .serializers import BusRouteSerializer
 from core.models import Stop
+from rapidfuzz import process, fuzz
+import redis
+from django.conf import settings
+
+# Setup Redis connection (adjust host/port/db as needed)
+try:
+    redis_client = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
+    redis_available = True
+    # Test connection
+    redis_client.ping()
+except Exception:
+    redis_client = None
+    redis_available = False
 
 @api_view(['GET'])
 def get_all_routes(request):
@@ -181,4 +194,38 @@ def get_fare_for_route(request):
 
     except BusRoute.DoesNotExist:
         return Response({"error": "Route not found."}, status=404)
+
+@api_view(['GET'])
+def autocomplete_stops(request):
+    """
+    Autocomplete stop names using fuzzy search and Redis caching.
+    Query param: ?q=partial_stop_name
+    Returns: List of matching stop names (max 10)
+    """
+    query = request.GET.get('q', '').strip()
+    if not query:
+        return Response({'error': 'Missing query parameter q'}, status=400)
+
+    stop_names = None
+    if redis_available and redis_client:
+        try:
+            stop_names = redis_client.get('all_stop_names')
+            if stop_names:
+                stop_names = stop_names.split('|')
+        except Exception:
+            stop_names = None
+    if not stop_names:
+        # Fetch from DB and cache if possible
+        stop_names = list(Stop.objects.values_list('name', flat=True))
+        if redis_available and redis_client:
+            try:
+                redis_client.set('all_stop_names', '|'.join(stop_names), ex=3600)  # cache for 1 hour
+            except Exception:
+                pass
+
+    # Fuzzy match using rapidfuzz
+    matches = process.extract(query, stop_names, scorer=fuzz.WRatio, limit=10)
+    results = [name for name, score, _ in matches if score > 60]  # threshold can be tuned
+
+    return Response({'results': results})
 

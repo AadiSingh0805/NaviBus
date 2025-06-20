@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:navibus/screens/Feedback.dart';
 import 'package:navibus/screens/paymentopts.dart';
 import 'package:navibus/screens/bus_details.dart';
+import 'dart:async';
 
 class BusOptions extends StatefulWidget {
   const BusOptions({super.key});
@@ -21,9 +22,20 @@ class _BusOptionsState extends State<BusOptions> {
 
   // For expanding/collapsing stops
   List<bool> expandedStops = [];
-
-  // Track tap count for each card
   List<int> tapCounts = [];
+
+  // For autocomplete
+  List<String> sourceSuggestions = [];
+  List<String> destinationSuggestions = [];
+  Timer? _debounceSource;
+  Timer? _debounceDestination;
+
+  // Recent and frequent searches
+  List<String> recentSources = [];
+  List<String> recentDestinations = [];
+  Map<String, int> frequentSources = {};
+  Map<String, int> frequentDestinations = {};
+  static const int maxRecent = 5;
 
   @override
   void initState() {
@@ -129,6 +141,65 @@ class _BusOptionsState extends State<BusOptions> {
     }
   }
 
+  Future<List<String>> fetchStopSuggestions(String query) async {
+    if (query.isEmpty) return [];
+    final url = Uri.parse('http://10.0.2.2:8000/api/stops/autocomplete/?q=${Uri.encodeComponent(query)}');
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return List<String>.from(data['results'] ?? []);
+      }
+    } catch (e) {
+      print('Autocomplete error: $e');
+    }
+    return [];
+  }
+
+  void onSourceChanged(String value) {
+    if (_debounceSource?.isActive ?? false) _debounceSource!.cancel();
+    _debounceSource = Timer(const Duration(milliseconds: 300), () async {
+      final suggestions = await fetchStopSuggestions(value);
+      setState(() {
+        sourceSuggestions = suggestions;
+      });
+    });
+  }
+
+  void onDestinationChanged(String value) {
+    if (_debounceDestination?.isActive ?? false) _debounceDestination!.cancel();
+    _debounceDestination = Timer(const Duration(milliseconds: 300), () async {
+      final suggestions = await fetchStopSuggestions(value);
+      setState(() {
+        destinationSuggestions = suggestions;
+      });
+    });
+  }
+
+  void addRecentSource(String stop) {
+    setState(() {
+      recentSources.remove(stop);
+      recentSources.insert(0, stop);
+      if (recentSources.length > maxRecent) recentSources = recentSources.sublist(0, maxRecent);
+      frequentSources[stop] = (frequentSources[stop] ?? 0) + 1;
+    });
+  }
+  void addRecentDestination(String stop) {
+    setState(() {
+      recentDestinations.remove(stop);
+      recentDestinations.insert(0, stop);
+      if (recentDestinations.length > maxRecent) recentDestinations = recentDestinations.sublist(0, maxRecent);
+      frequentDestinations[stop] = (frequentDestinations[stop] ?? 0) + 1;
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounceSource?.cancel();
+    _debounceDestination?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -151,216 +222,416 @@ class _BusOptionsState extends State<BusOptions> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: sourceController,
-              decoration: const InputDecoration(
-                labelText: "Enter Source",
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.location_on, color: Colors.blueAccent),
-              ),
-              onChanged: (value) => searchRoutes(),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: destinationController,
-              decoration: const InputDecoration(
-                labelText: "Enter Destination",
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.flag, color: Colors.redAccent),
-              ),
-              onChanged: (value) => searchRoutes(),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: searchRoutes,
-              child: const Text("Search"),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.my_location),
-              label: const Text("Use My Location"),
-              onPressed: getCurrentLocation,
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: filteredBuses.isEmpty
-                  ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.bus_alert, size: 80, color: Colors.redAccent),
-                        SizedBox(height: 10),
-                        Text("No buses available",
-                            style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black54)),
-                      ],
-                    )
-                  : ListView.builder(
-                      itemCount: filteredBuses.length,
-                      itemBuilder: (context, index) {
-                        var bus = filteredBuses[index];
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              tapCounts[index] += 1;
-                              if (tapCounts[index] == 1) {
-                                expandedStops[index] = !expandedStops[index];
-                              } else if (tapCounts[index] == 2) {
-                                tapCounts[index] = 0;
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => BusDetails(bus: bus),
-                                  ),
-                                );
-                              }
-                            });
-                          },
-                          child: Card(
-                            elevation: 6,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15)),
-                            margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                            child: Container(
-                              padding: const EdgeInsets.all(15),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
-                                gradient: LinearGradient(
-                                  colors: [Colors.blue.shade100, Colors.white],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                      color: Colors.grey.withOpacity(0.3),
-                                      blurRadius: 5,
-                                      spreadRadius: 2),
-                                ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RawAutocomplete<String>(
+                textEditingController: sourceController,
+                focusNode: FocusNode(),
+                optionsBuilder: (TextEditingValue textEditingValue) async {
+                  onSourceChanged(textEditingValue.text);
+                  // Combine recent, frequent, and backend suggestions
+                  final Set<String> options = {
+                    ...recentSources,
+                    ...frequentSources.keys.toList()..sort((a, b) => frequentSources[b]!.compareTo(frequentSources[a]!)),
+                    ...sourceSuggestions,
+                  };
+                  return options.where((s) => s.toLowerCase().contains(textEditingValue.text.toLowerCase())).toList();
+                },
+                fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                  return TextField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    decoration: const InputDecoration(
+                      labelText: "Enter Source",
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.location_on, color: Colors.blueAccent),
+                    ),
+                    onChanged: (value) => onSourceChanged(value),
+                  );
+                },
+                optionsViewBuilder: (context, onSelected, options) {
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      elevation: 4.0,
+                      child: SizedBox(
+                        height: 220.0,
+                        child: ListView(
+                          padding: EdgeInsets.zero,
+                          children: [
+                            if (recentSources.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                child: Text('Recent', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
                               ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.directions_bus,
-                                      size: 50, color: Colors.blueAccent),
-                                  const SizedBox(width: 15),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "Route: ${bus['route_number']}",
-                                          style: const TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black),
-                                        ),
-                                        const SizedBox(height: 5),
-                                        // Stops preview with ellipsis
-                                        Builder(
-                                          builder: (_) {
-                                            final stops = (bus['stops'] ?? bus['sub_path']) ?? [];
-                                            if (expandedStops[index] || stops.length <= 5) {
-                                              return Text("🛣 Stops: ${stops.join(' → ')}",
-                                                  style: const TextStyle(fontSize: 14, color: Colors.grey));
-                                            } else {
-                                              // Show first, up to 2 middle, last with ...
-                                              String preview = stops.first;
-                                              if (stops.length > 3) {
-                                                int mid1 = (stops.length / 2).floor() - 1;
-                                                int mid2 = (stops.length / 2).ceil();
-                                                preview += ' → ... → ' + stops[mid1] + ' → ... → ' + stops[mid2];
-                                              }
-                                              preview += ' → ' + stops.last;
-                                              return Text("🛣 Stops: $preview",
-                                                  style: const TextStyle(fontSize: 14, color: Colors.grey));
-                                            }
-                                          },
-                                        ),
-                                        Row(
-                                          children: [
-                                            Text("💰 Fare: ₹${bus['fare'] ?? 'N/A'}",
-                                                style: const TextStyle(
-                                                    fontSize: 14, color: Colors.green)),
-                                            const SizedBox(width: 4),
-                                            GestureDetector(
-                                              onTap: () {
-                                                showDialog(
-                                                  context: context,
-                                                  builder: (context) => AlertDialog(
-                                                    title: const Text('Fare Information'),
-                                                    content: const Text('This is an approximate calculated fare. Please contact NMMT authorities for exact fare prices.'),
-                                                    actions: [
-                                                      TextButton(
-                                                        onPressed: () => Navigator.of(context).pop(),
-                                                        child: const Text('OK'),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                );
-                                              },
-                                              child: const Icon(Icons.info_outline, size: 16, color: Colors.blueGrey),
-                                            ),
-                                          ],
-                                        ),
-                                        // ETA and frequency
-                                        Builder(
-                                          builder: (_) {
-                                            final now = DateTime.now();
-                                            final isSunday = now.weekday == DateTime.sunday;
-                                            final firstBus = isSunday ? bus['first_bus_time_sunday'] : bus['first_bus_time_weekday'];
-                                            final lastBus = isSunday ? bus['last_bus_time_sunday'] : bus['last_bus_time_weekday'];
-                                            final freq = isSunday ? bus['frequency_sunday'] : bus['frequency_weekday'];
-                                            String eta = 'N/A';
-                                            if (firstBus != null && lastBus != null && freq != null && firstBus != 'N/A' && lastBus != 'N/A' && freq != 'N/A') {
-                                              try {
-                                                final today = DateTime(now.year, now.month, now.day);
-                                                final firstParts = firstBus.split(":");
-                                                final lastParts = lastBus.split(":");
-                                                final firstBusTime = DateTime(today.year, today.month, today.day, int.parse(firstParts[0]), int.parse(firstParts[1]));
-                                                final lastBusTime = DateTime(today.year, today.month, today.day, int.parse(lastParts[0]), int.parse(lastParts[1]));
-                                                final freqInt = int.tryParse(freq.toString()) ?? 0;
-                                                final diff = now.difference(firstBusTime).inMinutes;
-                                                final afterLast = now.isAfter(lastBusTime.add(Duration(minutes: freqInt)));
-                                                if (afterLast) {
-                                                  eta = 'Next bus: N/A';
-                                                } else if (now.isBefore(firstBusTime)) {
-                                                  eta = 'Next bus at $firstBus';
-                                                } else {
-                                                  int nextBusIn = freqInt - (diff % freqInt);
-                                                  final nextBusTime = now.add(Duration(minutes: nextBusIn));
-                                                  if (nextBusTime.isAfter(lastBusTime)) {
-                                                    eta = 'Next bus: N/A';
-                                                  } else {
-                                                    eta = 'Next bus in $nextBusIn min';
-                                                  }
-                                                }
-                                              } catch (e) {
-                                                eta = 'N/A';
-                                              }
-                                            }
-                                            return Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text("🕒 $eta", style: const TextStyle(fontSize: 14, color: Colors.blue)),
-                                                Text("⏱️ Avg Frequency: ${freq ?? 'N/A'} min", style: const TextStyle(fontSize: 14, color: Colors.grey)),
-                                              ],
-                                            );
-                                          },
-                                        ),
-                                      ],
+                            ...recentSources.map((s) => ListTile(
+                                  leading: Icon(Icons.history, color: Colors.blueGrey),
+                                  title: Text(s),
+                                  onTap: () {
+                                    onSelected(s);
+                                    sourceController.text = s;
+                                    addRecentSource(s);
+                                    searchRoutes();
+                                  },
+                                )),
+                            if (frequentSources.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                child: Text('Frequent', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                              ),
+                            ...frequentSources.keys
+                                .toList()
+                                .where((s) => !recentSources.contains(s))
+                                .take(3)
+                                .map((s) => ListTile(
+                                      leading: Icon(Icons.star, color: Colors.green),
+                                      title: Text(s),
+                                      onTap: () {
+                                        onSelected(s);
+                                        sourceController.text = s;
+                                        addRecentSource(s);
+                                        searchRoutes();
+                                      },
+                                    )),
+                            if (sourceSuggestions.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                child: Text('Suggestions', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+                              ),
+                            ...sourceSuggestions
+                                .where((s) => !recentSources.contains(s) && !frequentSources.containsKey(s))
+                                .map((option) => ListTile(
+                                      title: Text(option),
+                                      onTap: () {
+                                        onSelected(option);
+                                        sourceController.text = option;
+                                        addRecentSource(option);
+                                        searchRoutes();
+                                      },
+                                    )),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              RawAutocomplete<String>(
+                textEditingController: destinationController,
+                focusNode: FocusNode(),
+                optionsBuilder: (TextEditingValue textEditingValue) async {
+                  onDestinationChanged(textEditingValue.text);
+                  final Set<String> options = {
+                    ...recentDestinations,
+                    ...frequentDestinations.keys.toList()..sort((a, b) => frequentDestinations[b]!.compareTo(frequentDestinations[a]!)),
+                    ...destinationSuggestions,
+                  };
+                  return options.where((s) => s.toLowerCase().contains(textEditingValue.text.toLowerCase())).toList();
+                },
+                fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                  return TextField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    decoration: const InputDecoration(
+                      labelText: "Enter Destination",
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.flag, color: Colors.redAccent),
+                    ),
+                    onChanged: (value) => onDestinationChanged(value),
+                  );
+                },
+                optionsViewBuilder: (context, onSelected, options) {
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      elevation: 4.0,
+                      child: SizedBox(
+                        height: 220.0,
+                        child: ListView(
+                          padding: EdgeInsets.zero,
+                          children: [
+                            if (recentDestinations.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                child: Text('Recent', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+                              ),
+                            ...recentDestinations.map((s) => ListTile(
+                                  leading: Icon(Icons.history, color: Colors.blueGrey),
+                                  title: Text(s),
+                                  onTap: () {
+                                    onSelected(s);
+                                    destinationController.text = s;
+                                    addRecentDestination(s);
+                                    searchRoutes();
+                                  },
+                                )),
+                            if (frequentDestinations.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                child: Text('Frequent', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                              ),
+                            ...frequentDestinations.keys
+                                .toList()
+                                .where((s) => !recentDestinations.contains(s))
+                                .take(3)
+                                .map((s) => ListTile(
+                                      leading: Icon(Icons.star, color: Colors.green),
+                                      title: Text(s),
+                                      onTap: () {
+                                        onSelected(s);
+                                        destinationController.text = s;
+                                        addRecentDestination(s);
+                                        searchRoutes();
+                                      },
+                                    )),
+                            if (destinationSuggestions.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                child: Text('Suggestions', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+                              ),
+                            ...destinationSuggestions
+                                .where((s) => !recentDestinations.contains(s) && !frequentDestinations.containsKey(s))
+                                .map((option) => ListTile(
+                                      title: Text(option),
+                                      onTap: () {
+                                        onSelected(option);
+                                        destinationController.text = option;
+                                        addRecentDestination(option);
+                                        searchRoutes();
+                                      },
+                                    )),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: searchRoutes,
+                child: const Text("Search"),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.my_location),
+                label: const Text("Use My Location"),
+                onPressed: getCurrentLocation,
+              ),
+              const SizedBox(height: 20),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.5,
+                ),
+                child: filteredBuses.isEmpty
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.bus_alert, size: 80, color: Colors.redAccent),
+                          SizedBox(height: 10),
+                          Text("No buses available",
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black54)),
+                        ],
+                      )
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: filteredBuses.length,
+                        itemBuilder: (context, index) {
+                          var bus = filteredBuses[index];
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                tapCounts[index] += 1;
+                                if (tapCounts[index] == 1) {
+                                  expandedStops[index] = !expandedStops[index];
+                                } else if (tapCounts[index] == 2) {
+                                  tapCounts[index] = 0;
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => BusDetails(bus: bus),
                                     ),
+                                  );
+                                }
+                              });
+                            },
+                            child: Card(
+                              elevation: 6,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15)),
+                              margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                              child: Container(
+                                padding: const EdgeInsets.all(15),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                  gradient: LinearGradient(
+                                    colors: [Colors.blue.shade100, Colors.white],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
-                                ],
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: Colors.grey.withOpacity(0.3),
+                                        blurRadius: 5,
+                                        spreadRadius: 2),
+                                  ],
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(Icons.directions_bus,
+                                        size: 50, color: Colors.blueAccent),
+                                    const SizedBox(width: 15),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Route: "+(bus['route_number'] ?? ''),
+                                            style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 5),
+                                          // Stops preview with ellipsis
+                                          Builder(
+                                            builder: (_) {
+                                              final stops = (bus['stops'] ?? bus['sub_path']) ?? [];
+                                              if (expandedStops[index] || stops.length <= 5) {
+                                                return Text(
+                                                  "🛣 Stops: ${stops.join(' → ')}",
+                                                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                                                  maxLines: 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                );
+                                              } else {
+                                                // Show first, up to 2 middle, last with ...
+                                                String preview = stops.first;
+                                                if (stops.length > 3) {
+                                                  int mid1 = (stops.length / 2).floor() - 1;
+                                                  int mid2 = (stops.length / 2).ceil();
+                                                  preview += ' → ... → ' + stops[mid1] + ' → ... → ' + stops[mid2];
+                                                }
+                                                preview += ' → ' + stops.last;
+                                                return Text(
+                                                  "🛣 Stops: $preview",
+                                                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                                                  maxLines: 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                );
+                                              }
+                                            },
+                                          ),
+                                          Row(
+                                            children: [
+                                              Flexible(
+                                                child: Text(
+                                                  "💰 Fare: ₹${bus['fare'] ?? 'N/A'}",
+                                                  style: const TextStyle(
+                                                      fontSize: 14, color: Colors.green),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              GestureDetector(
+                                                onTap: () {
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (context) => AlertDialog(
+                                                      title: const Text('Fare Information'),
+                                                      content: const Text('This is an approximate calculated fare. Please contact NMMT authorities for exact fare prices.'),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () => Navigator.of(context).pop(),
+                                                          child: const Text('OK'),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
+                                                child: const Icon(Icons.info_outline, size: 16, color: Colors.blueGrey),
+                                              ),
+                                            ],
+                                          ),
+                                          // ETA and frequency
+                                          Builder(
+                                            builder: (_) {
+                                              final now = DateTime.now();
+                                              final isSunday = now.weekday == DateTime.sunday;
+                                              final firstBus = isSunday ? bus['first_bus_time_sunday'] : bus['first_bus_time_weekday'];
+                                              final lastBus = isSunday ? bus['last_bus_time_sunday'] : bus['last_bus_time_weekday'];
+                                              final freq = isSunday ? bus['frequency_sunday'] : bus['frequency_weekday'];
+                                              String eta = 'N/A';
+                                              if (firstBus != null && lastBus != null && freq != null && firstBus != 'N/A' && lastBus != 'N/A' && freq != 'N/A') {
+                                                try {
+                                                  final today = DateTime(now.year, now.month, now.day);
+                                                  final firstParts = firstBus.split(":");
+                                                  final lastParts = lastBus.split(":");
+                                                  final firstBusTime = DateTime(today.year, today.month, today.day, int.parse(firstParts[0]), int.parse(firstParts[1]));
+                                                  final lastBusTime = DateTime(today.year, today.month, today.day, int.parse(lastParts[0]), int.parse(lastParts[1]));
+                                                  final freqInt = int.tryParse(freq.toString()) ?? 0;
+                                                  final diff = now.difference(firstBusTime).inMinutes;
+                                                  final afterLast = now.isAfter(lastBusTime.add(Duration(minutes: freqInt)));
+                                                  if (afterLast) {
+                                                    eta = 'Next bus: N/A';
+                                                  } else if (now.isBefore(firstBusTime)) {
+                                                    eta = 'Next bus at $firstBus';
+                                                  } else {
+                                                    int nextBusIn = freqInt - (diff % freqInt);
+                                                    final nextBusTime = now.add(Duration(minutes: nextBusIn));
+                                                    if (nextBusTime.isAfter(lastBusTime)) {
+                                                      eta = 'Next bus: N/A';
+                                                    } else {
+                                                      eta = 'Next bus in $nextBusIn min';
+                                                    }
+                                                  }
+                                                } catch (e) {
+                                                  eta = 'N/A';
+                                                }
+                                              }
+                                              return Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    "🕒 $eta",
+                                                    style: const TextStyle(fontSize: 14, color: Colors.blue),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                  Text(
+                                                    "⏱️ Avg Frequency: ${freq ?? 'N/A'} min",
+                                                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
