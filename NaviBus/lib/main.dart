@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:navibus/screens/auth_page.dart';
 import 'screens/home_page.dart';
-import 'screens/otpverify.dart';
 import 'screens/busopts.dart';
 import 'screens/payment.dart';
 

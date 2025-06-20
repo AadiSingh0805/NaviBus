@@ -73,7 +73,7 @@ class _BusOptionsState extends State<BusOptions> {
       return;
     }
     final url = Uri.parse('http://10.0.2.2:8000/api/routes/search/?start=$start&end=$end');
-    print('Calling API: ' + url.toString());
+    print('Calling API: $url');
     try {
       final response = await http.get(url);
       print('API response status: ${response.statusCode}');
@@ -278,9 +278,32 @@ class _BusOptionsState extends State<BusOptions> {
                                             }
                                           },
                                         ),
-                                        Text("💰 Fare: ₹${bus['fare'] ?? 'N/A'}",
-                                            style: const TextStyle(
-                                                fontSize: 14, color: Colors.green)),
+                                        Row(
+                                          children: [
+                                            Text("💰 Fare: ₹${bus['fare'] ?? 'N/A'}",
+                                                style: const TextStyle(
+                                                    fontSize: 14, color: Colors.green)),
+                                            const SizedBox(width: 4),
+                                            GestureDetector(
+                                              onTap: () {
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (context) => AlertDialog(
+                                                    title: const Text('Fare Information'),
+                                                    content: const Text('This is an approximate calculated fare. Please contact NMMT authorities for exact fare prices.'),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () => Navigator.of(context).pop(),
+                                                        child: const Text('OK'),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                              child: const Icon(Icons.info_outline, size: 16, color: Colors.blueGrey),
+                                            ),
+                                          ],
+                                        ),
                                         // ETA and frequency
                                         Builder(
                                           builder: (_) {
@@ -303,7 +326,7 @@ class _BusOptionsState extends State<BusOptions> {
                                                 if (afterLast) {
                                                   eta = 'Next bus: N/A';
                                                 } else if (now.isBefore(firstBusTime)) {
-                                                  eta = 'Next bus at ${firstBus}';
+                                                  eta = 'Next bus at $firstBus';
                                                 } else {
                                                   int nextBusIn = freqInt - (diff % freqInt);
                                                   final nextBusTime = now.add(Duration(minutes: nextBusIn));
