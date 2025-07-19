@@ -36,6 +36,7 @@ dependencies:
   google_maps_flutter: ^2.2.0
   path_provider: ^2.1.2
   supabase_flutter: ^2.3.4
+  shared_preferences: ^2.2.2  # For caching data locally
 
 
   # The following adds the Cupertino Icons font to your application.

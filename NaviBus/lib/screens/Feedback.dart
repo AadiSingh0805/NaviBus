@@ -6,7 +6,7 @@ class FeedbackPage extends StatefulWidget {
   const FeedbackPage({super.key});
 
   @override
-  _FeedbackPageState createState() => _FeedbackPageState();
+  State<FeedbackPage> createState() => _FeedbackPageState();
 }
 
 class _FeedbackPageState extends State<FeedbackPage> {
@@ -81,6 +81,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
       appBar: AppBar(
         title: Text("Feedback & Support", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
         backgroundColor: Color(0xFF042F40),
+        iconTheme: IconThemeData(color: Colors.white), // This fixes the back button color
         centerTitle: true,
       ),
       body: SingleChildScrollView(

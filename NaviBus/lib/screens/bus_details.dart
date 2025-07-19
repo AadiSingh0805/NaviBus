@@ -76,24 +76,24 @@ class _BusDetailsState extends State<BusDetails> {
           children: [
             Card(
               elevation: 0,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   gradient: LinearGradient(
-                    colors: [Colors.white.withOpacity(0.6), Colors.blue.shade50.withOpacity(0.5)],
+                    colors: [Colors.white.withValues(alpha: 0.6), Colors.blue.shade50.withValues(alpha: 0.5)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.blueGrey.withOpacity(0.08),
+                        color: Colors.blueGrey.withValues(alpha: 0.08),
                         blurRadius: 18,
                         spreadRadius: 4),
                   ],
-                  border: Border.all(color: Colors.blueAccent.withOpacity(0.15), width: 1.2),
+                  border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.15), width: 1.2),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,18 +213,18 @@ class _BusDetailsState extends State<BusDetails> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
                 gradient: LinearGradient(
-                  colors: [Colors.blueGrey.shade50.withOpacity(0.7), Colors.white.withOpacity(0.6)],
+                  colors: [Colors.blueGrey.shade50.withValues(alpha: 0.7), Colors.white.withValues(alpha: 0.6)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.blueGrey.withOpacity(0.10),
+                    color: Colors.blueGrey.withValues(alpha: 0.10),
                     blurRadius: 16,
                     spreadRadius: 2,
                   ),
                 ],
-                border: Border.all(color: Colors.blueAccent.withOpacity(0.10), width: 1),
+                border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.10), width: 1),
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12), // reduced horizontal padding
@@ -300,18 +300,18 @@ class StopsTimeline extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         gradient: LinearGradient(
-          colors: [Colors.blue.shade50.withOpacity(0.7), Colors.white.withOpacity(0.7)],
+          colors: [Colors.blue.shade50.withValues(alpha: 0.7), Colors.white.withValues(alpha: 0.7)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.blueGrey.withOpacity(0.07),
+            color: Colors.blueGrey.withValues(alpha: 0.07),
             blurRadius: 10,
             spreadRadius: 2,
           ),
         ],
-        border: Border.all(color: Colors.blueAccent.withOpacity(0.10), width: 1),
+        border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.10), width: 1),
       ),
       child: ListView.separated(
         shrinkWrap: true,
@@ -330,10 +330,10 @@ class StopsTimeline extends StatelessWidget {
                 Container(
                   decoration: BoxDecoration(
                     color: index == 0
-                        ? Colors.green.withOpacity(0.15)
+                        ? Colors.green.withValues(alpha: 0.15)
                         : index == stops.length - 1
-                            ? Colors.redAccent.withOpacity(0.15)
-                            : Colors.blueGrey.withOpacity(0.10),
+                            ? Colors.redAccent.withValues(alpha: 0.15)
+                            : Colors.blueGrey.withValues(alpha: 0.10),
                     shape: BoxShape.circle,
                   ),
                   padding: const EdgeInsets.all(6),

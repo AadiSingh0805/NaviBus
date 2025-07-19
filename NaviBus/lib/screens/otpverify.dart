@@ -7,7 +7,7 @@ class OTPVerificationScreen extends StatefulWidget {
   const OTPVerificationScreen({super.key, required this.phoneNumber});
 
   @override
-  _OTPVerificationScreenState createState() => _OTPVerificationScreenState();
+  State<OTPVerificationScreen> createState() => _OTPVerificationScreenState();
 }
 
 class _OTPVerificationScreenState extends State<OTPVerificationScreen> {

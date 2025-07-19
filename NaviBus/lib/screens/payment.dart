@@ -10,7 +10,7 @@ class Payment extends StatefulWidget {
   const Payment({super.key, required this.bus});
 
   @override
-  _PaymentState createState() => _PaymentState();
+  State<Payment> createState() => _PaymentState();
 }
 
 class _PaymentState extends State<Payment> {

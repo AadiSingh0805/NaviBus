@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:navibus/screens/Feedback.dart';
+import 'package:navibus/screens/feedback.dart';
 import 'package:navibus/screens/busopts.dart';
 import 'package:navibus/screens/login.dart';
 import 'package:navibus/screens/bus_details.dart';
 import 'package:navibus/screens/profile_page.dart';
+import 'package:navibus/widgets/offline_widgets.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -80,122 +81,139 @@ class _HomePageState extends State<HomePage> {
         iconTheme: IconThemeData(color: Colors.white),
       ),
 
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            SizedBox(height: 30),
-
-            // 🔍 Search Box
-            Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Row(
+      body: Column(
+        children: [
+          // Offline notification banner
+          const OfflineNotificationBanner(),
+          
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: "Search for Buses (Route No.)",
-                        prefixIcon: Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(50),
-                        ),
-                      ),
-                      onSubmitted: (value) async {
-                        if (value.trim().isEmpty) return;
-                        final bus = await fetchBusByRouteNumber(context, value.trim());
-                        if (bus != null) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => BusDetails(bus: bus),
+                  SizedBox(height: 30),
+
+                  // 🔍 Search Box
+                  Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              hintText: "Search for Buses (Route No.)",
+                              prefixIcon: Icon(Icons.search),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(50),
+                              ),
                             ),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('No bus found for route $value')),
-                          );
-                        }
-                      },
+                            onSubmitted: (value) async {
+                              if (value.trim().isEmpty) return;
+                              final bus = await fetchBusByRouteNumber(context, value.trim());
+                              if (bus != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => BusDetails(bus: bus),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('No bus found for route $value')),
+                                );
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () async {
+                            final value = _searchController.text.trim();
+                            if (value.isEmpty) return;
+                            final bus = await fetchBusByRouteNumber(context, value);
+                            if (bus != null) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => BusDetails(bus: bus),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('No bus found for route $value')),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFF042F40),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          ),
+                          child: const Text('Search', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+
+                  SizedBox(height: 50),
+
+                  // 🚍 AC & Non-AC Options
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Flexible(child: _buildBusButton("AC Bus", "assets/acbus.png", context)),
+                        Flexible(child: _buildBusButton("Non-AC Bus", "assets/nonacbus.png", context)),
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(height: 80),
+
+                  // 🎫 My Tickets/Passes Button
                   ElevatedButton(
-                    onPressed: () async {
-                      final value = _searchController.text.trim();
-                      if (value.isEmpty) return;
-                      final bus = await fetchBusByRouteNumber(context, value);
-                      if (bus != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => BusDetails(bus: bus),
-                          ),
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('No bus found for route $value')),
-                        );
-                      }
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF042F40),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      backgroundColor: Color(0xFF042F40), // Custom Color
+                      padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                     ),
-                    child: const Text('Search', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    child: Text("My Tickets/Passes", style: TextStyle(fontSize: 18, color: Colors.white)),
+                  ),
+
+                  SizedBox(height: 20),
+                  
+                  // 📱 Offline Data Download Section
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: DataDownloadWidget(),
+                  ),
+
+                  SizedBox(height: 20),
+
+                  // 📌 Logo & App Name
+                  Column(
+                    children: [
+                      ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: 200, maxHeight: 200),
+                        child: Image.asset("assets/logo.png", width: 200, height: 200),
+                      ),
+                      SizedBox(height: 10),
+                      Text("NAVI BUS", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                      Text("Driving Navi Mumbai Forward", style: TextStyle(color: Colors.black.withValues(alpha: 0.3), fontSize: 18, fontWeight: FontWeight.w400), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      SizedBox(height: 20),
+                    ],
                   ),
                 ],
               ),
             ),
-
-            SizedBox(height: 50),
-
-            // 🚍 AC & Non-AC Options
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Flexible(child: _buildBusButton("AC Bus", "assets/acbus.png", context)),
-                  Flexible(child: _buildBusButton("Non-AC Bus", "assets/nonacbus.png", context)),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 80),
-
-            // 🎫 My Tickets/Passes Button
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF042F40), // Custom Color
-                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-              ),
-              child: Text("My Tickets/Passes", style: TextStyle(fontSize: 18, color: Colors.white)),
-            ),
-
-            SizedBox(height: 20),
-
-            // 📌 Logo & App Name
-            Column(
-              children: [
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: 200, maxHeight: 200),
-                  child: Image.asset("assets/logo.png", width: 200, height: 200),
-                ),
-                SizedBox(height: 10),
-                Text("NAVI BUS", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                Text("Driving Navi Mumbai Forward", style: TextStyle(color: Colors.black.withOpacity(0.3), fontSize: 18, fontWeight: FontWeight.w400), maxLines: 1, overflow: TextOverflow.ellipsis),
-                SizedBox(height: 20),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -209,7 +227,7 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 10,
             spreadRadius: 2,
             offset: Offset(4, 4),

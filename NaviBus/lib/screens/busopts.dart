@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
-import 'package:navibus/screens/Feedback.dart';
-import 'package:navibus/screens/paymentopts.dart';
+import 'package:navibus/screens/feedback.dart';
 import 'package:navibus/screens/bus_details.dart';
 import 'dart:async';
 import 'package:navibus/screens/multi_route_planner.dart';
@@ -532,7 +531,7 @@ class _BusOptionsState extends State<BusOptions> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                  color: Colors.grey.withOpacity(0.3),
+                                  color: Colors.grey.withValues(alpha: 0.3),
                                   blurRadius: 5,
                                   spreadRadius: 2),
                             ],
