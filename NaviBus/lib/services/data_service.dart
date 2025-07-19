@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class DataService {
   static const String _baseUrl = 'http://10.0.2.2:8000/api';
-  static const String _productionUrl = 'https://navibus-backend.onrender.com/api'; // Update this with your actual Render URL
+  static const String _productionUrl = 'https://navibus-lwpp.onrender.com/api'; // Your live Render backend
   static const Duration _requestTimeout = Duration(seconds: 10);
   static const Duration _cacheTimeout = Duration(hours: 6); // Cache for 6 hours
   
@@ -29,19 +29,23 @@ class DataService {
     // Check if user has manually set a preference
     if (prefs.containsKey(_useProductionKey)) {
       final useProduction = prefs.getBool(_useProductionKey) ?? false;
+      print('Using manual preference: ${useProduction ? 'Production' : 'Development'}');
       return useProduction ? _productionUrl : _baseUrl;
     }
     
     // Auto-detect based on build mode
     if (kReleaseMode) {
       // Production build - use production backend
+      print('Release mode: Using production backend');
       return _productionUrl;
     } else {
       // Debug build - try local first, fallback to production
+      print('Debug mode: Checking local backend availability...');
       if (await _isLocalBackendAvailable()) {
+        print('Local backend available: Using local backend');
         return _baseUrl;
       } else {
-        print('Local backend not available, using production backend');
+        print('Local backend not available: Falling back to production backend');
         return _productionUrl;
       }
     }

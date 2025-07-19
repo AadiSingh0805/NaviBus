@@ -7,6 +7,7 @@ import 'package:navibus/screens/login.dart';
 import 'package:navibus/screens/bus_details.dart';
 import 'package:navibus/screens/profile_page.dart';
 import 'package:navibus/widgets/offline_widgets.dart';
+import 'package:navibus/widgets/backend_settings.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -192,6 +193,14 @@ class _HomePageState extends State<HomePage> {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
                     child: DataDownloadWidget(),
+                  ),
+
+                  SizedBox(height: 20),
+
+                  // ⚙️ Backend Settings Section
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: BackendSettingsWidget(),
                   ),
 
                   SizedBox(height: 20),

@@ -247,8 +247,8 @@ import requests
 import json
 
 # Backend URLs
-ROUTES_URL = "https://navibus-backend.onrender.com/api/routes/"
-STOPS_URL = "https://navibus-backend.onrender.com/api/stops/"
+ROUTES_URL = "https://navibus-lwpp.onrender.com/api/routes/"
+STOPS_URL = "https://navibus-lwpp.onrender.com/api/stops/"
 
 # Asset file paths
 ASSETS_DIR = "d:/NMMT_FLUTTER/NaviBus/NaviBus/assets/"
