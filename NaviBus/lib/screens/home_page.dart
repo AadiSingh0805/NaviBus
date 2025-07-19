@@ -8,6 +8,7 @@ import 'package:navibus/screens/bus_details.dart';
 import 'package:navibus/screens/profile_page.dart';
 import 'package:navibus/widgets/offline_widgets.dart';
 import 'package:navibus/widgets/backend_settings.dart';
+import 'package:navibus/services/data_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,7 +23,13 @@ class _HomePageState extends State<HomePage> {
   Future<dynamic> fetchBusByRouteNumber(BuildContext context, String routeNumber) async {
     try {
       print('Searching for route: $routeNumber');
-      final url = Uri.parse('http://10.0.2.2:8000/api/routes/search/?route_number=$routeNumber');
+      
+      // Use DataService to get the correct backend URL
+      final dataService = DataService.instance;
+      final backendUrl = await dataService.getCurrentBackendUrl();
+      final url = Uri.parse('$backendUrl/routes/search/?route_number=$routeNumber');
+      
+      print('Using backend: $backendUrl');
       final response = await http.get(url);
       print('API status: ${response.statusCode}, body: ${response.body}');
       if (response.statusCode == 200) {

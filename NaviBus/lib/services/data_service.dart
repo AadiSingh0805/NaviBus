@@ -85,6 +85,11 @@ class DataService {
     };
   }
 
+  /// Get current backend URL (public method for search)
+  Future<String> getCurrentBackendUrl() async {
+    return await _getBackendUrl();
+  }
+
   /// Check if backend is reachable
   Future<bool> _isBackendReachable(String baseUrl) async {
     try {
