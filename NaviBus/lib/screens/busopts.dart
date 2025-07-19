@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:navibus/screens/feedback.dart';
 import 'package:navibus/screens/bus_details.dart';
+import 'package:navibus/services/data_service.dart';
 import 'dart:async';
 import 'package:navibus/screens/multi_route_planner.dart';
 
@@ -24,11 +25,17 @@ class _BusOptionsState extends State<BusOptions> {
   List<bool> expandedStops = [];
   List<int> tapCounts = [];
 
-  // For autocomplete
+  // For autocomplete with performance optimizations
   List<String> sourceSuggestions = [];
   List<String> destinationSuggestions = [];
   Timer? _debounceSource;
   Timer? _debounceDestination;
+  
+  // Performance optimizations
+  Map<String, List<String>> _suggestionCache = {}; // Cache for suggestions
+  bool _isSearching = false; // Prevent multiple concurrent searches
+  String _lastSourceQuery = '';
+  String _lastDestinationQuery = '';
 
   // Recent and frequent searches
   List<String> recentSources = [];
@@ -148,36 +155,125 @@ class _BusOptionsState extends State<BusOptions> {
 
   Future<List<String>> fetchStopSuggestions(String query) async {
     if (query.isEmpty) return [];
-    final url = Uri.parse('http://10.0.2.2:8000/api/stops/autocomplete/?q=${Uri.encodeComponent(query)}');
+    
+    // Check cache first for performance
+    if (_suggestionCache.containsKey(query.toLowerCase())) {
+      print('Returning cached suggestions for "$query"');
+      return _suggestionCache[query.toLowerCase()]!;
+    }
+    
+    // Prevent multiple concurrent searches
+    if (_isSearching) {
+      print('Search already in progress, skipping...');
+      return [];
+    }
+    
+    _isSearching = true;
+    List<String> results = [];
+    
     try {
-      final response = await http.get(url);
+      // Use DataService to get the correct backend URL
+      final dataService = DataService.instance;
+      final backendUrl = await dataService.getCurrentBackendUrl();
+      final url = Uri.parse('$backendUrl/stops/autocomplete/?q=${Uri.encodeComponent(query)}');
+      
+      final response = await http.get(url).timeout(Duration(seconds: 3)); // Reduced timeout
+      
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return List<String>.from(data['results'] ?? []);
+        results = List<String>.from(data['results'] ?? []);
+        
+        // Cache the results for better performance
+        _suggestionCache[query.toLowerCase()] = results;
+        
+        // Limit cache size to prevent memory issues
+        if (_suggestionCache.length > 50) {
+          _suggestionCache.clear();
+        }
+        
+        print('Got ${results.length} suggestions for "$query" from API');
+      } else {
+        print('Autocomplete API returned ${response.statusCode}');
       }
     } catch (e) {
       print('Autocomplete error: $e');
     }
-    return [];
+    
+    // Fallback: search through cached data only if API failed
+    if (results.isEmpty) {
+      try {
+        final dataService = DataService.instance;
+        final data = await dataService.getAllData();
+        
+        if (data['stops'] != null) {
+          List<String> matches = [];
+          for (var stop in data['stops']) {
+            if (stop['name'] != null) {
+              String stopName = stop['name'].toString();
+              if (stopName.toLowerCase().contains(query.toLowerCase())) {
+                matches.add(stopName);
+              }
+            }
+          }
+          // Sort matches and return top 8
+          matches.sort();
+          results = matches.take(8).toList();
+          
+          // Cache fallback results too
+          _suggestionCache[query.toLowerCase()] = results;
+          
+          print('Fallback: Got ${results.length} cached suggestions for "$query"');
+        }
+      } catch (e) {
+        print('Fallback autocomplete error: $e');
+      }
+    }
+    
+    _isSearching = false;
+    return results;
   }
 
   void onSourceChanged(String value) {
+    // Prevent unnecessary calls if value hasn't changed
+    if (value == _lastSourceQuery) return;
+    _lastSourceQuery = value;
+    
     if (_debounceSource?.isActive ?? false) _debounceSource!.cancel();
-    _debounceSource = Timer(const Duration(milliseconds: 300), () async {
-      final suggestions = await fetchStopSuggestions(value);
-      setState(() {
-        sourceSuggestions = suggestions;
-      });
+    _debounceSource = Timer(const Duration(milliseconds: 800), () async { // Increased debounce time
+      if (mounted && value.trim().length >= 2) { // Only search if 2+ characters
+        final suggestions = await fetchStopSuggestions(value);
+        if (mounted) {
+          setState(() {
+            sourceSuggestions = suggestions;
+          });
+        }
+      } else if (mounted) {
+        setState(() {
+          sourceSuggestions = [];
+        });
+      }
     });
   }
 
   void onDestinationChanged(String value) {
+    // Prevent unnecessary calls if value hasn't changed
+    if (value == _lastDestinationQuery) return;
+    _lastDestinationQuery = value;
+    
     if (_debounceDestination?.isActive ?? false) _debounceDestination!.cancel();
-    _debounceDestination = Timer(const Duration(milliseconds: 300), () async {
-      final suggestions = await fetchStopSuggestions(value);
-      setState(() {
-        destinationSuggestions = suggestions;
-      });
+    _debounceDestination = Timer(const Duration(milliseconds: 800), () async { // Increased debounce time
+      if (mounted && value.trim().length >= 2) { // Only search if 2+ characters
+        final suggestions = await fetchStopSuggestions(value);
+        if (mounted) {
+          setState(() {
+            destinationSuggestions = suggestions;
+          });
+        }
+      } else if (mounted) {
+        setState(() {
+          destinationSuggestions = [];
+        });
+      }
     });
   }
 
@@ -239,6 +335,8 @@ class _BusOptionsState extends State<BusOptions> {
   void dispose() {
     _debounceSource?.cancel();
     _debounceDestination?.cancel();
+    sourceController.dispose();
+    destinationController.dispose();
     super.dispose();
   }
 
@@ -265,6 +363,8 @@ class _BusOptionsState extends State<BusOptions> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
+          // Add mobile performance optimizations
+          physics: const BouncingScrollPhysics(),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -287,15 +387,41 @@ class _BusOptionsState extends State<BusOptions> {
                   return TextField(
                     controller: controller,
                     focusNode: focusNode,
-                    decoration: const InputDecoration(
+                    // Mobile optimizations for better performance
+                    textInputAction: TextInputAction.next,
+                    keyboardType: TextInputType.text,
+                    autofocus: false,
+                    // Fix backspace and performance issues
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    maxLines: 1,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: InputDecoration(
                       labelText: "Enter Source",
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Color(0xFF042F40), width: 2),
+                      ),
                       prefixIcon: Icon(Icons.location_on, color: Colors.blueAccent),
+                      // Optimized clear button
+                      suffixIcon: controller.text.isNotEmpty 
+                        ? IconButton(
+                            icon: Icon(Icons.clear, color: Colors.grey),
+                            onPressed: () {
+                              controller.clear();
+                              onSourceChanged('');
+                              // Don't call setState here to prevent lag
+                            },
+                          )
+                        : null,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     ),
-                    onChanged: (value) async {
+                    onChanged: (value) {
                       onSourceChanged(value);
-                      // Optionally, force dropdown to update
-                      setState(() {});
+                      // Removed unnecessary setState call
                     },
                   );
                 },
@@ -380,14 +506,41 @@ class _BusOptionsState extends State<BusOptions> {
                   return TextField(
                     controller: controller,
                     focusNode: focusNode,
-                    decoration: const InputDecoration(
+                    // Mobile optimizations for better performance
+                    textInputAction: TextInputAction.search,
+                    keyboardType: TextInputType.text,
+                    autofocus: false,
+                    // Fix backspace and performance issues
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    maxLines: 1,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: InputDecoration(
                       labelText: "Enter Destination",
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Color(0xFF042F40), width: 2),
+                      ),
                       prefixIcon: Icon(Icons.flag, color: Colors.redAccent),
+                      // Optimized clear button
+                      suffixIcon: controller.text.isNotEmpty 
+                        ? IconButton(
+                            icon: Icon(Icons.clear, color: Colors.grey),
+                            onPressed: () {
+                              controller.clear();
+                              onDestinationChanged('');
+                              // Don't call setState here to prevent lag
+                            },
+                          )
+                        : null,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     ),
-                    onChanged: (value) async {
+                    onChanged: (value) {
                       onDestinationChanged(value);
-                      setState(() {});
+                      // Removed unnecessary setState call
                     },
                   );
                 },
@@ -493,9 +646,14 @@ class _BusOptionsState extends State<BusOptions> {
                 )
               else
                 ListView.builder(
+                  // Performance optimizations
                   shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
+                  physics: const BouncingScrollPhysics(), // Better mobile scroll feel
                   itemCount: filteredBuses.length,
+                  // Add performance improvements
+                  addAutomaticKeepAlives: false,
+                  addRepaintBoundaries: true,
+                  addSemanticIndexes: false,
                   itemBuilder: (context, index) {
                     var bus = filteredBuses[index];
                     return GestureDetector(

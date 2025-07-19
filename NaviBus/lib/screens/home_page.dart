@@ -9,6 +9,7 @@ import 'package:navibus/screens/profile_page.dart';
 import 'package:navibus/widgets/offline_widgets.dart';
 import 'package:navibus/widgets/backend_settings.dart';
 import 'package:navibus/services/data_service.dart';
+import 'package:navibus/widgets/autocomplete_search.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -96,70 +97,58 @@ class _HomePageState extends State<HomePage> {
           
           Expanded(
             child: SingleChildScrollView(
+              // Add performance optimizations
+              physics: const BouncingScrollPhysics(), // Smoother scrolling
               child: Column(
                 children: [
                   SizedBox(height: 30),
 
-                  // 🔍 Search Box
+                  // 🔍 Search Box with autocomplete and mobile UX
                   Padding(
                     padding: EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            decoration: InputDecoration(
-                              hintText: "Search for Buses (Route No.)",
-                              prefixIcon: Icon(Icons.search),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(50),
-                              ),
-                            ),
-                            onSubmitted: (value) async {
-                              if (value.trim().isEmpty) return;
-                              final bus = await fetchBusByRouteNumber(context, value.trim());
-                              if (bus != null) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => BusDetails(bus: bus),
-                                  ),
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('No bus found for route $value')),
-                                );
-                              }
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: () async {
-                            final value = _searchController.text.trim();
-                            if (value.isEmpty) return;
-                            final bus = await fetchBusByRouteNumber(context, value);
-                            if (bus != null) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => BusDetails(bus: bus),
+                    child: AutocompleteSearchField(
+                      controller: _searchController,
+                      hintText: "Search for Buses (Route No.)",
+                      onRouteSelected: (String routeNumber) async {
+                        // Show loading indicator
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
                                 ),
-                              );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('No bus found for route $value')),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF042F40),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                                SizedBox(width: 12),
+                                Text('Loading route $routeNumber...'),
+                              ],
+                            ),
+                            duration: Duration(seconds: 2),
                           ),
-                          child: const Text('Search', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
+                        );
+                        
+                        final bus = await fetchBusByRouteNumber(context, routeNumber);
+                        
+                        // Hide loading indicator
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                        
+                        if (bus != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => BusDetails(bus: bus),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('No bus found for route $routeNumber'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
                     ),
                   ),
 
@@ -243,32 +232,55 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 10,
-            spreadRadius: 2,
-            offset: Offset(4, 4),
+            color: Colors.black.withValues(alpha: 0.2), // Reduce shadow intensity
+            blurRadius: 6, // Reduce blur for performance
+            spreadRadius: 1, // Reduce spread
+            offset: Offset(2, 2), // Smaller offset
           ),
         ],
       ),
-      child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const BusOptions()),
-          );
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(text, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
-            SizedBox(height: 10),
-            Image.asset(imagePath, width: 160, height: 100, fit: BoxFit.contain),
-          ],
+      child: Material( // Add Material for better tap feedback
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.white,
+        child: InkWell( // Better touch feedback than ElevatedButton
+          borderRadius: BorderRadius.circular(10),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const BusOptions()),
+            );
+          },
+          child: Padding(
+            padding: EdgeInsets.all(8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  text, 
+                  style: TextStyle(
+                    fontSize: 18, 
+                    fontWeight: FontWeight.bold, 
+                    color: Colors.black
+                  ),
+                ),
+                SizedBox(height: 10),
+                // Optimize image loading for mobile
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    imagePath, 
+                    width: 140, 
+                    height: 80, 
+                    fit: BoxFit.contain,
+                    // Add caching and performance optimizations
+                    cacheWidth: 280, // Optimize for mobile resolution
+                    cacheHeight: 160,
+                    filterQuality: FilterQuality.medium, // Balance quality/performance
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

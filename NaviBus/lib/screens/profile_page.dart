@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -74,9 +75,20 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _signOut() async {
     try {
+      // Clear Supabase session
       await Supabase.instance.client.auth.signOut();
+      
+      // Clear all session data from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('is_guest_logged_in');
+      await prefs.remove('guest_id');
+      await prefs.remove('guest_login_time');
+      await prefs.remove('is_user_logged_in');
+      await prefs.remove('user_id');
+      await prefs.remove('login_time');
+      
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/');
+        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
       }
     } catch (e) {
       if (mounted) {

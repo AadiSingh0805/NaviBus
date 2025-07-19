@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -83,6 +84,13 @@ class _AuthPageState extends State<AuthPage> {
           );
           if (res.user != null) {
             setState(() { smsSessionId = null; });
+            
+            // Save login state for SMS users
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('is_user_logged_in', true);
+            await prefs.setString('user_id', res.user!.id);
+            await prefs.setString('login_time', DateTime.now().toIso8601String());
+            
             Navigator.of(context).pushReplacementNamed('/home');
           } else {
             setState(() { errorMsg = 'OTP verification failed.'; });
@@ -108,6 +116,12 @@ class _AuthPageState extends State<AuthPage> {
           res = await supabase.auth.signUp(email: email, password: password, data: {'name': name});
         }
         if (res.user != null) {
+          // Save login state for regular users as well
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('is_user_logged_in', true);
+          await prefs.setString('user_id', res.user!.id);
+          await prefs.setString('login_time', DateTime.now().toIso8601String());
+          
           Navigator.of(context).pushReplacementNamed('/home');
         } else {
           setState(() { errorMsg = 'Authentication failed.'; });
@@ -126,6 +140,12 @@ class _AuthPageState extends State<AuthPage> {
       final supabase = Supabase.instance.client;
       final res = await supabase.auth.signInAnonymously();
       if (res.user != null) {
+        // Save guest login state
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('is_guest_logged_in', true);
+        await prefs.setString('guest_id', res.user!.id);
+        await prefs.setString('guest_login_time', DateTime.now().toIso8601String());
+        
         Navigator.of(context).pushReplacementNamed('/home');
       } else {
         setState(() { errorMsg = 'Guest login failed.'; });

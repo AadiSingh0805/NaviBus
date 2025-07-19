@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:navibus/services/data_service.dart';
 import 'dart:async';
 
 class MultiRoutePlannerScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
   bool loading = false;
   String? errorMsg;
 
-  // For autocomplete
+  // For autocomplete with performance optimizations
   List<String> sourceSuggestions = [];
   List<String> destinationSuggestions = [];
   Timer? _debounceSource;
@@ -29,39 +30,136 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
   Map<String, int> frequentSources = {};
   Map<String, int> frequentDestinations = {};
   static const int maxRecent = 5;
+  
+  // Performance optimization fields
+  Map<String, List<String>> _suggestionCache = {};
+  bool _isSearching = false;
+  String? _lastSourceQuery;
+  String? _lastDestinationQuery;
 
   Future<List<String>> fetchStopSuggestions(String query) async {
     if (query.isEmpty) return [];
-    final url = Uri.parse('http://10.0.2.2:8000/api/stops/autocomplete/?q=${Uri.encodeComponent(query)}');
+    
+    // Check cache first for performance
+    if (_suggestionCache.containsKey(query)) {
+      return _suggestionCache[query]!;
+    }
+    
+    // Prevent concurrent requests
+    if (_isSearching) return [];
+    
     try {
-      final response = await http.get(url);
+      _isSearching = true;
+      
+      // Use DataService to get the correct backend URL
+      final dataService = DataService.instance;
+      final backendUrl = await dataService.getCurrentBackendUrl();
+      final url = Uri.parse('$backendUrl/stops/autocomplete/?q=${Uri.encodeComponent(query)}');
+      
+      print('Fetching suggestions from: $url');
+      final response = await http.get(url).timeout(Duration(seconds: 3)); // Reduced timeout
+      
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return List<String>.from(data['results'] ?? []);
+        List<String> results = List<String>.from(data['results'] ?? []);
+        print('Got ${results.length} suggestions for "$query"');
+        
+        // Cache the results
+        _suggestionCache[query] = results;
+        
+        // Limit cache size to prevent memory issues
+        if (_suggestionCache.length > 50) {
+          final keys = _suggestionCache.keys.toList();
+          _suggestionCache.remove(keys.first);
+        }
+        
+        return results;
+      } else {
+        print('Autocomplete API returned ${response.statusCode}');
       }
     } catch (e) {
       print('Autocomplete error: $e');
+    } finally {
+      _isSearching = false;
     }
+    
+    // Fallback: search through cached data
+    try {
+      final dataService = DataService.instance;
+      final data = await dataService.getAllData();
+      
+      if (data['stops'] != null) {
+        List<String> matches = [];
+        for (var stop in data['stops']) {
+          if (stop['name'] != null) {
+            String stopName = stop['name'].toString();
+            if (stopName.toLowerCase().contains(query.toLowerCase())) {
+              matches.add(stopName);
+            }
+          }
+        }
+        // Sort matches and return top 10
+        matches.sort();
+        print('Fallback: Got ${matches.length} cached suggestions for "$query"');
+        
+        // Cache fallback results too
+        final fallbackResults = matches.take(10).toList();
+        _suggestionCache[query] = fallbackResults;
+        
+        return fallbackResults;
+      }
+    } catch (e) {
+      print('Fallback autocomplete error: $e');
+    }
+    
     return [];
   }
 
   void onSourceChanged(String value) {
+    // Avoid unnecessary API calls for duplicate queries
+    if (value == _lastSourceQuery) return;
+    _lastSourceQuery = value;
+    
     if (_debounceSource?.isActive ?? false) _debounceSource!.cancel();
-    _debounceSource = Timer(const Duration(milliseconds: 300), () async {
-      final suggestions = await fetchStopSuggestions(value);
-      setState(() {
-        sourceSuggestions = suggestions;
-      });
+    _debounceSource = Timer(const Duration(milliseconds: 800), () async {
+      // Only search if we have at least 2 characters to reduce unnecessary calls
+      if (mounted && value.length >= 2) {
+        final suggestions = await fetchStopSuggestions(value);
+        if (mounted) {
+          setState(() {
+            sourceSuggestions = suggestions;
+          });
+        }
+      } else if (mounted && value.isEmpty) {
+        // Clear suggestions when field is empty
+        setState(() {
+          sourceSuggestions = [];
+        });
+      }
     });
   }
 
   void onDestinationChanged(String value) {
+    // Avoid unnecessary API calls for duplicate queries
+    if (value == _lastDestinationQuery) return;
+    _lastDestinationQuery = value;
+    
     if (_debounceDestination?.isActive ?? false) _debounceDestination!.cancel();
-    _debounceDestination = Timer(const Duration(milliseconds: 300), () async {
-      final suggestions = await fetchStopSuggestions(value);
-      setState(() {
-        destinationSuggestions = suggestions;
-      });
+    _debounceDestination = Timer(const Duration(milliseconds: 800), () async {
+      // Only search if we have at least 2 characters to reduce unnecessary calls
+      if (mounted && value.length >= 2) {
+        final suggestions = await fetchStopSuggestions(value);
+        if (mounted) {
+          setState(() {
+            destinationSuggestions = suggestions;
+          });
+        }
+      } else if (mounted && value.isEmpty) {
+        // Clear suggestions when field is empty
+        setState(() {
+          destinationSuggestions = [];
+        });
+      }
     });
   }
 
@@ -123,8 +221,17 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
 
   @override
   void dispose() {
+    // Cancel any pending debounce timers
     _debounceSource?.cancel();
     _debounceDestination?.cancel();
+    
+    // Dispose controllers for memory management
+    sourceController.dispose();
+    destinationController.dispose();
+    
+    // Clear caches to free memory
+    _suggestionCache.clear();
+    
     super.dispose();
   }
 
@@ -139,6 +246,8 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
         color: Colors.blue.shade50,
         child: Center(
           child: SingleChildScrollView(
+            // Add mobile performance optimizations
+            physics: const BouncingScrollPhysics(),
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: Card(
@@ -173,14 +282,41 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
                           return TextField(
                             controller: controller,
                             focusNode: focusNode,
-                            decoration: const InputDecoration(
+                            // Mobile optimizations for better performance
+                            textInputAction: TextInputAction.next,
+                            keyboardType: TextInputType.text,
+                            autofocus: false,
+                            // Fix backspace and performance issues
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            maxLines: 1,
+                            textCapitalization: TextCapitalization.words,
+                            decoration: InputDecoration(
                               labelText: "Enter Source",
-                              border: OutlineInputBorder(),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Color(0xFF042F40), width: 2),
+                              ),
                               prefixIcon: Icon(Icons.location_on, color: Colors.blueAccent),
+                              // Optimized clear button
+                              suffixIcon: controller.text.isNotEmpty 
+                                ? IconButton(
+                                    icon: Icon(Icons.clear, color: Colors.grey),
+                                    onPressed: () {
+                                      controller.clear();
+                                      onSourceChanged('');
+                                      // Don't call setState here to prevent lag
+                                    },
+                                  )
+                                : null,
+                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                             ),
-                            onChanged: (value) async {
+                            onChanged: (value) {
                               onSourceChanged(value);
-                              setState(() {});
+                              // Removed unnecessary setState call
                             },
                           );
                         },
@@ -262,14 +398,41 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
                           return TextField(
                             controller: controller,
                             focusNode: focusNode,
-                            decoration: const InputDecoration(
+                            // Mobile optimizations for better performance
+                            textInputAction: TextInputAction.search,
+                            keyboardType: TextInputType.text,
+                            autofocus: false,
+                            // Fix backspace and performance issues
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            maxLines: 1,
+                            textCapitalization: TextCapitalization.words,
+                            decoration: InputDecoration(
                               labelText: "Enter Destination",
-                              border: OutlineInputBorder(),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Color(0xFF042F40), width: 2),
+                              ),
                               prefixIcon: Icon(Icons.flag, color: Colors.redAccent),
+                              // Optimized clear button
+                              suffixIcon: controller.text.isNotEmpty 
+                                ? IconButton(
+                                    icon: Icon(Icons.clear, color: Colors.grey),
+                                    onPressed: () {
+                                      controller.clear();
+                                      onDestinationChanged('');
+                                      // Don't call setState here to prevent lag
+                                    },
+                                  )
+                                : null,
+                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                             ),
-                            onChanged: (value) async {
+                            onChanged: (value) {
                               onDestinationChanged(value);
-                              setState(() {});
+                              // Removed unnecessary setState call
                             },
                           );
                         },
