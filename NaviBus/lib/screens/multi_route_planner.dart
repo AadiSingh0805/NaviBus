@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:navibus/services/data_service.dart';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MultiRoutePlannerScreen extends StatefulWidget {
   const MultiRoutePlannerScreen({super.key});
@@ -36,6 +37,45 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
   bool _isSearching = false;
   String? _lastSourceQuery;
   String? _lastDestinationQuery;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecentSearches();
+  }
+
+  /// Load recent searches from SharedPreferences
+  Future<void> _loadRecentSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      recentSources = prefs.getStringList('multi_recent_sources') ?? ['Borivali Station', 'Andheri Station'];
+      recentDestinations = prefs.getStringList('multi_recent_destinations') ?? ['Colaba Bus Station', 'Gateway of India'];
+      
+      // Load frequent searches (stored as JSON)
+      final frequentSourcesJson = prefs.getString('multi_frequent_sources') ?? '{}';
+      final frequentDestinationsJson = prefs.getString('multi_frequent_destinations') ?? '{}';
+      
+      frequentSources = Map<String, int>.from(json.decode(frequentSourcesJson));
+      frequentDestinations = Map<String, int>.from(json.decode(frequentDestinationsJson));
+      
+      // Add some default frequent searches if empty
+      if (frequentSources.isEmpty) {
+        frequentSources = {'Borivali Station': 3, 'Andheri Station': 2};
+      }
+      if (frequentDestinations.isEmpty) {
+        frequentDestinations = {'Colaba Bus Station': 3, 'Gateway of India': 2};
+      }
+    });
+  }
+
+  /// Save recent searches to SharedPreferences
+  Future<void> _saveRecentSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('multi_recent_sources', recentSources);
+    await prefs.setStringList('multi_recent_destinations', recentDestinations);
+    await prefs.setString('multi_frequent_sources', json.encode(frequentSources));
+    await prefs.setString('multi_frequent_destinations', json.encode(frequentDestinations));
+  }
 
   Future<List<String>> fetchStopSuggestions(String query) async {
     if (query.isEmpty) return [];
@@ -121,9 +161,12 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
     _lastSourceQuery = value;
     
     if (_debounceSource?.isActive ?? false) _debounceSource!.cancel();
-    _debounceSource = Timer(const Duration(milliseconds: 800), () async {
-      // Only search if we have at least 2 characters to reduce unnecessary calls
-      if (mounted && value.length >= 2) {
+    
+    // Use shorter debounce for initial typing to make suggestions appear faster
+    final debounceTime = value.length <= 2 ? 400 : 600;
+    _debounceSource = Timer(Duration(milliseconds: debounceTime), () async {
+      // Only search if we have at least 1 character to show suggestions quickly
+      if (mounted && value.length >= 1) {
         final suggestions = await fetchStopSuggestions(value);
         if (mounted) {
           setState(() {
@@ -145,9 +188,12 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
     _lastDestinationQuery = value;
     
     if (_debounceDestination?.isActive ?? false) _debounceDestination!.cancel();
-    _debounceDestination = Timer(const Duration(milliseconds: 800), () async {
-      // Only search if we have at least 2 characters to reduce unnecessary calls
-      if (mounted && value.length >= 2) {
+    
+    // Use shorter debounce for initial typing to make suggestions appear faster
+    final debounceTime = value.length <= 2 ? 400 : 600;
+    _debounceDestination = Timer(Duration(milliseconds: debounceTime), () async {
+      // Only search if we have at least 1 character to show suggestions quickly
+      if (mounted && value.length >= 1) {
         final suggestions = await fetchStopSuggestions(value);
         if (mounted) {
           setState(() {
@@ -170,7 +216,9 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
       if (recentSources.length > maxRecent) recentSources = recentSources.sublist(0, maxRecent);
       frequentSources[stop] = (frequentSources[stop] ?? 0) + 1;
     });
+    _saveRecentSearches(); // Persist to storage
   }
+  
   void addRecentDestination(String stop) {
     setState(() {
       recentDestinations.remove(stop);
@@ -178,6 +226,7 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
       if (recentDestinations.length > maxRecent) recentDestinations = recentDestinations.sublist(0, maxRecent);
       frequentDestinations[stop] = (frequentDestinations[stop] ?? 0) + 1;
     });
+    _saveRecentSearches(); // Persist to storage
   }
 
   Future<void> searchBestJourney() async {
@@ -188,9 +237,18 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
       return;
     }
     setState(() { loading = true; errorMsg = null; });
-    final url = Uri.parse('http://10.0.2.2:8000/api/routes/plan/?start=$start&end=$end');
+    
     try {
-      final response = await http.get(url);
+      // Use DataService to get the correct backend URL
+      final dataService = DataService.instance;
+      final backendUrl = await dataService.getCurrentBackendUrl();
+      final url = Uri.parse('$backendUrl/routes/plan/?start=$start&end=$end');
+      print('Calling multi-route planner API: $url');
+      
+      final response = await http.get(url).timeout(Duration(seconds: 10));
+      print('Multi-route response status: ${response.statusCode}');
+      print('Multi-route response body: ${response.body}');
+      
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -209,6 +267,7 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
         });
       }
     } catch (e) {
+      print('Error fetching multi-route journey: $e');
       setState(() {
         plannedSegments = [];
         totalStops = 0;
@@ -268,6 +327,13 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
                         focusNode: FocusNode(),
                         optionsBuilder: (TextEditingValue textEditingValue) {
                           final input = textEditingValue.text.toLowerCase();
+                          
+                          // If input is empty, show recent and frequent stops
+                          if (input.isEmpty) {
+                            return [...recentSources.take(3), ...frequentSources.keys.take(5)];
+                          }
+                          
+                          // Combine all available suggestions
                           final List<String> recents = recentSources.where((s) => s.toLowerCase().contains(input)).toList();
                           final List<String> frequents = frequentSources.keys
                               .where((s) => !recents.contains(s) && s.toLowerCase().contains(input))
@@ -276,7 +342,19 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
                           final List<String> backend = sourceSuggestions
                               .where((s) => !recents.contains(s) && !frequents.contains(s) && s.toLowerCase().contains(input))
                               .toList();
-                          return [...recents, ...frequents, ...backend];
+                          
+                          // Always show suggestions even if only one character is typed
+                          final allSuggestions = [...recents, ...frequents, ...backend];
+                          
+                          // If we don't have enough suggestions and input has at least 1 character, trigger fetch
+                          if (allSuggestions.length < 3 && input.length >= 1) {
+                            // Trigger suggestion fetch with a slight delay to avoid excessive calls
+                            Future.delayed(Duration(milliseconds: 100), () {
+                              onSourceChanged(textEditingValue.text);
+                            });
+                          }
+                          
+                          return allSuggestions.take(10).toList();
                         },
                         fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
                           return TextField(
@@ -384,6 +462,13 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
                         focusNode: FocusNode(),
                         optionsBuilder: (TextEditingValue textEditingValue) {
                           final input = textEditingValue.text.toLowerCase();
+                          
+                          // If input is empty, show recent and frequent stops
+                          if (input.isEmpty) {
+                            return [...recentDestinations.take(3), ...frequentDestinations.keys.take(5)];
+                          }
+                          
+                          // Combine all available suggestions
                           final List<String> recents = recentDestinations.where((s) => s.toLowerCase().contains(input)).toList();
                           final List<String> frequents = frequentDestinations.keys
                               .where((s) => !recents.contains(s) && s.toLowerCase().contains(input))
@@ -392,7 +477,19 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
                           final List<String> backend = destinationSuggestions
                               .where((s) => !recents.contains(s) && !frequents.contains(s) && s.toLowerCase().contains(input))
                               .toList();
-                          return [...recents, ...frequents, ...backend];
+                          
+                          // Always show suggestions even if only one character is typed
+                          final allSuggestions = [...recents, ...frequents, ...backend];
+                          
+                          // If we don't have enough suggestions and input has at least 1 character, trigger fetch
+                          if (allSuggestions.length < 3 && input.length >= 1) {
+                            // Trigger suggestion fetch with a slight delay to avoid excessive calls
+                            Future.delayed(Duration(milliseconds: 100), () {
+                              onDestinationChanged(textEditingValue.text);
+                            });
+                          }
+                          
+                          return allSuggestions.take(10).toList();
                         },
                         fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
                           return TextField(

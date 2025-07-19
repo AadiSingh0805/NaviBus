@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:navibus/services/data_service.dart';
 
 class FeedbackPage extends StatefulWidget {
   const FeedbackPage({super.key});
@@ -16,13 +17,15 @@ class _FeedbackPageState extends State<FeedbackPage> {
   final TextEditingController _descriptionController = TextEditingController();
   List<Map<String, dynamic>> _tickets = []; // Feedback data
 
-  // Django API URL
-  final String apiUrl = "http://10.0.2.2:8000/feedback/feedback";// Change to your backend URL
-
   /// ✅ Fetch feedback from the Django backend
   Future<void> _fetchFeedbacks() async {
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      // Use DataService to get the correct backend URL
+      final dataService = DataService.instance;
+      final backendUrl = await dataService.getCurrentBackendUrl();
+      final apiUrl = "$backendUrl/feedback/feedback";
+      
+      final response = await http.get(Uri.parse(apiUrl)).timeout(Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         List<dynamic> feedbackList = json.decode(response.body);
@@ -47,11 +50,16 @@ class _FeedbackPageState extends State<FeedbackPage> {
       };
 
       try {
+        // Use DataService to get the correct backend URL
+        final dataService = DataService.instance;
+        final backendUrl = await dataService.getCurrentBackendUrl();
+        final apiUrl = "$backendUrl/feedback/feedback";
+        
         final response = await http.post(
           Uri.parse(apiUrl),
           headers: {"Content-Type": "application/json"},
           body: json.encode(feedbackData),
-        );
+        ).timeout(Duration(seconds: 10));
 
         if (response.statusCode == 201) {
           _fetchFeedbacks(); // Refresh the list after submitting
@@ -65,6 +73,9 @@ class _FeedbackPageState extends State<FeedbackPage> {
         }
       } catch (error) {
         print("Error submitting feedback: $error");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error submitting feedback. Please try again.")),
+        );
       }
     }
   }

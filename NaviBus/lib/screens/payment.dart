@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:navibus/screens/Feedback.dart';
 import 'package:navibus/screens/paymentopts.dart';
 import 'package:http/http.dart' as http;
+import 'package:navibus/services/data_service.dart';
 
 class Payment extends StatefulWidget {
   final dynamic bus;
@@ -39,10 +40,15 @@ class _PaymentState extends State<Payment> {
         });
         return;
       }
+      
+      // Use DataService to get the correct backend URL
+      final dataService = DataService.instance;
+      final backendUrl = await dataService.getCurrentBackendUrl();
       final url = Uri.parse(
-        'http://10.0.2.2:8000/api/routes/fare/?route_number=$routeNumber&source_stop=$source&destination_stop=$destination'
+        '$backendUrl/routes/fare/?route_number=$routeNumber&source_stop=$source&destination_stop=$destination'
       );
-      final response = await http.get(url);
+      
+      final response = await http.get(url).timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {

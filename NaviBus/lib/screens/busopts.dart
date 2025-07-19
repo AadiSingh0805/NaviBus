@@ -7,6 +7,7 @@ import 'package:navibus/screens/bus_details.dart';
 import 'package:navibus/services/data_service.dart';
 import 'dart:async';
 import 'package:navibus/screens/multi_route_planner.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BusOptions extends StatefulWidget {
   const BusOptions({super.key});
@@ -18,6 +19,8 @@ class BusOptions extends StatefulWidget {
 class _BusOptionsState extends State<BusOptions> {
   TextEditingController sourceController = TextEditingController();
   TextEditingController destinationController = TextEditingController();
+  FocusNode sourceFocusNode = FocusNode();
+  FocusNode destinationFocusNode = FocusNode();
   List<dynamic> filteredBuses = [];
   Position? currentPosition;
 
@@ -53,6 +56,40 @@ class _BusOptionsState extends State<BusOptions> {
   void initState() {
     super.initState();
     getCurrentLocation();
+    _loadRecentSearches();
+  }
+
+  /// Load recent searches from SharedPreferences
+  Future<void> _loadRecentSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      recentSources = prefs.getStringList('recent_sources') ?? ['Borivali Station', 'Andheri Station', 'Bandra Station'];
+      recentDestinations = prefs.getStringList('recent_destinations') ?? ['Colaba Bus Station', 'Gateway of India', 'Marine Drive'];
+      
+      // Load frequent searches (stored as JSON)
+      final frequentSourcesJson = prefs.getString('frequent_sources') ?? '{}';
+      final frequentDestinationsJson = prefs.getString('frequent_destinations') ?? '{}';
+      
+      frequentSources = Map<String, int>.from(json.decode(frequentSourcesJson));
+      frequentDestinations = Map<String, int>.from(json.decode(frequentDestinationsJson));
+      
+      // Add some default frequent searches if empty
+      if (frequentSources.isEmpty) {
+        frequentSources = {'Borivali Station': 5, 'Andheri Station': 3, 'Bandra Station': 2};
+      }
+      if (frequentDestinations.isEmpty) {
+        frequentDestinations = {'Colaba Bus Station': 4, 'Gateway of India': 3, 'Marine Drive': 2};
+      }
+    });
+  }
+
+  /// Save recent searches to SharedPreferences
+  Future<void> _saveRecentSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('recent_sources', recentSources);
+    await prefs.setStringList('recent_destinations', recentDestinations);
+    await prefs.setString('frequent_sources', json.encode(frequentSources));
+    await prefs.setString('frequent_destinations', json.encode(frequentDestinations));
   }
 
   /// Get User's GPS Location
@@ -96,10 +133,15 @@ class _BusOptionsState extends State<BusOptions> {
       print('Source or destination is empty');
       return;
     }
-    final url = Uri.parse('http://10.0.2.2:8000/api/routes/search/?start=$start&end=$end');
-    print('Calling API: $url');
+    
     try {
-      final response = await http.get(url);
+      // Use DataService to get the correct backend URL
+      final dataService = DataService.instance;
+      final backendUrl = await dataService.getCurrentBackendUrl();
+      final url = Uri.parse('$backendUrl/routes/search/?start=$start&end=$end');
+      print('Calling API: $url');
+      
+      final response = await http.get(url).timeout(Duration(seconds: 10));
       print('API response status: ${response.statusCode}');
       print('API response body: ${response.body}');
       if (response.statusCode == 200) {
@@ -107,9 +149,9 @@ class _BusOptionsState extends State<BusOptions> {
         List<dynamic> routesWithFare = await Future.wait(routes.map((route) async {
           try {
             final fareUrl = Uri.parse(
-              'http://10.0.2.2:8000/api/routes/fare/?route_number=${route['route_number']}&source_stop=${Uri.encodeComponent(route['sub_path'][0])}&destination_stop=${Uri.encodeComponent(route['sub_path'][route['sub_path'].length-1])}'
+              '$backendUrl/routes/fare/?route_number=${route['route_number']}&source_stop=${Uri.encodeComponent(route['sub_path'][0])}&destination_stop=${Uri.encodeComponent(route['sub_path'][route['sub_path'].length-1])}'
             );
-            final fareRes = await http.get(fareUrl);
+            final fareRes = await http.get(fareUrl).timeout(Duration(seconds: 8));
             if (fareRes.statusCode == 200) {
               final fareData = json.decode(fareRes.body);
               return {
@@ -145,6 +187,7 @@ class _BusOptionsState extends State<BusOptions> {
         });
       }
     } catch (e) {
+      print('Error searching routes: $e');
       setState(() {
         filteredBuses = [];
         expandedStops = [];
@@ -239,8 +282,11 @@ class _BusOptionsState extends State<BusOptions> {
     _lastSourceQuery = value;
     
     if (_debounceSource?.isActive ?? false) _debounceSource!.cancel();
-    _debounceSource = Timer(const Duration(milliseconds: 800), () async { // Increased debounce time
-      if (mounted && value.trim().length >= 2) { // Only search if 2+ characters
+    
+    // Use shorter debounce for initial typing to make suggestions appear faster
+    final debounceTime = value.length <= 2 ? 400 : 600;
+    _debounceSource = Timer(Duration(milliseconds: debounceTime), () async {
+      if (mounted && value.trim().length >= 1) { // Start showing suggestions from 1 character
         final suggestions = await fetchStopSuggestions(value);
         if (mounted) {
           setState(() {
@@ -261,8 +307,11 @@ class _BusOptionsState extends State<BusOptions> {
     _lastDestinationQuery = value;
     
     if (_debounceDestination?.isActive ?? false) _debounceDestination!.cancel();
-    _debounceDestination = Timer(const Duration(milliseconds: 800), () async { // Increased debounce time
-      if (mounted && value.trim().length >= 2) { // Only search if 2+ characters
+    
+    // Use shorter debounce for initial typing to make suggestions appear faster
+    final debounceTime = value.length <= 2 ? 400 : 600;
+    _debounceDestination = Timer(Duration(milliseconds: debounceTime), () async {
+      if (mounted && value.trim().length >= 1) { // Start showing suggestions from 1 character
         final suggestions = await fetchStopSuggestions(value);
         if (mounted) {
           setState(() {
@@ -284,7 +333,9 @@ class _BusOptionsState extends State<BusOptions> {
       if (recentSources.length > maxRecent) recentSources = recentSources.sublist(0, maxRecent);
       frequentSources[stop] = (frequentSources[stop] ?? 0) + 1;
     });
+    _saveRecentSearches(); // Persist to storage
   }
+  
   void addRecentDestination(String stop) {
     setState(() {
       recentDestinations.remove(stop);
@@ -292,6 +343,7 @@ class _BusOptionsState extends State<BusOptions> {
       if (recentDestinations.length > maxRecent) recentDestinations = recentDestinations.sublist(0, maxRecent);
       frequentDestinations[stop] = (frequentDestinations[stop] ?? 0) + 1;
     });
+    _saveRecentSearches(); // Persist to storage
   }
 
   Future<void> searchBestJourney() async {
@@ -301,12 +353,17 @@ class _BusOptionsState extends State<BusOptions> {
       print('Source or destination is empty');
       return;
     }
-    final url = Uri.parse('http://10.0.2.2:8000/api/routes/plan/?start=$start&end=$end');
-    print('Calling planner API: $url');
+    
     try {
-      final response = await http.get(url);
-      print('Planner response status: \\${response.statusCode}');
-      print('Planner response body: \\${response.body}');
+      // Use DataService to get the correct backend URL
+      final dataService = DataService.instance;
+      final backendUrl = await dataService.getCurrentBackendUrl();
+      final url = Uri.parse('$backendUrl/routes/plan/?start=$start&end=$end');
+      print('Calling planner API: $url');
+      
+      final response = await http.get(url).timeout(Duration(seconds: 10));
+      print('Planner response status: ${response.statusCode}');
+      print('Planner response body: ${response.body}');
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -322,12 +379,12 @@ class _BusOptionsState extends State<BusOptions> {
         });
       }
     } catch (e) {
+      print('Error fetching planned journey: $e');
       setState(() {
         plannedSegments = [];
         totalStops = 0;
         transfers = 0;
       });
-      print('Error fetching planned journey: $e');
     }
   }
 
@@ -337,6 +394,8 @@ class _BusOptionsState extends State<BusOptions> {
     _debounceDestination?.cancel();
     sourceController.dispose();
     destinationController.dispose();
+    sourceFocusNode.dispose();
+    destinationFocusNode.dispose();
     super.dispose();
   }
 
@@ -370,18 +429,37 @@ class _BusOptionsState extends State<BusOptions> {
             children: [
               RawAutocomplete<String>(
                 textEditingController: sourceController,
-                focusNode: FocusNode(),
+                focusNode: sourceFocusNode,
                 optionsBuilder: (TextEditingValue textEditingValue) {
-                  final input = textEditingValue.text.toLowerCase();
-                  final List<String> recents = recentSources.where((s) => s.toLowerCase().contains(input)).toList();
-                  final List<String> frequents = frequentSources.keys
-                      .where((s) => !recents.contains(s) && s.toLowerCase().contains(input))
-                      .toList()
+                  final input = textEditingValue.text.toLowerCase().trim();
+                  
+                  // Debug print to see what's happening
+                  print('Source input: "$input", suggestions: ${sourceSuggestions.length}, recents: ${recentSources.length}');
+                  print('Available suggestions: $sourceSuggestions');
+                  
+                  if (input.isEmpty) {
+                    // Show recent searches when empty
+                    return recentSources.take(5).toList();
+                  }
+                  
+                  final List<String> allOptions = <String>[];
+                  
+                  // Add recent matches first (more lenient matching)
+                  allOptions.addAll(recentSources.where((s) => 
+                    s.toLowerCase().contains(input)).take(3));
+                  
+                  // Add frequent matches (more lenient matching)
+                  final frequentMatches = frequentSources.keys.where((s) => 
+                    s.toLowerCase().contains(input) && !allOptions.contains(s)).toList()
                     ..sort((a, b) => frequentSources[b]!.compareTo(frequentSources[a]!));
-                  final List<String> backend = sourceSuggestions
-                      .where((s) => !recents.contains(s) && !frequents.contains(s) && s.toLowerCase().contains(input))
-                      .toList();
-                  return [...recents, ...frequents, ...backend];
+                  allOptions.addAll(frequentMatches.take(3));
+                  
+                  // Add ALL backend suggestions without strict filtering - let user see everything from API
+                  allOptions.addAll(sourceSuggestions.where((s) => 
+                    !allOptions.contains(s)).take(8));
+                  
+                  print('Returning ${allOptions.length} options for "$input": $allOptions');
+                  return allOptions.take(10).toList();
                 },
                 fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
                   return TextField(
@@ -421,7 +499,8 @@ class _BusOptionsState extends State<BusOptions> {
                     ),
                     onChanged: (value) {
                       onSourceChanged(value);
-                      // Removed unnecessary setState call
+                      // Force rebuild of autocomplete options
+                      setState(() {});
                     },
                   );
                 },
@@ -489,18 +568,37 @@ class _BusOptionsState extends State<BusOptions> {
               const SizedBox(height: 10),
               RawAutocomplete<String>(
                 textEditingController: destinationController,
-                focusNode: FocusNode(),
+                focusNode: destinationFocusNode,
                 optionsBuilder: (TextEditingValue textEditingValue) {
-                  final input = textEditingValue.text.toLowerCase();
-                  final List<String> recents = recentDestinations.where((s) => s.toLowerCase().contains(input)).toList();
-                  final List<String> frequents = frequentDestinations.keys
-                      .where((s) => !recents.contains(s) && s.toLowerCase().contains(input))
-                      .toList()
+                  final input = textEditingValue.text.toLowerCase().trim();
+                  
+                  // Debug print to see what's happening
+                  print('Destination input: "$input", suggestions: ${destinationSuggestions.length}, recents: ${recentDestinations.length}');
+                  print('Available suggestions: $destinationSuggestions');
+                  
+                  if (input.isEmpty) {
+                    // Show recent searches when empty
+                    return recentDestinations.take(5).toList();
+                  }
+                  
+                  final List<String> allOptions = <String>[];
+                  
+                  // Add recent matches first (more lenient matching)
+                  allOptions.addAll(recentDestinations.where((s) => 
+                    s.toLowerCase().contains(input)).take(3));
+                  
+                  // Add frequent matches (more lenient matching)
+                  final frequentMatches = frequentDestinations.keys.where((s) => 
+                    s.toLowerCase().contains(input) && !allOptions.contains(s)).toList()
                     ..sort((a, b) => frequentDestinations[b]!.compareTo(frequentDestinations[a]!));
-                  final List<String> backend = destinationSuggestions
-                      .where((s) => !recents.contains(s) && !frequents.contains(s) && s.toLowerCase().contains(input))
-                      .toList();
-                  return [...recents, ...frequents, ...backend];
+                  allOptions.addAll(frequentMatches.take(3));
+                  
+                  // Add ALL backend suggestions without strict filtering - let user see everything from API
+                  allOptions.addAll(destinationSuggestions.where((s) => 
+                    !allOptions.contains(s)).take(8));
+                  
+                  print('Returning ${allOptions.length} options for "$input": $allOptions');
+                  return allOptions.take(10).toList();
                 },
                 fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
                   return TextField(
@@ -540,7 +638,8 @@ class _BusOptionsState extends State<BusOptions> {
                     ),
                     onChanged: (value) {
                       onDestinationChanged(value);
-                      // Removed unnecessary setState call
+                      // Force rebuild of autocomplete options
+                      setState(() {});
                     },
                   );
                 },
