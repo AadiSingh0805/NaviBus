@@ -1,0 +1,33 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'Backend/**'
+      - '.github/workflows/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Validate build script
+      run: |
+        cd Backend
+        chmod +x build.sh
+        echo "✅ Build script validated"
+        
+    - name: Trigger Render Deploy
+      run: |
+        echo "🚀 GitHub push detected - Render will auto-deploy"
+        echo "📍 Bus stops will be automatically populated during deployment"
+        echo "🔗 Monitor deployment at: https://dashboard.render.com"

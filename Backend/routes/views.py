@@ -41,6 +41,236 @@ def add_route(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
+def test_redis_connectivity(request):
+    """
+    Test endpoint to check Redis connectivity and fuzzy search functionality
+    URL: /routes/test-redis/
+    """
+    try:
+        if redis_available:
+            # Test Redis connection
+            redis_client.ping()
+            
+            # Test cache operations
+            test_key = "test_connection"
+            test_value = "Redis is working!"
+            redis_client.setex(test_key, 60, test_value)
+            retrieved_value = redis_client.get(test_key)
+            
+            return Response({
+                "redis_status": "connected",
+                "test_cache": "working" if retrieved_value == test_value else "failed",
+                "message": "Redis connectivity test passed"
+            })
+        else:
+            return Response({
+                "redis_status": "not_available",
+                "message": "Redis client is not configured or not available"
+            })
+    except Exception as e:
+        return Response({
+            "redis_status": "error",
+            "error": str(e),
+            "message": "Redis connectivity test failed"
+        }, status=500)
+
+
+@api_view(['GET'])
+def fuzzy_search_routes(request):
+    """
+    Fuzzy search for routes by route number with Redis caching
+    URL: /routes/fuzzy-search/?route_number=<partial_route_number>
+    """
+    route_query = request.GET.get('route_number', '').strip()
+    
+    if not route_query:
+        return Response({"error": "route_number parameter is required."}, status=400)
+
+    # Create cache key
+    cache_key = f"fuzzy_route_search:{route_query.lower()}"
+    
+    # Try to get from Redis cache first
+    if redis_available:
+        try:
+            cached_result = redis_client.get(cache_key)
+            if cached_result:
+                return Response(pickle.loads(cached_result.encode('latin1')))
+        except Exception as e:
+            print(f"Redis cache read error: {e}")
+
+    # If not in cache, perform fuzzy search
+    try:
+        # Get all route numbers for fuzzy matching
+        all_routes = BusRoute.objects.select_related('start_stop', 'end_stop').prefetch_related(
+            Prefetch(
+                'route_stops',
+                queryset=RouteStop.objects.select_related('stop').order_by('stop_order')
+            )
+        ).all()
+        
+        # Prepare route numbers for fuzzy matching
+        route_choices = [(route.route_number, route) for route in all_routes]
+        route_numbers = [choice[0] for choice in route_choices]
+        
+        # Perform fuzzy matching using rapidfuzz
+        fuzzy_matches = process.extract(
+            route_query, 
+            route_numbers, 
+            scorer=fuzz.partial_ratio,
+            limit=10,  # Limit to top 10 matches
+            score_cutoff=60  # Minimum similarity score of 60%
+        )
+        
+        results = []
+        for match_text, score, _ in fuzzy_matches:
+            # Find the corresponding route object
+            matching_route = next((route for route_num, route in route_choices if route_num == match_text), None)
+            
+            if matching_route:
+                # Get all stops in order for this route
+                route_stops = [rs.stop.name for rs in matching_route.route_stops.all()]
+                
+                # Determine bus type for fare calculation
+                route_number_upper = matching_route.route_number.upper()
+                is_ac = any(x in route_number_upper for x in [".AC", " AC", "AC.", "-AC", "_AC", "AC"])
+                
+                results.append({
+                    'route_number': matching_route.route_number,
+                    'source': matching_route.start_stop.name,
+                    'destination': matching_route.end_stop.name,
+                    'stops': route_stops,
+                    'total_stops': len(route_stops),
+                    'bus_type': 'AC' if is_ac else 'Non-AC',
+                    'first_bus_time_weekday': matching_route.first_bus_time_weekday,
+                    'last_bus_time_weekday': matching_route.last_bus_time_weekday,
+                    'first_bus_time_sunday': matching_route.first_bus_time_sunday,
+                    'last_bus_time_sunday': matching_route.last_bus_time_sunday,
+                    'frequency_weekday': matching_route.average_frequency_minutes,
+                    'frequency_sunday': matching_route.average_frequency_minutes_sunday,
+                    'average_fare': matching_route.average_fare,
+                    'match_score': score,  # Include fuzzy match score
+                    'active': matching_route.active
+                })
+        
+        # Sort by match score (highest first)
+        results.sort(key=lambda x: x['match_score'], reverse=True)
+        
+        response_data = {
+            'query': route_query,
+            'total_matches': len(results),
+            'routes': results
+        }
+        
+        # Cache the result in Redis (expire after 1 hour)
+        if redis_available and results:
+            try:
+                redis_client.setex(
+                    cache_key, 
+                    3600,  # 1 hour expiry
+                    pickle.dumps(response_data).decode('latin1')
+                )
+            except Exception as e:
+                print(f"Redis cache write error: {e}")
+        
+        return Response(response_data)
+        
+    except Exception as e:
+        return Response(
+            {"error": f"Error performing fuzzy search: {str(e)}"}, 
+            status=500
+        )
+
+
+@api_view(['GET'])
+def get_route_details(request):
+    """
+    Get complete route details by exact route number
+    URL: /routes/details/?route_number=<exact_route_number>
+    """
+    route_number = request.GET.get('route_number', '').strip()
+    
+    if not route_number:
+        return Response({"error": "route_number parameter is required."}, status=400)
+
+    # Create cache key for exact route details
+    cache_key = f"route_details:{route_number.lower()}"
+    
+    # Try to get from Redis cache first
+    if redis_available:
+        try:
+            cached_result = redis_client.get(cache_key)
+            if cached_result:
+                return Response(pickle.loads(cached_result.encode('latin1')))
+        except Exception as e:
+            print(f"Redis cache read error: {e}")
+
+    try:
+        route = BusRoute.objects.select_related('start_stop', 'end_stop').prefetch_related(
+            Prefetch(
+                'route_stops',
+                queryset=RouteStop.objects.select_related('stop').order_by('stop_order')
+            )
+        ).get(route_number__iexact=route_number)
+        
+        # Get all stops in order for this route
+        route_stops_data = []
+        for i, rs in enumerate(route.route_stops.all()):
+            route_stops_data.append({
+                'stop_number': i + 1,
+                'stop_name': rs.stop.name,
+                'stop_id': rs.stop.id,
+                'stop_order': rs.stop_order
+            })
+        
+        # Determine bus type for fare calculation
+        route_number_upper = route.route_number.upper()
+        is_ac = any(x in route_number_upper for x in [".AC", " AC", "AC.", "-AC", "_AC", "AC"])
+        
+        response_data = {
+            'route_number': route.route_number,
+            'source': route.start_stop.name,
+            'destination': route.end_stop.name,
+            'source_destination': route.source_destination,
+            'stops': [stop['stop_name'] for stop in route_stops_data],
+            'stops_details': route_stops_data,
+            'total_stops': len(route_stops_data),
+            'bus_type': 'AC' if is_ac else 'Non-AC',
+            'first_bus_time_weekday': route.first_bus_time_weekday,
+            'last_bus_time_weekday': route.last_bus_time_weekday,
+            'first_bus_time_sunday': route.first_bus_time_sunday,
+            'last_bus_time_sunday': route.last_bus_time_sunday,
+            'frequency_weekday': route.average_frequency_minutes,
+            'frequency_sunday': route.average_frequency_minutes_sunday,
+            'average_fare': route.average_fare,
+            'active': route.active
+        }
+        
+        # Cache the result in Redis (expire after 2 hours)
+        if redis_available:
+            try:
+                redis_client.setex(
+                    cache_key, 
+                    7200,  # 2 hours expiry
+                    pickle.dumps(response_data).decode('latin1')
+                )
+            except Exception as e:
+                print(f"Redis cache write error: {e}")
+        
+        return Response(response_data)
+        
+    except BusRoute.DoesNotExist:
+        return Response(
+            {"error": f"No route found for route number '{route_number}'"}, 
+            status=404
+        )
+    except Exception as e:
+        return Response(
+            {"error": f"Error retrieving route details: {str(e)}"}, 
+            status=500
+        )
+
+
+@api_view(['GET'])
 def search_route_path(request):
     start_name = request.GET.get('start')
     end_name = request.GET.get('end')

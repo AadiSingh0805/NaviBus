@@ -22,6 +22,8 @@ class _BusOptionsState extends State<BusOptions> {
   FocusNode sourceFocusNode = FocusNode();
   FocusNode destinationFocusNode = FocusNode();
   List<dynamic> filteredBuses = [];
+
+  // GPS position variable
   Position? currentPosition;
 
   // For expanding/collapsing stops
@@ -97,7 +99,22 @@ class _BusOptionsState extends State<BusOptions> {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        print("Location services are disabled.");
+        print("Location services are disabled. Using test coordinates for PC.");
+        // Use test coordinates for desktop testing (Kalamboli area)
+        setState(() {
+          currentPosition = Position(
+            latitude: 19.031784,
+            longitude: 73.0994121,
+            timestamp: DateTime.now(),
+            accuracy: 10.0,
+            altitude: 0.0,
+            altitudeAccuracy: 0.0,
+            heading: 0.0,
+            headingAccuracy: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+          );
+        });
         return;
       }
 
@@ -105,13 +122,42 @@ class _BusOptionsState extends State<BusOptions> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          print("Location permission denied");
+          print("Location permission denied. Using test coordinates for PC.");
+          // Use test coordinates when permission denied
+          setState(() {
+            currentPosition = Position(
+              latitude: 19.031784,
+              longitude: 73.0994121,
+              timestamp: DateTime.now(),
+              accuracy: 10.0,
+              altitude: 0.0,
+              altitudeAccuracy: 0.0,
+              heading: 0.0,
+              headingAccuracy: 0.0,
+              speed: 0.0,
+              speedAccuracy: 0.0,
+            );
+          });
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        print("Location permissions permanently denied.");
+        print("Location permissions permanently denied. Using test coordinates for PC.");
+        setState(() {
+          currentPosition = Position(
+            latitude: 19.031784,
+            longitude: 73.0994121,
+            timestamp: DateTime.now(),
+            accuracy: 10.0,
+            altitude: 0.0,
+            altitudeAccuracy: 0.0,
+            heading: 0.0,
+            headingAccuracy: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+          );
+        });
         return;
       }
 
@@ -120,9 +166,250 @@ class _BusOptionsState extends State<BusOptions> {
       setState(() {
         currentPosition = position;
       });
+      print("✅ Got real GPS location: ${position.latitude}, ${position.longitude}");
     } catch (e) {
-      print("Error fetching location: $e");
+      print("Error fetching location: $e. Using test coordinates for PC.");
+      // Fallback to test coordinates on any error (common on PC)
+      setState(() {
+        currentPosition = Position(
+          latitude: 19.031784,
+          longitude: 73.0994121,
+          timestamp: DateTime.now(),
+          accuracy: 10.0,
+          altitude: 0.0,
+          altitudeAccuracy: 0.0,
+          heading: 0.0,
+          headingAccuracy: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+        );
+      });
     }
+  }
+
+  /// Fetch nearby stops from backend API
+  Future<List<Map<String, dynamic>>> fetchNearbyStops(double lat, double lng) async {
+    try {
+      final dataService = DataService.instance;
+      final backendUrl = await dataService.getCurrentBackendUrl();
+      final url = Uri.parse('$backendUrl/api/stops/nearby/?lat=$lat&lng=$lng&radius=2');
+      
+      print('🔍 Fetching nearby stops from: $url');
+      
+      final response = await http.get(url).timeout(Duration(seconds: 10));
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        List<Map<String, dynamic>> stops = List<Map<String, dynamic>>.from(data['stops'] ?? []);
+        print('✅ Found ${stops.length} nearby stops');
+        return stops;
+      } else {
+        print('❌ API returned status: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('❌ Error fetching nearby stops: $e');
+      return [];
+    }
+  }
+
+  /// Show modal with nearby stops
+  void showNearbyStopsModal() async {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => FutureBuilder<List<Map<String, dynamic>>>(
+        future: fetchNearbyStopsFromCurrentLocation(),
+        builder: (context, snapshot) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.75,
+            padding: EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.location_on, color: Colors.blueAccent, size: 24),
+                    SizedBox(width: 8),
+                    Text(
+                      'Nearby Bus Stops',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF042F40),
+                      ),
+                    ),
+                    Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                if (currentPosition != null)
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Your location: ${currentPosition!.latitude.toStringAsFixed(4)}, ${currentPosition!.longitude.toStringAsFixed(4)}',
+                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        ),
+                        // Check if using test coordinates
+                        if (currentPosition!.latitude == 19.031784 && 
+                            currentPosition!.longitude == 73.0994121)
+                          Container(
+                            margin: EdgeInsets.only(top: 4),
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.orange),
+                            ),
+                            child: Text(
+                              "⚠️ Using test coordinates (PC mode)",
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.orange[800],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                Divider(),
+                Expanded(
+                  child: snapshot.connectionState == ConnectionState.waiting
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: 16),
+                              Text('Finding nearby stops...'),
+                            ],
+                          ),
+                        )
+                      : snapshot.hasError
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.error_outline, size: 64, color: Colors.red),
+                                  SizedBox(height: 16),
+                                  Text('Error: ${snapshot.error}'),
+                                  SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      showNearbyStopsModal();
+                                    },
+                                    child: Text('Retry'),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : snapshot.data!.isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.location_off, size: 64, color: Colors.grey),
+                                      SizedBox(height: 16),
+                                      Text(
+                                        'No bus stops found nearby',
+                                        style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        'Try increasing search radius or check GPS',
+                                        style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : ListView.builder(
+                                  itemCount: snapshot.data!.length,
+                                  itemBuilder: (context, index) {
+                                    final stop = snapshot.data![index];
+                                    return Card(
+                                      margin: EdgeInsets.symmetric(vertical: 4),
+                                      child: ListTile(
+                                        leading: Container(
+                                          padding: EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blueAccent.withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Icon(
+                                            Icons.directions_bus,
+                                            color: Colors.blueAccent,
+                                            size: 20,
+                                          ),
+                                        ),
+                                        title: Text(
+                                          stop['name'] ?? 'Unknown Stop',
+                                          style: TextStyle(fontWeight: FontWeight.w600),
+                                        ),
+                                        subtitle: Text(
+                                          '${stop['distance']} km away',
+                                          style: TextStyle(
+                                            color: Colors.green,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        trailing: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              onPressed: () {
+                                                sourceController.text = stop['name'];
+                                                Navigator.pop(context);
+                                                addRecentSource(stop['name']);
+                                              },
+                                              icon: Icon(Icons.my_location, color: Colors.blue),
+                                              tooltip: 'Set as source',
+                                            ),
+                                            IconButton(
+                                              onPressed: () {
+                                                destinationController.text = stop['name'];
+                                                Navigator.pop(context);
+                                                addRecentDestination(stop['name']);
+                                              },
+                                              icon: Icon(Icons.flag, color: Colors.red),
+                                              tooltip: 'Set as destination',
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Fetch nearby stops using current position
+  Future<List<Map<String, dynamic>>> fetchNearbyStopsFromCurrentLocation() async {
+    if (currentPosition == null) {
+      await getCurrentLocation();
+    }
+    
+    if (currentPosition == null) {
+      throw Exception('Could not get your location');
+    }
+    
+    return await fetchNearbyStops(currentPosition!.latitude, currentPosition!.longitude);
   }
 
   /// Search routes using Django API
@@ -484,23 +771,33 @@ class _BusOptionsState extends State<BusOptions> {
                         borderSide: BorderSide(color: Color(0xFF042F40), width: 2),
                       ),
                       prefixIcon: Icon(Icons.location_on, color: Colors.blueAccent),
-                      // Optimized clear button
-                      suffixIcon: controller.text.isNotEmpty 
-                        ? IconButton(
-                            icon: Icon(Icons.clear, color: Colors.grey),
-                            onPressed: () {
-                              controller.clear();
-                              onSourceChanged('');
-                              // Don't call setState here to prevent lag
-                            },
-                          )
-                        : null,
+                      // GPS and Clear buttons
+                      suffixIcon: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.near_me, color: Colors.blueAccent),
+                            tooltip: 'Find nearby stops',
+                            onPressed: () => showNearbyStopsModal(),
+                          ),
+                          if (controller.text.isNotEmpty)
+                            IconButton(
+                              icon: Icon(Icons.clear, color: Colors.grey),
+                              onPressed: () {
+                                controller.clear();
+                                onSourceChanged('');
+                              },
+                            ),
+                        ],
+                      ),
                       contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     ),
                     onChanged: (value) {
                       onSourceChanged(value);
-                      // Force rebuild of autocomplete options
-                      setState(() {});
+                      // Only rebuild if really needed
+                      if (sourceSuggestions.isNotEmpty || value.isEmpty) {
+                        setState(() {});
+                      }
                     },
                   );
                 },
@@ -638,8 +935,10 @@ class _BusOptionsState extends State<BusOptions> {
                     ),
                     onChanged: (value) {
                       onDestinationChanged(value);
-                      // Force rebuild of autocomplete options
-                      setState(() {});
+                      // Only rebuild if really needed
+                      if (destinationSuggestions.isNotEmpty || value.isEmpty) {
+                        setState(() {});
+                      }
                     },
                   );
                 },

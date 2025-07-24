@@ -4,12 +4,12 @@ import 'dart:convert';
 import 'package:navibus/screens/feedback.dart';
 import 'package:navibus/screens/busopts.dart';
 import 'package:navibus/screens/login.dart';
-import 'package:navibus/screens/bus_details.dart';
 import 'package:navibus/screens/profile_page.dart';
+import 'package:navibus/screens/route_search_results.dart';
 import 'package:navibus/widgets/offline_widgets.dart';
 import 'package:navibus/widgets/backend_settings.dart';
 import 'package:navibus/services/data_service.dart';
-import 'package:navibus/widgets/autocomplete_search.dart';
+import 'package:geolocator/geolocator.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,7 +20,344 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController _searchController = TextEditingController();
+  Position? currentPosition;
 
+  @override
+  void initState() {
+    super.initState();
+    getCurrentLocation();
+  }
+
+  /// Get User's GPS Location
+  Future<void> getCurrentLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        print("Location services are disabled. Using test coordinates for PC.");
+        currentPosition = Position(
+          latitude: 19.031784,
+          longitude: 73.0994121,
+          timestamp: DateTime.now(),
+          accuracy: 0,
+          altitude: 0,
+          altitudeAccuracy: 0,
+          heading: 0,
+          headingAccuracy: 0,
+          speed: 0,
+          speedAccuracy: 0,
+        );
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          print("Location permission denied. Using test coordinates for PC.");
+          currentPosition = Position(
+            latitude: 19.031784,
+            longitude: 73.0994121,
+            timestamp: DateTime.now(),
+            accuracy: 0,
+            altitude: 0,
+            altitudeAccuracy: 0,
+            heading: 0,
+            headingAccuracy: 0,
+            speed: 0,
+            speedAccuracy: 0,
+          );
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        print("Location permissions permanently denied. Using test coordinates for PC.");
+        currentPosition = Position(
+          latitude: 19.031784,
+          longitude: 73.0994121,
+          timestamp: DateTime.now(),
+          accuracy: 0,
+          altitude: 0,
+          altitudeAccuracy: 0,
+          heading: 0,
+          headingAccuracy: 0,
+          speed: 0,
+          speedAccuracy: 0,
+        );
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+
+      setState(() {
+        currentPosition = position;
+      });
+      print("✅ Got real GPS location: ${position.latitude}, ${position.longitude}");
+    } catch (e) {
+      print("Error fetching location: $e. Using test coordinates for PC.");
+      currentPosition = Position(
+        latitude: 19.031784,
+        longitude: 73.0994121,
+        timestamp: DateTime.now(),
+        accuracy: 0,
+        altitude: 0,
+        altitudeAccuracy: 0,
+        heading: 0,
+        headingAccuracy: 0,
+        speed: 0,
+        speedAccuracy: 0,
+      );
+    }
+  }
+
+  /// Navigate to BusOptions with GPS functionality
+  void _navigateWithGPS() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BusOptions(),
+      ),
+    );
+  }
+
+  // Enhanced route search with fuzzy matching and comprehensive data
+  Future<List<dynamic>> searchRoutesByNumber(String routeNumber) async {
+    try {
+      print('Searching for route with fuzzy matching: $routeNumber');
+      
+      // Use DataService to get the correct backend URL
+      final dataService = DataService.instance;
+      final backendUrl = await dataService.getCurrentBackendUrl();
+      
+      // Try fuzzy search first for better user experience
+      final fuzzyUrl = Uri.parse('$backendUrl/routes/fuzzy-search/?route_number=${Uri.encodeComponent(routeNumber)}');
+      
+      print('Using fuzzy search URL: $fuzzyUrl');
+      final response = await http.get(fuzzyUrl).timeout(Duration(seconds: 10));
+      print('Fuzzy search API status: ${response.statusCode}, body: ${response.body}');
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is Map && data['routes'] != null && data['routes'].isNotEmpty) {
+          final routes = data['routes'] as List;
+          print('Found ${routes.length} fuzzy matches');
+          
+          // Process routes and add fare calculation for each route segment
+          List<dynamic> routesWithFare = await Future.wait(routes.map((route) async {
+            try {
+              print('Processing route: ${route['route_number']}');
+              
+              // If the route already has average_fare, use it, otherwise calculate
+              if (route['average_fare'] != null && route['average_fare'] > 0) {
+                return {
+                  ...route,
+                  'fare': route['average_fare'],
+                  'stops': route['stops'] ?? [],
+                  'source': route['source'],
+                  'destination': route['destination'],
+                  'frequency_weekday': route['frequency_weekday'],
+                  'frequency_sunday': route['frequency_sunday'],
+                  'match_score': route['match_score'] ?? 100,
+                  'search_type': 'fuzzy'
+                };
+              }
+              
+              // Calculate fare based on total stops
+              final totalStops = route['total_stops'] ?? (route['stops']?.length ?? 0);
+              final busType = route['bus_type'] ?? 'Non-AC';
+              final isAC = busType.toUpperCase().contains('AC');
+              
+              double calculatedFare;
+              if (isAC) {
+                // AC fare pattern
+                final acFares = [10, 12, 15, 18, 20, 22, 25, 27, 30, 32, 35, 40, 45, 50, 50, 55, 55, 60, 60, 65, 70, 70, 75, 75, 80, 80, 85, 85, 90, 90, 95, 95, 100, 100, 105, 105, 110, 110, 115, 115, 120];
+                calculatedFare = (totalStops <= acFares.length) ? acFares[totalStops - 1].toDouble() : 120.0;
+              } else {
+                // Non-AC fare pattern
+                final nonAcFares = [7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47];
+                calculatedFare = (totalStops <= nonAcFares.length) ? nonAcFares[totalStops - 1].toDouble() : 47.0;
+              }
+
+              return {
+                ...route,
+                'fare': calculatedFare,
+                'stops': route['stops'] ?? [],
+                'source': route['source'],
+                'destination': route['destination'],
+                'frequency_weekday': route['frequency_weekday'],
+                'frequency_sunday': route['frequency_sunday'],
+                'match_score': route['match_score'] ?? 100,
+                'search_type': 'fuzzy'
+              };
+            } catch (e) {
+              print('Error processing fuzzy route: $e');
+              return route;
+            }
+          }).toList());
+          
+          return routesWithFare;
+        }
+      }
+      
+      // If fuzzy search didn't work or returned no results, try exact search
+      print('Fuzzy search returned no results, trying exact search...');
+      final exactUrl = Uri.parse('$backendUrl/routes/details/?route_number=${Uri.encodeComponent(routeNumber)}');
+      
+      print('Using exact search URL: $exactUrl');
+      final exactResponse = await http.get(exactUrl).timeout(Duration(seconds: 10));
+      print('Exact search API status: ${exactResponse.statusCode}, body: ${exactResponse.body}');
+      
+      if (exactResponse.statusCode == 200) {
+        final exactData = jsonDecode(exactResponse.body);
+        print('Found exact match: ${exactData['route_number']}');
+        
+        // Process the exact match
+        final totalStops = exactData['total_stops'] ?? (exactData['stops']?.length ?? 0);
+        final busType = exactData['bus_type'] ?? 'Non-AC';
+        final isAC = busType.toUpperCase().contains('AC');
+        
+        double calculatedFare;
+        if (exactData['average_fare'] != null && exactData['average_fare'] > 0) {
+          calculatedFare = exactData['average_fare'].toDouble();
+        } else {
+          if (isAC) {
+            final acFares = [10, 12, 15, 18, 20, 22, 25, 27, 30, 32, 35, 40, 45, 50, 50, 55, 55, 60, 60, 65, 70, 70, 75, 75, 80, 80, 85, 85, 90, 90, 95, 95, 100, 100, 105, 105, 110, 110, 115, 115, 120];
+            calculatedFare = (totalStops <= acFares.length) ? acFares[totalStops - 1].toDouble() : 120.0;
+          } else {
+            final nonAcFares = [7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47];
+            calculatedFare = (totalStops <= nonAcFares.length) ? nonAcFares[totalStops - 1].toDouble() : 47.0;
+          }
+        }
+
+        return [{
+          ...exactData,
+          'fare': calculatedFare,
+          'stops': exactData['stops'] ?? [],
+          'source': exactData['source'],
+          'destination': exactData['destination'],
+          'frequency_weekday': exactData['frequency_weekday'],
+          'frequency_sunday': exactData['frequency_sunday'],
+          'match_score': 100,
+          'search_type': 'exact'
+        }];
+      }
+      
+      print('No routes found for: $routeNumber');
+      return [];
+      
+    } catch (e) {
+      print('Error searching routes: $e');
+      return [];
+    }
+  }
+
+  // Method to handle route search and navigation with fuzzy search feedback
+  Future<void> _performRouteSearch(String routeNumber) async {
+    try {
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              ),
+              SizedBox(width: 12),
+              Text('Searching for route $routeNumber...'),
+            ],
+          ),
+          duration: Duration(seconds: 3),
+          backgroundColor: Color(0xFF042F40),
+        ),
+      );
+
+      // Search for routes
+      final routes = await searchRoutesByNumber(routeNumber);
+      
+      // Hide loading indicator
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      if (routes.isNotEmpty) {
+        // Show results summary with match information
+        final exactMatches = routes.where((r) => r['search_type'] == 'exact').length;
+        final fuzzyMatches = routes.where((r) => r['search_type'] == 'fuzzy').length;
+        
+        String resultMessage;
+        if (exactMatches > 0) {
+          resultMessage = 'Found exact match for route $routeNumber';
+        } else if (fuzzyMatches > 0) {
+          resultMessage = 'Found ${fuzzyMatches} similar route(s) for "$routeNumber"';
+        } else {
+          resultMessage = 'Found ${routes.length} route(s)';
+        }
+        
+        // Navigate to route search results page with pre-filled search results
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RouteSearchResultsPage(
+              searchQuery: routeNumber,
+              initialResults: routes,
+            ),
+          ),
+        ).then((_) {
+          // Show success message with match details
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(resultMessage),
+                  if (fuzzyMatches > 0) 
+                    Text(
+                      'Showing routes similar to "$routeNumber"',
+                      style: TextStyle(fontSize: 12, color: Colors.white70),
+                    ),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('No routes found for "$routeNumber"'),
+                Text(
+                  'Try different variations like "59", "EL AC 59", or "404"',
+                  style: TextStyle(fontSize: 12, color: Colors.white70),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error in route search: $e');
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error searching for routes. Please check your connection and try again.'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  // Keep the old function for backward compatibility but mark as deprecated
+  @deprecated
   Future<dynamic> fetchBusByRouteNumber(BuildContext context, String routeNumber) async {
     try {
       print('Searching for route: $routeNumber');
@@ -103,52 +440,87 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   SizedBox(height: 30),
 
-                  // 🔍 Search Box with autocomplete and mobile UX
+                  // 🔍 Simple Route Number Search
                   Padding(
                     padding: EdgeInsets.all(16.0),
-                    child: AutocompleteSearchField(
-                      controller: _searchController,
-                      hintText: "Search for Buses (Route No.)",
-                      onRouteSelected: (String routeNumber) async {
-                        // Show loading indicator
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Row(
-                              children: [
-                                SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                ),
-                                SizedBox(width: 12),
-                                Text('Loading route $routeNumber...'),
-                              ],
-                            ),
-                            duration: Duration(seconds: 2),
+                    child: Column(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.2),
+                                spreadRadius: 2,
+                                blurRadius: 8,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
                           ),
-                        );
-                        
-                        final bus = await fetchBusByRouteNumber(context, routeNumber);
-                        
-                        // Hide loading indicator
-                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                        
-                        if (bus != null) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => BusDetails(bus: bus),
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              hintText: "Enter Route Number (e.g., 59, EL AC 59, 404)",
+                              hintStyle: TextStyle(color: Colors.grey[600]),
+                              prefixIcon: Icon(Icons.directions_bus, color: Color(0xFF042F40)),
+                              suffixIcon: IconButton(
+                                icon: Icon(Icons.near_me, color: Color(0xFF042F40)),
+                                tooltip: 'Find nearby stops',
+                                onPressed: _navigateWithGPS,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                             ),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('No bus found for route $routeNumber'),
-                              backgroundColor: Colors.red,
+                            textInputAction: TextInputAction.search,
+                            onSubmitted: (routeNumber) async {
+                              if (routeNumber.trim().isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Please enter a route number'),
+                                    backgroundColor: Colors.orange,
+                                  ),
+                                );
+                                return;
+                              }
+                              await _performRouteSearch(routeNumber.trim());
+                            },
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        ElevatedButton(
+                          onPressed: () async {
+                            final routeNumber = _searchController.text.trim();
+                            if (routeNumber.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Please enter a route number'),
+                                  backgroundColor: Colors.orange,
+                                ),
+                              );
+                              return;
+                            }
+                            await _performRouteSearch(routeNumber);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFF042F40),
+                            foregroundColor: Colors.white,
+                            minimumSize: Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                          );
-                        }
-                      },
+                          ),
+                          child: Text(
+                            'Search Route',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 

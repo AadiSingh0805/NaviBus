@@ -1,0 +1,4239 @@
+[
+  {
+    "name": "A.P.J.School",
+    "coords": [
+      19.047677,
+      73.067721
+    ]
+  },
+  {
+    "name": "A.P.M.C Fruit & Vegetables Market",
+    "coords": [
+      19.076593,
+      73.009864
+    ]
+  },
+  {
+    "name": "A.P.M.C Market (Vashi)",
+    "coords": [
+      19.073493,
+      73.008419
+    ]
+  },
+  {
+    "name": "Aadavali Stand",
+    "coords": [
+      19.210402,
+      73.132843
+    ]
+  },
+  {
+    "name": "Aarey JVLR Metro Station",
+    "coords": [
+      19.129224,
+      72.884127
+    ]
+  },
+  {
+    "name": "Abhang Society",
+    "coords": [
+      19.154491,
+      72.999297
+    ]
+  },
+  {
+    "name": "Abhyudaya Bank Airoli",
+    "coords": [
+      19.153697,
+      72.992818
+    ]
+  },
+  {
+    "name": "Abhyudaya Bank Panvel",
+    "coords": [
+      18.993178,
+      73.121221
+    ]
+  },
+  {
+    "name": "Acharya Udyan",
+    "coords": [
+      19.052579,
+      72.899082
+    ]
+  },
+  {
+    "name": "Acharya Udyan / Diamond Garden",
+    "coords": [
+      19.051929,
+      72.900833
+    ]
+  },
+  {
+    "name": "Adai Co.Op.Housing Society",
+    "coords": [
+      19.006052,
+      73.120746
+    ]
+  },
+  {
+    "name": "Adai Phata / Suryadarshan Society",
+    "coords": [
+      19.006295,
+      73.12225
+    ]
+  },
+  {
+    "name": "Adarsha Market (Nerul)",
+    "coords": [
+      19.013207,
+      73.01785
+    ]
+  },
+  {
+    "name": "Adavali Bhutawali",
+    "coords": [
+      19.111085,
+      73.03138
+    ]
+  },
+  {
+    "name": "Adinath Society Sector 17",
+    "coords": [
+      18.965195,
+      73.019539
+    ]
+  },
+  {
+    "name": "Agarwadi (Mankhurd)",
+    "coords": [
+      19.045823,
+      72.925865
+    ]
+  },
+  {
+    "name": "Agarwal Trade Centre",
+    "coords": [
+      19.015751,
+      73.038529
+    ]
+  },
+  {
+    "name": "Agari Koli Sanskrutik Bhavan",
+    "coords": [
+      19.032062,
+      73.010218
+    ]
+  },
+  {
+    "name": "Agarkar Chowk (Andheri E)",
+    "coords": [
+      19.119048,
+      72.848218
+    ]
+  },
+  {
+    "name": "Airoli Bus Station",
+    "coords": [
+      19.156557,
+      72.998415
+    ]
+  },
+  {
+    "name": "Airoli Naka",
+    "coords": [
+      19.166224,
+      72.999684
+    ]
+  },
+  {
+    "name": "Airoli Sector 10 (Dr.Babasaheb Ambedkar Bhavan)",
+    "coords": [
+      19.160868,
+      72.995373
+    ]
+  },
+  {
+    "name": "Airoli Sector 16",
+    "coords": [
+      19.160868,
+      72.995373
+    ]
+  },
+  {
+    "name": "Airoli Sector 17",
+    "coords": [
+      19.160868,
+      72.995373
+    ]
+  },
+  {
+    "name": "Airoli Sector 20",
+    "coords": [
+      19.160868,
+      72.995373
+    ]
+  },
+  {
+    "name": "Airoli Sector 4",
+    "coords": [
+      19.160868,
+      72.995373
+    ]
+  },
+  {
+    "name": "Airoli Sector 4 (Abhang Society)",
+    "coords": [
+      19.160868,
+      72.995373
+    ]
+  },
+  {
+    "name": "Airoli Sector 5",
+    "coords": [
+      19.160868,
+      72.995373
+    ]
+  },
+  {
+    "name": "Airoli Sector 5 / Abhang Society",
+    "coords": [
+      19.160868,
+      72.995373
+    ]
+  },
+  {
+    "name": "Airoli Sector 8 / Diva Village",
+    "coords": [
+      19.160868,
+      72.995373
+    ]
+  },
+  {
+    "name": "Airoli Station",
+    "coords": [
+      19.158942,
+      72.998675
+    ]
+  },
+  {
+    "name": "Airoli Station (W)",
+    "coords": [
+      19.158942,
+      72.998675
+    ]
+  },
+  {
+    "name": "Airoli Toll Naka (Mulund-E)",
+    "coords": [
+      19.153743,
+      72.96486
+    ]
+  },
+  {
+    "name": "Air India Colony",
+    "coords": [
+      19.022516,
+      73.026343
+    ]
+  },
+  {
+    "name": "Akhil Maharashtra Mathadi Gruha Sankul",
+    "coords": [
+      19.115147,
+      72.99567
+    ]
+  },
+  {
+    "name": "Akshar Residency",
+    "coords": [
+      19.010119,
+      73.012004
+    ]
+  },
+  {
+    "name": "Akurli",
+    "coords": [
+      19.198162,
+      72.860579
+    ]
+  },
+  {
+    "name": "Akurli Gaon",
+    "coords": [
+      19.005002,
+      73.145626
+    ]
+  },
+  {
+    "name": "Alfa Laval",
+    "coords": [
+      19.1346,
+      73.016664
+    ]
+  },
+  {
+    "name": "Alta Laboratories Limited Khopoli",
+    "coords": [
+      18.795174,
+      73.332474
+    ]
+  },
+  {
+    "name": "Almos Colony (Kousa)",
+    "coords": [
+      19.167809,
+      73.025919
+    ]
+  },
+  {
+    "name": "Amardham / C.K.T College",
+    "coords": [
+      18.997092,
+      73.111736
+    ]
+  },
+  {
+    "name": "Ambika Yog Kutir",
+    "coords": [
+      19.207362,
+      72.97744
+    ]
+  },
+  {
+    "name": "Amlendu Society",
+    "coords": [
+      19.072764,
+      72.993064
+    ]
+  },
+  {
+    "name": "Amrut Nagar (Mumbra)",
+    "coords": [
+      19.173945,
+      73.023017
+    ]
+  },
+  {
+    "name": "Anand Astha Society Sector 19",
+    "coords": [
+      19.256136,
+      72.864727
+    ]
+  },
+  {
+    "name": "Anand Nagar",
+    "coords": [
+      19.257219,
+      72.866148
+    ]
+  },
+  {
+    "name": "Aniruddha Bhavan",
+    "coords": [
+      19.053196,
+      73.016509
+    ]
+  },
+  {
+    "name": "Anjivali",
+    "coords": [
+      18.954917,
+      73.165453
+    ]
+  },
+  {
+    "name": "Anmol Garden",
+    "coords": [
+      19.214208,
+      73.131099
+    ]
+  },
+  {
+    "name": "Anthony Garage",
+    "coords": [
+      19.145154,
+      73.009959
+    ]
+  },
+  {
+    "name": "Apna Bazar",
+    "coords": [
+      19.070005,
+      72.997292
+    ]
+  },
+  {
+    "name": "Apna Bazaar Sector 17 Vashi",
+    "coords": [
+      19.070118,
+      72.997559
+    ]
+  },
+  {
+    "name": "Artist Colony",
+    "coords": [
+      19.034973,
+      73.043145
+    ]
+  },
+  {
+    "name": "Artist Colony (Sector 8)",
+    "coords": [
+      19.034973,
+      73.043145
+    ]
+  },
+  {
+    "name": "Ashtagandha Society (Nerul)",
+    "coords": [
+      19.01092,
+      73.016433
+    ]
+  },
+  {
+    "name": "Asis Company",
+    "coords": [
+      19.113285,
+      73.12606
+    ]
+  },
+  {
+    "name": "Asudgaon Depot",
+    "coords": [
+      19.014467,
+      73.107276
+    ]
+  },
+  {
+    "name": "Asudgaon Depot Highway",
+    "coords": [
+      19.014467,
+      73.107276
+    ]
+  },
+  {
+    "name": "Atlantis Society",
+    "coords": [
+      19.12053,
+      72.993339
+    ]
+  },
+  {
+    "name": "Automatic Company",
+    "coords": [
+      19.187686,
+      72.955441
+    ]
+  },
+  {
+    "name": "Axis Bank",
+    "coords": [
+      19.173714,
+      72.991069
+    ]
+  },
+  {
+    "name": "Ayyappa Mandir Panvel",
+    "coords": [
+      18.996731,
+      73.127734
+    ]
+  },
+  {
+    "name": "B.E.L.Naka Taloja",
+    "coords": [
+      19.071368,
+      73.136861
+    ]
+  },
+  {
+    "name": "Baba Saheb Ambedkar Nagar",
+    "coords": [
+      19.165964,
+      72.960023
+    ]
+  },
+  {
+    "name": "Babla Compound",
+    "coords": [
+      19.284905,
+      73.072287
+    ]
+  },
+  {
+    "name": "Badhwar Park Machhimar Nagar",
+    "coords": [
+      18.91984,
+      72.825819
+    ]
+  },
+  {
+    "name": "Badlapur",
+    "coords": [
+      19.154205,
+      73.241333
+    ]
+  },
+  {
+    "name": "Badlapur Junction",
+    "coords": [
+      19.17233,
+      73.082949
+    ]
+  },
+  {
+    "name": "Bagade Engineers",
+    "coords": [
+      19.075169,
+      73.027274
+    ]
+  },
+  {
+    "name": "Bageshree Apartment Sector 40",
+    "coords": [
+      19.065976,
+      73.084378
+    ]
+  },
+  {
+    "name": "Bajrang Hotel",
+    "coords": [
+      19.112354,
+      73.032993
+    ]
+  },
+  {
+    "name": "Bal Bharati Vidyalaya",
+    "coords": [
+      19.199953,
+      72.849658
+    ]
+  },
+  {
+    "name": "Balaji Amrut",
+    "coords": [
+      18.98535,
+      73.027104
+    ]
+  },
+  {
+    "name": "Balaji Crest Society",
+    "coords": [
+      19.040401,
+      73.096134
+    ]
+  },
+  {
+    "name": "Balaji Garden",
+    "coords": [
+      19.094969,
+      73.012007
+    ]
+  },
+  {
+    "name": "Balaji Residency",
+    "coords": [
+      19.045216,
+      73.079562
+    ]
+  },
+  {
+    "name": "Balkum Naka",
+    "coords": [
+      19.221445,
+      72.989594
+    ]
+  },
+  {
+    "name": "Balkum Pada Number 2",
+    "coords": [
+      19.225776,
+      72.987741
+    ]
+  },
+  {
+    "name": "Balkum Pada Number 3",
+    "coords": [
+      19.225776,
+      72.987741
+    ]
+  },
+  {
+    "name": "Balmer Lawrie",
+    "coords": [
+      18.883595,
+      72.988969
+    ]
+  },
+  {
+    "name": "Bamandongri Station (E)",
+    "coords": [
+      18.973862,
+      73.026299
+    ]
+  },
+  {
+    "name": "Bamandongri Station (W)",
+    "coords": [
+      18.97625,
+      73.022213
+    ]
+  },
+  {
+    "name": "Bamandongari Railway Station (E)",
+    "coords": [
+      18.971917,
+      73.024288
+    ]
+  },
+  {
+    "name": "Bamandongari Railway Station (W)",
+    "coords": [
+      18.971917,
+      73.024288
+    ]
+  },
+  {
+    "name": "Bandongri",
+    "coords": [
+      19.199263,
+      72.860802
+    ]
+  },
+  {
+    "name": "Banubai Ganpat Tandel Market",
+    "coords": [
+      19.014205,
+      73.016541
+    ]
+  },
+  {
+    "name": "Bank Of India / Hiranandani Complex",
+    "coords": [
+      19.035397,
+      73.064127
+    ]
+  },
+  {
+    "name": "Bank Of India Sector 35 Kharghar",
+    "coords": [
+      18.930211,
+      72.83421
+    ]
+  },
+  {
+    "name": "Bank Of Maharashtra (Nerul)",
+    "coords": [
+      19.040646,
+      73.021421
+    ]
+  },
+  {
+    "name": "Bavrai Gaon",
+    "coords": [
+      18.929524,
+      73.195454
+    ]
+  },
+  {
+    "name": "Belapur Railway Station",
+    "coords": [
+      19.022053,
+      73.016379
+    ]
+  },
+  {
+    "name": "Belapur Station",
+    "coords": [
+      19.021198,
+      73.040293
+    ]
+  },
+  {
+    "name": "Belapur Station / Central Bank",
+    "coords": [
+      19.017967,
+      73.040374
+    ]
+  },
+  {
+    "name": "Belapur Talao",
+    "coords": [
+      19.013142,
+      73.032343
+    ]
+  },
+  {
+    "name": "Belapur Ward Office",
+    "coords": [
+      19.014693,
+      73.031142
+    ]
+  },
+  {
+    "name": "Belapur West",
+    "coords": [
+      19.012458,
+      73.028517
+    ]
+  },
+  {
+    "name": "Belavali Petrol Pump",
+    "coords": [
+      19.17373,
+      73.226471
+    ]
+  },
+  {
+    "name": "Bhabha Hospital",
+    "coords": [
+      19.057164,
+      72.833937
+    ]
+  },
+  {
+    "name": "Bhadwad Pipeline",
+    "coords": [
+      19.283272,
+      73.072925
+    ]
+  },
+  {
+    "name": "Bhagvati Group Sector 9",
+    "coords": [
+      19.173035,
+      72.937428
+    ]
+  },
+  {
+    "name": "Bhagyashree Hotel",
+    "coords": [
+      18.825328,
+      73.295691
+    ]
+  },
+  {
+    "name": "Bhal",
+    "coords": [
+      19.189246,
+      73.138765
+    ]
+  },
+  {
+    "name": "Bhandarli Gaon",
+    "coords": [
+      19.127552,
+      73.055134
+    ]
+  },
+  {
+    "name": "Bhandup Pumping Centre",
+    "coords": [
+      19.154821,
+      72.955795
+    ]
+  },
+  {
+    "name": "Bhandup Pumping Station",
+    "coords": [
+      19.153748,
+      72.956693
+    ]
+  },
+  {
+    "name": "Bhandup Pumping Station (Link Road)",
+    "coords": [
+      19.154358,
+      72.957876
+    ]
+  },
+  {
+    "name": "Bhandup Station (E)",
+    "coords": [
+      19.143453,
+      72.939783
+    ]
+  },
+  {
+    "name": "Bhandup Village",
+    "coords": [
+      19.149895,
+      72.943932
+    ]
+  },
+  {
+    "name": "Bhandup Village (E)",
+    "coords": [
+      19.149895,
+      72.943932
+    ]
+  },
+  {
+    "name": "Bhandup Village Junction",
+    "coords": [
+      19.156058,
+      72.950546
+    ]
+  },
+  {
+    "name": "Bharat Bijlee Airoli",
+    "coords": [
+      19.156202,
+      73.000037
+    ]
+  },
+  {
+    "name": "Bharat Gears (Mumbra)",
+    "coords": [
+      19.157237,
+      73.031324
+    ]
+  },
+  {
+    "name": "Bharat Petrolium Company",
+    "coords": [
+      18.876353,
+      72.972425
+    ]
+  },
+  {
+    "name": "Bharati Vidyapeeth Belapur",
+    "coords": [
+      19.026396,
+      73.056811
+    ]
+  },
+  {
+    "name": "Bhavani Chowk Nerul",
+    "coords": [
+      19.038981,
+      73.02011
+    ]
+  },
+  {
+    "name": "Bhendkhal",
+    "coords": [
+      18.887169,
+      72.986306
+    ]
+  },
+  {
+    "name": "Bhendkhal Gaon",
+    "coords": [
+      18.879599,
+      72.984215
+    ]
+  },
+  {
+    "name": "Bhim Nagar",
+    "coords": [
+      19.144355,
+      73.00584
+    ]
+  },
+  {
+    "name": "Bhingarwadi",
+    "coords": [
+      18.945063,
+      73.180659
+    ]
+  },
+  {
+    "name": "Bhingari",
+    "coords": [
+      18.974884,
+      73.119321
+    ]
+  },
+  {
+    "name": "Bhisegaon",
+    "coords": [
+      18.912808,
+      73.308758
+    ]
+  },
+  {
+    "name": "Bhokarpada",
+    "coords": [
+      19.003706,
+      73.149207
+    ]
+  },
+  {
+    "name": "Bhoomi Oscar Chowk",
+    "coords": [
+      19.117612,
+      72.996936
+    ]
+  },
+  {
+    "name": "Bhoomiraj Queen Bridge Sector 16",
+    "coords": [
+      19.127892,
+      72.993968
+    ]
+  },
+  {
+    "name": "Bilad Hillmark Heights",
+    "coords": [
+      19.070916,
+      73.096232
+    ]
+  },
+  {
+    "name": "Bimbisar Nagar",
+    "coords": [
+      19.146265,
+      72.856381
+    ]
+  },
+  {
+    "name": "Blossom Cooperative Society",
+    "coords": [
+      19.113366,
+      73.00431
+    ]
+  },
+  {
+    "name": "Bonkode Village / Kalash Udyan",
+    "coords": [
+      19.094775,
+      73.005609
+    ]
+  },
+  {
+    "name": "Bonsari Gaon",
+    "coords": [
+      19.064515,
+      73.03168
+    ]
+  },
+  {
+    "name": "Bonshet Phata",
+    "coords": [
+      19.004611,
+      73.150889
+    ]
+  },
+  {
+    "name": "Borgaon",
+    "coords": [
+      18.914864,
+      73.282577
+    ]
+  },
+  {
+    "name": "Borivali (E) Station",
+    "coords": [
+      19.231311,
+      72.858463
+    ]
+  },
+  {
+    "name": "Borivali Gaon (Vashivali)",
+    "coords": [
+      18.876446,
+      73.190245
+    ]
+  },
+  {
+    "name": "Bramha House",
+    "coords": [
+      19.010177,
+      73.0316
+    ]
+  },
+  {
+    "name": "C Cross Road Seepz",
+    "coords": [
+      19.123543,
+      72.87196
+    ]
+  },
+  {
+    "name": "C.B.D Belapur Bus Station",
+    "coords": [
+      19.025431,
+      73.041739
+    ]
+  },
+  {
+    "name": "C.B.D Belapur Highway / Konkan Bhavan",
+    "coords": [
+      19.024165,
+      73.039717
+    ]
+  },
+  {
+    "name": "C.B.D Court",
+    "coords": [
+      19.007675,
+      73.031985
+    ]
+  },
+  {
+    "name": "C.B.D Sector 8",
+    "coords": [
+      19.020916,
+      73.039848
+    ]
+  },
+  {
+    "name": "C.B.D.Belapur Bus Station",
+    "coords": [
+      19.025431,
+      73.041739
+    ]
+  },
+  {
+    "name": "C.B.D.Fire Brigde Station",
+    "coords": [
+      19.0253,
+      73.0445
+    ]
+  },
+  {
+    "name": "C.B.D.Fire Brigade Station",
+    "coords": [
+      19.024433,
+      73.04088
+    ]
+  },
+  {
+    "name": "C.B.D.Sector 8",
+    "coords": [
+      19.020916,
+      73.039848
+    ]
+  },
+  {
+    "name": "C.I.D.C.O.Bhavan / Konkan Bhavan",
+    "coords": [
+      19.21354,
+      72.86736
+    ]
+  },
+  {
+    "name": "C.K.T College",
+    "coords": [
+      18.997092,
+      73.111736
+    ]
+  },
+  {
+    "name": "C.S.M.T",
+    "coords": [
+      18.939109,
+      72.833403
+    ]
+  },
+  {
+    "name": "CGS Colony Bhandup",
+    "coords": [
+      19.141064,
+      72.937698
+    ]
+  },
+  {
+    "name": "CIDCO Bhavan (Konkan Bhavan)",
+    "coords": [
+      19.022632,
+      73.039301
+    ]
+  },
+  {
+    "name": "Canara Bank",
+    "coords": [
+      19.058804,
+      72.864052
+    ]
+  },
+  {
+    "name": "Canara Bank BKC",
+    "coords": [
+      19.058804,
+      72.864052
+    ]
+  },
+  {
+    "name": "Cantiener Corporation Of India",
+    "coords": [
+      19.155525,
+      72.952901
+    ]
+  },
+  {
+    "name": "Carnac Bunder",
+    "coords": [
+      18.949874,
+      72.840704
+    ]
+  },
+  {
+    "name": "Castle Mill Chowk",
+    "coords": [
+      19.205519,
+      72.977464
+    ]
+  },
+  {
+    "name": "Cement Plant (Nanak Dhaba)",
+    "coords": [
+      19.24508,
+      73.046718
+    ]
+  },
+  {
+    "name": "Center One Mall (Vashi)",
+    "coords": [
+      19.067739,
+      72.99724
+    ]
+  },
+  {
+    "name": "Central Bank | Belapur Station",
+    "coords": [
+      19.017967,
+      73.040374
+    ]
+  },
+  {
+    "name": "Central Park / Pandav Kada",
+    "coords": [
+      19.057134,
+      73.064618
+    ]
+  },
+  {
+    "name": "Chakala / WEH Metro Station",
+    "coords": [
+      19.115033,
+      72.857677
+    ]
+  },
+  {
+    "name": "Chakki Naka",
+    "coords": [
+      19.223729,
+      73.126739
+    ]
+  },
+  {
+    "name": "Chambharli Gaon",
+    "coords": [
+      18.897043,
+      73.186306
+    ]
+  },
+  {
+    "name": "Chamunda",
+    "coords": [
+      19.231634,
+      73.007428
+    ]
+  },
+  {
+    "name": "Chandicha Pada",
+    "coords": [
+      19.161136,
+      73.046301
+    ]
+  },
+  {
+    "name": "Char Phata (Dombivali)",
+    "coords": [
+      19.21392,
+      73.091379
+    ]
+  },
+  {
+    "name": "Char Rasta Karjat",
+    "coords": [
+      18.918473,
+      73.31947
+    ]
+  },
+  {
+    "name": "Chaughule Vidyalay / G.R. Patil College",
+    "coords": [
+      19.199407,
+      73.10138
+    ]
+  },
+  {
+    "name": "Chetana School",
+    "coords": [
+      19.21992,
+      73.128058
+    ]
+  },
+  {
+    "name": "Chendani Koliwada",
+    "coords": [
+      19.187951,
+      72.979714
+    ]
+  },
+  {
+    "name": "Chhatrapati Shivaji Maharaj Chowk",
+    "coords": [
+      19.305319,
+      73.058525
+    ]
+  },
+  {
+    "name": "Chhatrapati Shivaji Maharaj Chowk (Nerul)",
+    "coords": [
+      19.044316,
+      73.022979
+    ]
+  },
+  {
+    "name": "Chhatrapati Shivaji Maharaj Chowk Bhiwandi",
+    "coords": [
+      19.305319,
+      73.058525
+    ]
+  },
+  {
+    "name": "Chhatrapati Shivaji Maharaj Hospital Kalwa",
+    "coords": [
+      19.191459,
+      72.987724
+    ]
+  },
+  {
+    "name": "Chhatrapati Shivaji Maharaj Terminus",
+    "coords": [
+      18.94047,
+      72.838364
+    ]
+  },
+  {
+    "name": "Chhatrapati Shivaji Maharaj Terminus (C.S.M.T.)",
+    "coords": [
+      18.939109,
+      72.833403
+    ]
+  },
+  {
+    "name": "Chhatrapati Shivaji Maharaj Terminus (G.P.O.)",
+    "coords": [
+      18.938441,
+      72.836493
+    ]
+  },
+  {
+    "name": "Chikhale Gaon",
+    "coords": [
+      18.961461,
+      73.145026
+    ]
+  },
+  {
+    "name": "Chinchavali Phata",
+    "coords": [
+      18.802393,
+      73.322535
+    ]
+  },
+  {
+    "name": "Chincholi Talao (Sector 25)",
+    "coords": [
+      19.04731,
+      73.019119
+    ]
+  },
+  {
+    "name": "Chintamani Hotel / Jain Mandir",
+    "coords": [
+      19.147173,
+      73.051304
+    ]
+  },
+  {
+    "name": "Chipale",
+    "coords": [
+      19.006058,
+      73.152254
+    ]
+  },
+  {
+    "name": "Chipale Pul",
+    "coords": [
+      19.004961,
+      73.147203
+    ]
+  },
+  {
+    "name": "Chipale Vihighar",
+    "coords": [
+      19.007057,
+      73.153193
+    ]
+  },
+  {
+    "name": "Chirad / Pali",
+    "coords": [
+      19.145804,
+      73.120904
+    ]
+  },
+  {
+    "name": "Chirle (Gavhan) Atal Setu Toll Plaza",
+    "coords": [
+      18.952314,
+      73.018536
+    ]
+  },
+  {
+    "name": "Chirner Phata / Chirle Phata",
+    "coords": [
+      18.94068,
+      73.02588
+    ]
+  },
+  {
+    "name": "Chowk City",
+    "coords": [
+      18.900494,
+      73.244571
+    ]
+  },
+  {
+    "name": "Chowk Naka",
+    "coords": [
+      18.900991,
+      73.235129
+    ]
+  },
+  {
+    "name": "Chowk Railway Station",
+    "coords": [
+      18.901348,
+      73.240735
+    ]
+  },
+  {
+    "name": "Church / S.T.Sub Station",
+    "coords": [
+      19.031103,
+      73.101898
+    ]
+  },
+  {
+    "name": "Church / ST Sub Station",
+    "coords": [
+      19.031103,
+      73.101898
+    ]
+  },
+  {
+    "name": "Cidco Water Supply",
+    "coords": [
+      19.127385,
+      73.034759
+    ]
+  },
+  {
+    "name": "Cidco Water Tank",
+    "coords": [
+      19.038607,
+      73.102077
+    ]
+  },
+  {
+    "name": "Cipla Corner",
+    "coords": [
+      18.881461,
+      73.182186
+    ]
+  },
+  {
+    "name": "Cipla Gate (Rasayani)",
+    "coords": [
+      18.881015,
+      73.183779
+    ]
+  },
+  {
+    "name": "Cloud 36 Society",
+    "coords": [
+      19.119102,
+      72.99399
+    ]
+  },
+  {
+    "name": "College Phata",
+    "coords": [
+      18.981434,
+      73.102993
+    ]
+  },
+  {
+    "name": "Court Naka (Kanhaji Angre Chowk)",
+    "coords": [
+      19.196921,
+      72.983978
+    ]
+  },
+  {
+    "name": "Crompton Greaves",
+    "coords": [
+      19.134433,
+      72.93503
+    ]
+  },
+  {
+    "name": "Crown",
+    "coords": [
+      19.25889,
+      72.97911
+    ]
+  },
+  {
+    "name": "Cuffe Parade Machhimar Nagar",
+    "coords": [
+      18.918106,
+      72.824759
+    ]
+  },
+  {
+    "name": "D - Mart/ Don Bosco School",
+    "coords": [
+      19.01804,
+      73.016559
+    ]
+  },
+  {
+    "name": "D Mart / Nerul Sector 42",
+    "coords": [
+      19.042965,
+      73.077424
+    ]
+  },
+  {
+    "name": "D Mart Sector 10",
+    "coords": [
+      19.042965,
+      73.077424
+    ]
+  },
+  {
+    "name": "D Mart Gharkul",
+    "coords": [
+      19.040823,
+      73.075964
+    ]
+  },
+  {
+    "name": "D.A.V.School",
+    "coords": [
+      19.039328,
+      73.080722
+    ]
+  },
+  {
+    "name": "D.Mart Nerul Sector 21",
+    "coords": [
+      19.042965,
+      73.077424
+    ]
+  },
+  {
+    "name": "D.Mart Sector 42",
+    "coords": [
+      19.042965,
+      73.077424
+    ]
+  },
+  {
+    "name": "Dada Patil Wadi",
+    "coords": [
+      19.18675,
+      72.9743
+    ]
+  },
+  {
+    "name": "Dadar Village",
+    "coords": [
+      19.181947,
+      73.153037
+    ]
+  },
+  {
+    "name": "Dadoji Kondadev Stadium",
+    "coords": [
+      19.191701,
+      72.98065
+    ]
+  },
+  {
+    "name": "Dadoji Konddev Stadium",
+    "coords": [
+      19.191779,
+      72.980825
+    ]
+  },
+  {
+    "name": "Dakshata Society",
+    "coords": [
+      19.03051,
+      73.018572
+    ]
+  },
+  {
+    "name": "Damodar Nagar",
+    "coords": [
+      19.227214,
+      73.125459
+    ]
+  },
+  {
+    "name": "Dambar Plant",
+    "coords": [
+      19.07057,
+      73.023511
+    ]
+  },
+  {
+    "name": "Dana Bazar Gate No.2",
+    "coords": [
+      19.164484,
+      72.789073
+    ]
+  },
+  {
+    "name": "Dand Phata",
+    "coords": [
+      18.906226,
+      73.208737
+    ]
+  },
+  {
+    "name": "Darave Phatak / Sanjay Joshi Chowk",
+    "coords": [
+      19.023433,
+      73.014929
+    ]
+  },
+  {
+    "name": "Dastan Phata",
+    "coords": [
+      18.928308,
+      73.015772
+    ]
+  },
+  {
+    "name": "Dastan Phata Bus Station",
+    "coords": [
+      19.11331,
+      72.92876
+    ]
+  },
+  {
+    "name": "Dastan Toll Plaza",
+    "coords": [
+      19.11331,
+      72.92876
+    ]
+  },
+  {
+    "name": "Datta Mandir Nerul (E)",
+    "coords": [
+      19.034178,
+      73.01977
+    ]
+  },
+  {
+    "name": "Datta Meghe College",
+    "coords": [
+      19.160802,
+      72.99472
+    ]
+  },
+  {
+    "name": "Datta Prasadik Bhajan Mandal",
+    "coords": [
+      19.013552,
+      73.037227
+    ]
+  },
+  {
+    "name": "Dattani Park (Magathane)",
+    "coords": [
+      19.211501,
+      72.868384
+    ]
+  },
+  {
+    "name": "Davadi Naka",
+    "coords": [
+      19.20745,
+      73.10953
+    ]
+  },
+  {
+    "name": "DAV College Bhand Shivai Vidyalaya",
+    "coords": [
+      19.14237,
+      72.93828
+    ]
+  },
+  {
+    "name": "Dawadi Naka",
+    "coords": [
+      19.207155,
+      73.109307
+    ]
+  },
+  {
+    "name": "Delta Tower Sector 8",
+    "coords": [
+      19.226565,
+      72.973975
+    ]
+  },
+  {
+    "name": "Dena Bank",
+    "coords": [
+      19.060459,
+      73.115891
+    ]
+  },
+  {
+    "name": "Deonar Depot",
+    "coords": [
+      19.045828,
+      72.912086
+    ]
+  },
+  {
+    "name": "Derivali",
+    "coords": [
+      18.963112,
+      73.142911
+    ]
+  },
+  {
+    "name": "Devipada",
+    "coords": [
+      19.224514,
+      72.864488
+    ]
+  },
+  {
+    "name": "Devkrupa Society",
+    "coords": [
+      19.048057,
+      73.101992
+    ]
+  },
+  {
+    "name": "Dharmaleshwar Shankar Mandir",
+    "coords": [
+      19.167124,
+      73.115677
+    ]
+  },
+  {
+    "name": "Dhanvantari Hospital",
+    "coords": [
+      19.176114,
+      72.953398
+    ]
+  },
+  {
+    "name": "Digha Village",
+    "coords": [
+      19.175155,
+      72.998024
+    ]
+  },
+  {
+    "name": "Diwale Gaon",
+    "coords": [
+      19.0084,
+      73.04055
+    ]
+  },
+  {
+    "name": "Diwale Gaon Corner",
+    "coords": [
+      19.0084,
+      73.04055
+    ]
+  },
+  {
+    "name": "Diwale Village",
+    "coords": [
+      19.014302,
+      73.039136
+    ]
+  },
+  {
+    "name": "Dnyan Sarita (Thane)",
+    "coords": [
+      19.202587,
+      72.949569
+    ]
+  },
+  {
+    "name": "Dnyan Vikas School",
+    "coords": [
+      19.10326,
+      72.998862
+    ]
+  },
+  {
+    "name": "Dnyanoday Vidyalaya",
+    "coords": [
+      19.207039,
+      72.950463
+    ]
+  },
+  {
+    "name": "Dombivali (Shastri Nagar Hospital)",
+    "coords": [
+      19.217101,
+      73.083395
+    ]
+  },
+  {
+    "name": "Dombivali Nagari Sahakari Bank",
+    "coords": [
+      19.201874,
+      73.103828
+    ]
+  },
+  {
+    "name": "Dongarli",
+    "coords": [
+      19.254925,
+      73.061657
+    ]
+  },
+  {
+    "name": "Dosti West County",
+    "coords": [
+      19.223975,
+      72.994495
+    ]
+  },
+  {
+    "name": "Dr D.Y Patil Stadium (Nerul)",
+    "coords": [
+      19.042581,
+      73.028522
+    ]
+  },
+  {
+    "name": "Dr DY Patil College (Nerul L.P)",
+    "coords": [
+      19.045931,
+      73.024304
+    ]
+  },
+  {
+    "name": "Dr.Ambedkar Statue (Churchgate)",
+    "coords": [
+      18.927145,
+      72.829639
+    ]
+  },
+  {
+    "name": "Dr.Ambedkar Udyan (Powai)",
+    "coords": [
+      19.125615,
+      72.893511
+    ]
+  },
+  {
+    "name": "Dr.B.R.Ambedkar Chowk / Kamothe Police Station",
+    "coords": [
+      19.023012,
+      73.091051
+    ]
+  },
+  {
+    "name": "Dr.Shyamaprasad Mukherjee Chowk (Museum)",
+    "coords": [
+      18.925605,
+      72.83045
+    ]
+  },
+  {
+    "name": "Durgesh Park",
+    "coords": [
+      19.244065,
+      73.01761
+    ]
+  },
+  {
+    "name": "Dwarli Gaon",
+    "coords": [
+      19.201773,
+      73.136542
+    ]
+  },
+  {
+    "name": "E.S.I.S Hospital / Midc Police Station",
+    "coords": [
+      19.118011,
+      72.867957
+    ]
+  },
+  {
+    "name": "Empty Container Yard Jnpt Road",
+    "coords": [
+      18.964021,
+      73.069382
+    ]
+  },
+  {
+    "name": "Empyrean School",
+    "coords": [
+      19.068706,
+      73.069277
+    ]
+  },
+  {
+    "name": "Everard Nagar",
+    "coords": [
+      19.051071,
+      72.875286
+    ]
+  },
+  {
+    "name": "Expressway / MC Donald's Kalamboli",
+    "coords": [
+      19.020992,
+      73.10249
+    ]
+  },
+  {
+    "name": "Farm House Anjur Gaon",
+    "coords": [
+      19.222853,
+      73.017632
+    ]
+  },
+  {
+    "name": "Fire Brigade (P.D Mello Road)",
+    "coords": [
+      18.947015,
+      72.840005
+    ]
+  },
+  {
+    "name": "Fire Brigade Kalamboli / Abhyudaya Bank",
+    "coords": [
+      19.026432,
+      73.105353
+    ]
+  },
+  {
+    "name": "Fire Brigade Panvel",
+    "coords": [
+      18.996415,
+      73.119228
+    ]
+  },
+  {
+    "name": "Funde College",
+    "coords": [
+      18.895033,
+      72.977998
+    ]
+  },
+  {
+    "name": "Gaondevi Chowk (Sarsole)",
+    "coords": [
+      19.049203,
+      73.017303
+    ]
+  },
+  {
+    "name": "Gaondevi Maidan / Airoli Gaon",
+    "coords": [
+      19.160944,
+      72.993509
+    ]
+  },
+  {
+    "name": "Gaondevi Mandir Talvali",
+    "coords": null
+  },
+  {
+    "name": "Gavaskar Ground / Sector 1/2",
+    "coords": [
+      19.028022,
+      73.039698
+    ]
+  },
+  {
+    "name": "Gavaskar Maidan Sec 2/3",
+    "coords": [
+      19.028985,
+      73.039143
+    ]
+  },
+  {
+    "name": "Gavhan Phata",
+    "coords": [
+      18.957424,
+      73.035721
+    ]
+  },
+  {
+    "name": "Gavli Dev",
+    "coords": [
+      19.125709,
+      73.018049
+    ]
+  },
+  {
+    "name": "Gawali Dev",
+    "coords": [
+      19.12605,
+      73.01779
+    ]
+  },
+  {
+    "name": "Gawanpada (Mulund-E)",
+    "coords": [
+      19.17346,
+      72.961717
+    ]
+  },
+  {
+    "name": "Gavhan Phata",
+    "coords": [
+      18.957424,
+      73.035721
+    ]
+  },
+  {
+    "name": "Ganesh Apartment (Ulwe)",
+    "coords": [
+      18.983992,
+      73.026109
+    ]
+  },
+  {
+    "name": "Ganesh Ghat",
+    "coords": [
+      19.172108,
+      73.227463
+    ]
+  },
+  {
+    "name": "Ganesh Maidan",
+    "coords": [
+      19.017956,
+      73.012356
+    ]
+  },
+  {
+    "name": "Ganesh Mandir",
+    "coords": [
+      19.265591,
+      72.870729
+    ]
+  },
+  {
+    "name": "Ganesh Mandir Sector 35",
+    "coords": [
+      19.218737,
+      73.094227
+    ]
+  },
+  {
+    "name": "Ganesh Nagar",
+    "coords": [
+      19.203885,
+      72.827543
+    ]
+  },
+  {
+    "name": "Ganesh Talav Karave Gaon",
+    "coords": [
+      19.020189,
+      73.011343
+    ]
+  },
+  {
+    "name": "Ganpati Pada (Vitava Naka)",
+    "coords": [
+      19.184527,
+      72.993114
+    ]
+  },
+  {
+    "name": "Gautam Nagar (Marol)",
+    "coords": [
+      19.118515,
+      72.870044
+    ]
+  },
+  {
+    "name": "Gateway Plaza (Powai)",
+    "coords": [
+      19.123673,
+      72.912161
+    ]
+  },
+  {
+    "name": "Geomayor",
+    "coords": [
+      19.011818,
+      73.033289
+    ]
+  },
+  {
+    "name": "Ghansoli Dargah",
+    "coords": [
+      19.114298,
+      73.006258
+    ]
+  },
+  {
+    "name": "Ghansoli Depot",
+    "coords": [
+      19.121848,
+      72.992935
+    ]
+  },
+  {
+    "name": "Ghansoli Gharonda",
+    "coords": [
+      19.12291,
+      72.99986
+    ]
+  },
+  {
+    "name": "Ghansoli Naka",
+    "coords": [
+      19.126186,
+      73.004431
+    ]
+  },
+  {
+    "name": "Ghansoli Railway Station (W)",
+    "coords": [
+      19.115712,
+      73.005533
+    ]
+  },
+  {
+    "name": "Ghansoli School",
+    "coords": [
+      19.125933,
+      73.002212
+    ]
+  },
+  {
+    "name": "Ghansoli Sector 4",
+    "coords": [
+      19.112297,
+      73.008014
+    ]
+  },
+  {
+    "name": "Ghansoli Sector 6 / Gharonda",
+    "coords": [
+      19.112297,
+      73.008014
+    ]
+  },
+  {
+    "name": "Ghansoli Station",
+    "coords": [
+      19.116299,
+      73.008078
+    ]
+  },
+  {
+    "name": "Ghansoli Village",
+    "coords": [
+      19.122678,
+      72.999446
+    ]
+  },
+  {
+    "name": "Ghodivali Phata",
+    "coords": [
+      18.831382,
+      73.290942
+    ]
+  },
+  {
+    "name": "Ghorpade Chowk",
+    "coords": [
+      19.166669,
+      73.23065
+    ]
+  },
+  {
+    "name": "Goalavali Gaon",
+    "coords": [
+      19.212795,
+      73.114919
+    ]
+  },
+  {
+    "name": "Golden Daiej (Majiwada Junction)",
+    "coords": [
+      19.212132,
+      72.977583
+    ]
+  },
+  {
+    "name": "Golden Garage",
+    "coords": [
+      19.141258,
+      73.012457
+    ]
+  },
+  {
+    "name": "Gokul Nagar",
+    "coords": [
+      19.208469,
+      72.977176
+    ]
+  },
+  {
+    "name": "Gokuldham Developers",
+    "coords": [
+      19.072757,
+      73.079022
+    ]
+  },
+  {
+    "name": "Gothivali Gaon",
+    "coords": [
+      19.137231,
+      73.001506
+    ]
+  },
+  {
+    "name": "Gothivali Village / Telephone Exchange",
+    "coords": [
+      19.134179,
+      73.003802
+    ]
+  },
+  {
+    "name": "Gotheghar (Hotel Govardhan)",
+    "coords": [
+      19.136847,
+      73.050708
+    ]
+  },
+  {
+    "name": "Grahak Seva Kendra Kalyan Phata",
+    "coords": [
+      19.29634,
+      73.063227
+    ]
+  },
+  {
+    "name": "Green Field",
+    "coords": [
+      19.139476,
+      72.869293
+    ]
+  },
+  {
+    "name": "Green Heritage Sector 20",
+    "coords": [
+      19.053231,
+      73.070596
+    ]
+  },
+  {
+    "name": "Gurudatta Society",
+    "coords": [
+      19.010294,
+      73.014705
+    ]
+  },
+  {
+    "name": "Gurudatta Society Airoli",
+    "coords": [
+      19.143218,
+      72.995111
+    ]
+  },
+  {
+    "name": "Gurudwara",
+    "coords": [
+      19.032997,
+      73.099127
+    ]
+  },
+  {
+    "name": "Gurudwara Kalamboli",
+    "coords": [
+      19.032997,
+      73.099127
+    ]
+  },
+  {
+    "name": "Gurukul Society",
+    "coords": [
+      19.195615,
+      72.964861
+    ]
+  },
+  {
+    "name": "Hal Gaon",
+    "coords": [
+      18.809438,
+      73.316126
+    ]
+  },
+  {
+    "name": "Hal Khurd Gaon",
+    "coords": [
+      18.813326,
+      73.311355
+    ]
+  },
+  {
+    "name": "Hal Phata",
+    "coords": [
+      18.914943,
+      73.303778
+    ]
+  },
+  {
+    "name": "Hanuman Chowk",
+    "coords": [
+      19.169206,
+      72.959731
+    ]
+  },
+  {
+    "name": "Hanuman Chowk (Mulund)",
+    "coords": [
+      19.169206,
+      72.959731
+    ]
+  },
+  {
+    "name": "Hanuman Complex",
+    "coords": [
+      19.241128,
+      73.016875
+    ]
+  },
+  {
+    "name": "Hardiliya Company / Koramandal",
+    "coords": [
+      19.118668,
+      73.017057
+    ]
+  },
+  {
+    "name": "Hare Krishna Mandir",
+    "coords": [
+      19.052364,
+      73.064865
+    ]
+  },
+  {
+    "name": "Hayko",
+    "coords": [
+      19.089728,
+      73.027552
+    ]
+  },
+  {
+    "name": "Hedutane",
+    "coords": [
+      19.172892,
+      73.100514
+    ]
+  },
+  {
+    "name": "Hedutane Pada / Samadhan Hotel",
+    "coords": [
+      19.171416,
+      73.095866
+    ]
+  },
+  {
+    "name": "Helan Kelar Institute",
+    "coords": [
+      19.113229,
+      73.012331
+    ]
+  },
+  {
+    "name": "Hema Park",
+    "coords": [
+      19.147897,
+      72.942214
+    ]
+  },
+  {
+    "name": "Hind Turminals Company",
+    "coords": [
+      18.873839,
+      72.977114
+    ]
+  },
+  {
+    "name": "Hindalco Company",
+    "coords": [
+      19.065788,
+      73.125858
+    ]
+  },
+  {
+    "name": "Hira Nagar",
+    "coords": [
+      19.161875,
+      72.945649
+    ]
+  },
+  {
+    "name": "Hiranandani Complex Kharghar",
+    "coords": [
+      19.033053,
+      73.065458
+    ]
+  },
+  {
+    "name": "Hiranandani Highway Kharghar",
+    "coords": [
+      19.031712,
+      73.065696
+    ]
+  },
+  {
+    "name": "Hiranandani Powai",
+    "coords": [
+      19.115122,
+      72.905261
+    ]
+  },
+  {
+    "name": "Hotel President (Cuffe Parade)",
+    "coords": [
+      18.914901,
+      72.822038
+    ]
+  },
+  {
+    "name": "Hotel Rahul Park",
+    "coords": [
+      18.966627,
+      73.137848
+    ]
+  },
+  {
+    "name": "Hotel Rinky (Petrol Pump)",
+    "coords": [
+      18.849769,
+      73.277282
+    ]
+  },
+  {
+    "name": "Hotel Sun & Sand",
+    "coords": [
+      19.178898,
+      73.221766
+    ]
+  },
+  {
+    "name": "Hutatma Chowk",
+    "coords": [
+      18.933122,
+      72.831863
+    ]
+  },
+  {
+    "name": "Hutatma Chowk / Mumbai University",
+    "coords": [
+      18.929457,
+      72.829624
+    ]
+  },
+  {
+    "name": "Hyderabad State Bank / Spring Colony",
+    "coords": [
+      19.037045,
+      73.087954
+    ]
+  },
+  {
+    "name": "I.C.L School (Vashi)",
+    "coords": [
+      19.07314,
+      73.012525
+    ]
+  },
+  {
+    "name": "I.E.S High School J.V.L.R",
+    "coords": [
+      19.128366,
+      72.887301
+    ]
+  },
+  {
+    "name": "I.T.Park",
+    "coords": [
+      19.153269,
+      72.943691
+    ]
+  },
+  {
+    "name": "IIT Main Gate Powai",
+    "coords": [
+      19.125792,
+      72.91706
+    ]
+  },
+  {
+    "name": "IIT Market Powai",
+    "coords": [
+      19.127414,
+      72.919114
+    ]
+  },
+  {
+    "name": "Income Tax Colony",
+    "coords": [
+      19.019319,
+      73.028445
+    ]
+  },
+  {
+    "name": "Income Tax Office (B.K.C)",
+    "coords": [
+      19.059128,
+      72.854469
+    ]
+  },
+  {
+    "name": "Income Tax Office (Khanda Colony)",
+    "coords": [
+      19.006079,
+      73.10692
+    ]
+  },
+  {
+    "name": "Indira Gandhi Engineering College",
+    "coords": [
+      19.098239,
+      73.000757
+    ]
+  },
+  {
+    "name": "Indira Nagar",
+    "coords": [
+      19.071396,
+      73.027897
+    ]
+  },
+  {
+    "name": "Indira Nagar (Thane)",
+    "coords": [
+      19.204764,
+      72.949858
+    ]
+  },
+  {
+    "name": "Indian Bank / Union Bank",
+    "coords": [
+      18.997053,
+      73.119973
+    ]
+  },
+  {
+    "name": "Indian Oil Diva Highway",
+    "coords": [
+      19.233497,
+      73.032788
+    ]
+  },
+  {
+    "name": "Indian Oil Pump (Mankoli)",
+    "coords": [
+      19.24347,
+      73.04448
+    ]
+  },
+  {
+    "name": "Indraprastha / Thakur Estate",
+    "coords": [
+      18.909545,
+      73.273831
+    ]
+  },
+  {
+    "name": "Infinot House",
+    "coords": [
+      19.036414,
+      73.102491
+    ]
+  },
+  {
+    "name": "Integrated I.R.S.Tower - 1 Sector 21",
+    "coords": [
+      18.981876,
+      73.029916
+    ]
+  },
+  {
+    "name": "J.V.M College Airoli",
+    "coords": [
+      19.156975,
+      72.993166
+    ]
+  },
+  {
+    "name": "Jai Sambhav Society",
+    "coords": [
+      18.973184,
+      73.112241
+    ]
+  },
+  {
+    "name": "Jain Mandir",
+    "coords": [
+      19.147173,
+      73.051304
+    ]
+  },
+  {
+    "name": "Jain Park",
+    "coords": [
+      19.024902,
+      73.092771
+    ]
+  },
+  {
+    "name": "Jalaram Bappa Mandir",
+    "coords": [
+      19.216101,
+      72.991296
+    ]
+  },
+  {
+    "name": "Jasai",
+    "coords": [
+      18.935002,
+      73.018574
+    ]
+  },
+  {
+    "name": "Jay Mata Di Vajan Kata",
+    "coords": [
+      19.067575,
+      73.031154
+    ]
+  },
+  {
+    "name": "Jesus Saint Merry School",
+    "coords": [
+      19.048669,
+      73.064573
+    ]
+  },
+  {
+    "name": "Jewek Of Navi Mumbai",
+    "coords": [
+      19.026274,
+      73.012138
+    ]
+  },
+  {
+    "name": "Jimmy Tower",
+    "coords": [
+      19.104061,
+      73.001579
+    ]
+  },
+  {
+    "name": "Juhu Village Sector 14",
+    "coords": [
+      19.096123,
+      72.828089
+    ]
+  },
+  {
+    "name": "Jui Pada Gaon (Sector 23/24)",
+    "coords": [
+      19.051364,
+      73.016979
+    ]
+  },
+  {
+    "name": "Juinagar Sector 25",
+    "coords": [
+      19.057186,
+      73.019144
+    ]
+  },
+  {
+    "name": "Juinagar Station (Herdilla Co.)",
+    "coords": [
+      19.056167,
+      73.019247
+    ]
+  },
+  {
+    "name": "Juinagar Station (Herdilla Company)",
+    "coords": [
+      19.056141,
+      73.019832
+    ]
+  },
+  {
+    "name": "Juinagar Station (W)",
+    "coords": [
+      19.055693,
+      73.015367
+    ]
+  },
+  {
+    "name": "JVLR Junction",
+    "coords": [
+      19.124096,
+      72.937892
+    ]
+  },
+  {
+    "name": "K.M 1",
+    "coords": [
+      19.106283,
+      72.828237
+    ]
+  },
+  {
+    "name": "K.M 10",
+    "coords": [
+      19.106283,
+      72.828237
+    ]
+  },
+  {
+    "name": "K.M 13",
+    "coords": [
+      19.106283,
+      72.828237
+    ]
+  },
+  {
+    "name": "K.M 16",
+    "coords": [
+      19.106283,
+      72.828237
+    ]
+  },
+  {
+    "name": "K.M 4",
+    "coords": [
+      19.106283,
+      72.828237
+    ]
+  },
+  {
+    "name": "K.M 6",
+    "coords": [
+      19.106283,
+      72.828237
+    ]
+  },
+  {
+    "name": "K.M 7",
+    "coords": [
+      19.106283,
+      72.828237
+    ]
+  },
+  {
+    "name": "Kaire Shivaji Nagar",
+    "coords": [
+      18.882464,
+      73.178556
+    ]
+  },
+  {
+    "name": "Kalan Samaj Mandir",
+    "coords": [
+      18.991517,
+      73.106634
+    ]
+  },
+  {
+    "name": "Kalher",
+    "coords": [
+      19.247203,
+      73.017811
+    ]
+  },
+  {
+    "name": "Kalimata Mandir (Sector-13)",
+    "coords": [
+      18.995389,
+      73.126981
+    ]
+  },
+  {
+    "name": "Kalsekar",
+    "coords": [
+      19.154472,
+      73.0338
+    ]
+  },
+  {
+    "name": "Kalwa Depot",
+    "coords": [
+      19.19779,
+      72.99115
+    ]
+  },
+  {
+    "name": "Kalwa Naka",
+    "coords": [
+      19.195446,
+      72.987212
+    ]
+  },
+  {
+    "name": "Kalyan Bail Bazar Chowk",
+    "coords": [
+      19.237014,
+      73.12535
+    ]
+  },
+  {
+    "name": "Kalyan Bypass (Rajnoli Naka)",
+    "coords": [
+      19.268933,
+      73.083173
+    ]
+  },
+  {
+    "name": "Kalyan Phata (Dahisar Gaon)",
+    "coords": [
+      19.144983,
+      73.043528
+    ]
+  },
+  {
+    "name": "Kalyan Phata (Datta Mandir)",
+    "coords": [
+      19.143258,
+      73.046044
+    ]
+  },
+  {
+    "name": "Kalamboli Bus Station",
+    "coords": [
+      19.027725,
+      73.100792
+    ]
+  },
+  {
+    "name": "Kalamboli Chowk (M.G.M.Hospital)",
+    "coords": [
+      19.008028,
+      73.109371
+    ]
+  },
+  {
+    "name": "Kalamboli Chowk (Mumbra Road)",
+    "coords": null
+  },
+  {
+    "name": "Kalamboli Circle | MGM Hospital",
+    "coords": [
+      19.018796,
+      73.1049
+    ]
+  },
+  {
+    "name": "Kalamboli Colony",
+    "coords": [
+      19.022194,
+      73.100142
+    ]
+  },
+  {
+    "name": "Kalamboli Fire Brigade",
+    "coords": [
+      19.026755,
+      73.105848
+    ]
+  },
+  {
+    "name": "Kalamboli Gaon",
+    "coords": [
+      19.022748,
+      73.106321
+    ]
+  },
+  {
+    "name": "Kalamboli Naka",
+    "coords": [
+      19.026371,
+      73.102051
+    ]
+  },
+  {
+    "name": "Kalamboli Police Headquarter",
+    "coords": [
+      19.039678,
+      73.091029
+    ]
+  },
+  {
+    "name": "Kalamboli Roadpali",
+    "coords": [
+      19.04355,
+      73.102432
+    ]
+  },
+  {
+    "name": "Kalamboli Roadpali (Pallavi Hotel)",
+    "coords": [
+      19.04355,
+      73.102432
+    ]
+  },
+  {
+    "name": "Kalamboli Sector 16 Roadpali",
+    "coords": [
+      19.034024,
+      73.086315
+    ]
+  },
+  {
+    "name": "Kalanagar (B.K.C Road)",
+    "coords": [
+      19.053768,
+      72.848595
+    ]
+  },
+  {
+    "name": "Kalanagar (Bandra E)",
+    "coords": [
+      19.056487,
+      72.846742
+    ]
+  },
+  {
+    "name": "Kalote Gaon",
+    "coords": [
+      18.855034,
+      73.275909
+    ]
+  },
+  {
+    "name": "Kamal Amrohi Studio",
+    "coords": [
+      19.134577,
+      72.874199
+    ]
+  },
+  {
+    "name": "Kamdhenu Oaklands",
+    "coords": [
+      18.967964,
+      73.012771
+    ]
+  },
+  {
+    "name": "Kamdhenu Society",
+    "coords": [
+      19.079737,
+      73.09424
+    ]
+  },
+  {
+    "name": "Kamgar Hospital",
+    "coords": [
+      19.073629,
+      72.988065
+    ]
+  },
+  {
+    "name": "Kamothe Phata",
+    "coords": [
+      19.027261,
+      73.093836
+    ]
+  },
+  {
+    "name": "Kamothe Village / K.L.E College",
+    "coords": [
+      19.025721,
+      73.096032
+    ]
+  },
+  {
+    "name": "Kanjur Marg Village (E.E.H)",
+    "coords": [
+      19.130274,
+      72.941665
+    ]
+  },
+  {
+    "name": "Kanjur Village",
+    "coords": [
+      19.132536,
+      72.936202
+    ]
+  },
+  {
+    "name": "Karanjade Gaon",
+    "coords": [
+      18.976478,
+      73.106031
+    ]
+  },
+  {
+    "name": "Karanjade Phata",
+    "coords": [
+      18.982392,
+      73.103315
+    ]
+  },
+  {
+    "name": "Karanjade Sector 3",
+    "coords": [
+      18.979963,
+      73.103857
+    ]
+  },
+  {
+    "name": "Karanjade Sector 4 / Bhakti Apartment",
+    "coords": [
+      18.978579,
+      73.104792
+    ]
+  },
+  {
+    "name": "Karanjade Sector 6 (Jai Sambhav Society)",
+    "coords": [
+      18.973184,
+      73.112241
+    ]
+  },
+  {
+    "name": "Karave Gaon / Smashan Bhumi",
+    "coords": [
+      19.01671,
+      73.013787
+    ]
+  },
+  {
+    "name": "Karmil School",
+    "coords": [
+      19.093202,
+      72.828679
+    ]
+  },
+  {
+    "name": "Karmnagari",
+    "coords": [
+      19.113447,
+      73.060916
+    ]
+  },
+  {
+    "name": "Karnal Bank",
+    "coords": [
+      18.984215,
+      73.114471
+    ]
+  },
+  {
+    "name": "Karal Junction",
+    "coords": [
+      18.908567,
+      72.987027
+    ]
+  },
+  {
+    "name": "Karjat Phata",
+    "coords": [
+      18.897594,
+      73.251992
+    ]
+  },
+  {
+    "name": "Karjat Railway Station",
+    "coords": [
+      18.913129,
+      73.319704
+    ]
+  },
+  {
+    "name": "Karjat ST Stand",
+    "coords": [
+      18.911439,
+      73.317464
+    ]
+  },
+  {
+    "name": "Kasheli Gaon",
+    "coords": [
+      19.23622,
+      73.014767
+    ]
+  },
+  {
+    "name": "Kasheli Toll Naka",
+    "coords": [
+      19.234454,
+      73.012522
+    ]
+  },
+  {
+    "name": "Kasturi Heritage",
+    "coords": [
+      18.968319,
+      73.017835
+    ]
+  },
+  {
+    "name": "Katrap Gaon",
+    "coords": [
+      19.167705,
+      73.230254
+    ]
+  },
+  {
+    "name": "Katai Gaon",
+    "coords": [
+      19.169283,
+      73.080124
+    ]
+  },
+  {
+    "name": "Katai Junction / Naka",
+    "coords": [
+      19.171785,
+      73.082676
+    ]
+  },
+  {
+    "name": "Kelan Enterprises",
+    "coords": [
+      19.065664,
+      73.031428
+    ]
+  },
+  {
+    "name": "Kendriya Vihar",
+    "coords": [
+      19.037432,
+      73.065758
+    ]
+  },
+  {
+    "name": "Kendriya Vihar Sector 38",
+    "coords": [
+      19.019692,
+      73.014618
+    ]
+  },
+  {
+    "name": "Kendriya Vihar Sector No.12 / Navrang Hotel",
+    "coords": [
+      19.03767,
+      73.06562
+    ]
+  },
+  {
+    "name": "Keni Vidyalaya",
+    "coords": [
+      19.147248,
+      72.945328
+    ]
+  },
+  {
+    "name": "Khanda Colony Signal",
+    "coords": [
+      19.006031,
+      73.10848
+    ]
+  },
+  {
+    "name": "Khanda Gaon",
+    "coords": [
+      19.005754,
+      73.107448
+    ]
+  },
+  {
+    "name": "Khanda Gaon Colony",
+    "coords": [
+      19.005754,
+      73.107448
+    ]
+  },
+  {
+    "name": "Khanda Gaon Netrajyot Hospital",
+    "coords": [
+      19.009784,
+      73.107785
+    ]
+  },
+  {
+    "name": "Khandeshwar Railway Station",
+    "coords": [
+      19.007968,
+      73.095688
+    ]
+  },
+  {
+    "name": "Khane Ambivali",
+    "coords": [
+      18.892724,
+      73.170334
+    ]
+  },
+  {
+    "name": "Khardi Gaon",
+    "coords": [
+      19.16275,
+      73.046122
+    ]
+  },
+  {
+    "name": "Kharegaon Naka",
+    "coords": [
+      19.201921,
+      73.001511
+    ]
+  },
+  {
+    "name": "Kharegaon Phata",
+    "coords": [
+      19.208221,
+      73.000307
+    ]
+  },
+  {
+    "name": "Kharghar Gram Panchayat Office",
+    "coords": [
+      19.043761,
+      73.072482
+    ]
+  },
+  {
+    "name": "Kharghar Jalvayu Vihar",
+    "coords": [
+      19.049642,
+      73.070382
+    ]
+  },
+  {
+    "name": "Kharghar Multispeciality Hospital",
+    "coords": [
+      19.056867,
+      73.064269
+    ]
+  },
+  {
+    "name": "Kharghar Railway Station",
+    "coords": [
+      19.027842,
+      73.060106
+    ]
+  },
+  {
+    "name": "Kharghar Sector 35 (Manjiri Paradise) Bharatmata Chowk",
+    "coords": [
+      19.034831,
+      73.070698
+    ]
+  },
+  {
+    "name": "Kharghar Station",
+    "coords": [
+      19.026488,
+      73.058957
+    ]
+  },
+  {
+    "name": "Kharghar Subway",
+    "coords": [
+      19.027208,
+      73.057905
+    ]
+  },
+  {
+    "name": "Kharghar Valley Shilp Gate No.1",
+    "coords": [
+      19.034831,
+      73.070698
+    ]
+  },
+  {
+    "name": "Kharghar Valley Shilp Gate No.2",
+    "coords": [
+      19.034831,
+      73.070698
+    ]
+  },
+  {
+    "name": "Kharkopar Station",
+    "coords": [
+      18.958837,
+      73.015768
+    ]
+  },
+  {
+    "name": "Kharkopar Station (W)",
+    "coords": [
+      18.960745,
+      73.013478
+    ]
+  },
+  {
+    "name": "Khidkali",
+    "coords": [
+      19.159349,
+      73.068038
+    ]
+  },
+  {
+    "name": "Khidkali Mandir",
+    "coords": [
+      19.156634,
+      73.064097
+    ]
+  },
+  {
+    "name": "Khind",
+    "coords": [
+      19.166191,
+      72.928599
+    ]
+  },
+  {
+    "name": "Khoni Gaon",
+    "coords": [
+      19.177424,
+      73.116768
+    ]
+  },
+  {
+    "name": "Khot Bungalow",
+    "coords": [
+      19.124988,
+      73.055333
+    ]
+  },
+  {
+    "name": "Khopoli",
+    "coords": [
+      18.785562,
+      73.34381
+    ]
+  },
+  {
+    "name": "Kismat Colony",
+    "coords": [
+      19.171896,
+      73.023728
+    ]
+  },
+  {
+    "name": "Kolkhe Gaon",
+    "coords": [
+      18.964857,
+      73.14046
+    ]
+  },
+  {
+    "name": "Kon Gaon",
+    "coords": [
+      18.959521,
+      73.149626
+    ]
+  },
+  {
+    "name": "Konkan Bhavan",
+    "coords": [
+      19.024165,
+      73.039717
+    ]
+  },
+  {
+    "name": "Kopar",
+    "coords": [
+      19.10499,
+      73.003318
+    ]
+  },
+  {
+    "name": "Kopar Khairane Sector 2/20",
+    "coords": [
+      19.104835,
+      73.003864
+    ]
+  },
+  {
+    "name": "Koparkhairane Bus Station",
+    "coords": [
+      19.10499,
+      73.003318
+    ]
+  },
+  {
+    "name": "Koparkhairane Sector 7/15 (Shubham Palace)",
+    "coords": [
+      19.104835,
+      73.003864
+    ]
+  },
+  {
+    "name": "Kopra Gaon",
+    "coords": [
+      19.036369,
+      73.072345
+    ]
+  },
+  {
+    "name": "Kopri Gaon (Palm Beach Road)",
+    "coords": [
+      19.088762,
+      73.009268
+    ]
+  },
+  {
+    "name": "Kopri Talav / Panyachi Taki",
+    "coords": [
+      19.090619,
+      73.014878
+    ]
+  },
+  {
+    "name": "Krantiveer Vasudev Balwant Phadke School",
+    "coords": [
+      19.031574,
+      73.043296
+    ]
+  },
+  {
+    "name": "Krishna Kutir",
+    "coords": [
+      18.973894,
+      73.110605
+    ]
+  },
+  {
+    "name": "Krishna Steel",
+    "coords": [
+      19.092586,
+      73.02708
+    ]
+  },
+  {
+    "name": "Krushna Hotel / Swastik Krushna Society",
+    "coords": [
+      19.01941,
+      73.088192
+    ]
+  },
+  {
+    "name": "Kukshet Gaon",
+    "coords": [
+      19.039497,
+      73.012658
+    ]
+  },
+  {
+    "name": "Kukshet Gaon / M.S.E.B (Nerul)",
+    "coords": [
+      19.039194,
+      73.009654
+    ]
+  },
+  {
+    "name": "Kumbharli Phata",
+    "coords": [
+      19.176559,
+      73.114362
+    ]
+  },
+  {
+    "name": "Kumbharwada (Chembur)",
+    "coords": [
+      19.054266,
+      72.891952
+    ]
+  },
+  {
+    "name": "Kurla Nagrik Sahakari Bank",
+    "coords": [
+      19.148831,
+      72.944077
+    ]
+  },
+  {
+    "name": "Kutuk Bandhan",
+    "coords": [
+      19.074053,
+      73.075797
+    ]
+  },
+  {
+    "name": "L&T Company Mahape",
+    "coords": [
+      19.110893,
+      73.029665
+    ]
+  },
+  {
+    "name": "L.M.Hostel",
+    "coords": [
+      19.050257,
+      73.082168
+    ]
+  },
+  {
+    "name": "Ladhi Company",
+    "coords": [
+      19.159463,
+      73.04634
+    ]
+  },
+  {
+    "name": "Lalit Clinic",
+    "coords": [
+      19.185749,
+      73.02143
+    ]
+  },
+  {
+    "name": "Late Balasaheb Thackeray Trauma Center | SRP Camp",
+    "coords": [
+      19.142437,
+      72.855419
+    ]
+  },
+  {
+    "name": "LOK Gram",
+    "coords": [
+      19.225971,
+      73.126207
+    ]
+  },
+  {
+    "name": "Loha Bhavan",
+    "coords": [
+      18.952211,
+      72.841488
+    ]
+  },
+  {
+    "name": "Lokmanya Nagar (Thane)",
+    "coords": [
+      19.208901,
+      72.951594
+    ]
+  },
+  {
+    "name": "Lokshahir Annabhau Sathe Chowk",
+    "coords": [
+      19.11346,
+      72.999186
+    ]
+  },
+  {
+    "name": "Lokshahir Annabhau Sathe Udyan / Suman Nagar",
+    "coords": [
+      19.05352,
+      72.884364
+    ]
+  },
+  {
+    "name": "Lodha Complex",
+    "coords": [
+      19.163637,
+      73.074149
+    ]
+  },
+  {
+    "name": "Lodha Dham",
+    "coords": [
+      19.337831,
+      72.893971
+    ]
+  },
+  {
+    "name": "Lodha Gaon",
+    "coords": [
+      19.250017,
+      73.053684
+    ]
+  },
+  {
+    "name": "Lodhivali",
+    "coords": [
+      18.902394,
+      73.213733
+    ]
+  },
+  {
+    "name": "Lubrizol Company | Indiranagar",
+    "coords": [
+      19.070972,
+      73.025425
+    ]
+  },
+  {
+    "name": "M.B.P Mahape (Millennium Business Park)",
+    "coords": [
+      19.113825,
+      73.016242
+    ]
+  },
+  {
+    "name": "M.I.D.C.",
+    "coords": [
+      19.09539,
+      73.016494
+    ]
+  },
+  {
+    "name": "M.J.P.Office",
+    "coords": [
+      18.913499,
+      73.204316
+    ]
+  },
+  {
+    "name": "M.M.R.D.A / Family Court (B.K.C)",
+    "coords": [
+      19.056048,
+      72.851042
+    ]
+  },
+  {
+    "name": "M.S.E.B Digha",
+    "coords": [
+      19.172136,
+      72.999073
+    ]
+  },
+  {
+    "name": "M.S.E.B.Office Bhiwandi",
+    "coords": [
+      19.288814,
+      73.069256
+    ]
+  },
+  {
+    "name": "Mafco Market Sanpada",
+    "coords": [
+      19.070405,
+      73.009053
+    ]
+  },
+  {
+    "name": "Magathane Depot",
+    "coords": [
+      19.221549,
+      72.866433
+    ]
+  },
+  {
+    "name": "Magathane Telephone Exchange",
+    "coords": [
+      19.216029,
+      72.867448
+    ]
+  },
+  {
+    "name": "Mahagiri Koliwada",
+    "coords": [
+      19.193744,
+      72.982607
+    ]
+  },
+  {
+    "name": "Mahape Gaon",
+    "coords": [
+      19.110817,
+      73.021473
+    ]
+  },
+  {
+    "name": "Mahape Junction",
+    "coords": [
+      19.112824,
+      73.021573
+    ]
+  },
+  {
+    "name": "Mahape Naka",
+    "coords": [
+      19.113772,
+      73.008971
+    ]
+  },
+  {
+    "name": "Mahape Naka / Koramandal",
+    "coords": null
+  },
+  {
+    "name": "Maharana Pratap Chowk (Badlapur)",
+    "coords": [
+      19.161071,
+      73.233996
+    ]
+  },
+  {
+    "name": "Maharana Pratap Chowk (Mulund Check Naka W)",
+    "coords": [
+      19.184157,
+      72.954371
+    ]
+  },
+  {
+    "name": "Maharana Pratap Chowk (Mulund Check Naka-W)",
+    "coords": [
+      19.184157,
+      72.954371
+    ]
+  },
+  {
+    "name": "Maharashtra Nagar (Mankhurd)",
+    "coords": [
+      19.051706,
+      72.937641
+    ]
+  },
+  {
+    "name": "Maharashtra School Sector 13",
+    "coords": null
+  },
+  {
+    "name": "Maharashtra State Co-Operative Bank",
+    "coords": [
+      19.070014,
+      73.00206
+    ]
+  },
+  {
+    "name": "Mahatma Gandhi Complex (Juhu Nagar)",
+    "coords": [
+      19.084676,
+      73.001939
+    ]
+  },
+  {
+    "name": "Mahatma Phule Auditorium",
+    "coords": [
+      19.067634,
+      73.002203
+    ]
+  },
+  {
+    "name": "Mahatma Phule College / Karanjade Phata",
+    "coords": [
+      18.977276,
+      73.096234
+    ]
+  },
+  {
+    "name": "Mahatma Phule Sabhagruha",
+    "coords": [
+      19.07127,
+      73.00223
+    ]
+  },
+  {
+    "name": "Mahavir Icon / Amity International School",
+    "coords": [
+      19.009811,
+      73.036933
+    ]
+  },
+  {
+    "name": "Mahindra Company Gate | BHAD Colony",
+    "coords": [
+      19.205544,
+      72.865617
+    ]
+  },
+  {
+    "name": "Maitri Park",
+    "coords": [
+      19.050215,
+      72.904885
+    ]
+  },
+  {
+    "name": "Majas Depot",
+    "coords": [
+      19.13899,
+      72.865111
+    ]
+  },
+  {
+    "name": "Maker Tower",
+    "coords": [
+      18.916172,
+      72.817688
+    ]
+  },
+  {
+    "name": "Maldhanisar Kendra / Sector 23",
+    "coords": [
+      19.098805,
+      72.998989
+    ]
+  },
+  {
+    "name": "Malewadi",
+    "coords": [
+      19.00174,
+      73.140133
+    ]
+  },
+  {
+    "name": "Mangaon",
+    "coords": [
+      19.190329,
+      73.094357
+    ]
+  },
+  {
+    "name": "Mankhurd Octroi Naka",
+    "coords": [
+      19.05802,
+      72.955469
+    ]
+  },
+  {
+    "name": "Mankhurd Station (N)",
+    "coords": [
+      19.049177,
+      72.931817
+    ]
+  },
+  {
+    "name": "Mankoli",
+    "coords": [
+      19.239554,
+      73.040676
+    ]
+  },
+  {
+    "name": "Manisha Nagar",
+    "coords": [
+      19.196874,
+      72.990925
+    ]
+  },
+  {
+    "name": "Manisha Paradise Society",
+    "coords": [
+      19.041825,
+      73.095351
+    ]
+  },
+  {
+    "name": "Manjulabai Patil Chowk (A.V.L.Chowk)",
+    "coords": [
+      19.070202,
+      73.030741
+    ]
+  },
+  {
+    "name": "Manpada Gaon",
+    "coords": [
+      19.186415,
+      73.091485
+    ]
+  },
+  {
+    "name": "Mantralaya",
+    "coords": [
+      18.928238,
+      72.823904
+    ]
+  },
+  {
+    "name": "Mantralaya (Golden Gate)",
+    "coords": [
+      18.927353,
+      72.825917
+    ]
+  },
+  {
+    "name": "Mantralaya / L.I.C",
+    "coords": [
+      18.929214,
+      72.823491
+    ]
+  },
+  {
+    "name": "Marine Box Care",
+    "coords": [
+      18.952419,
+      73.03354
+    ]
+  },
+  {
+    "name": "Marol Depot",
+    "coords": [
+      19.117932,
+      72.8654
+    ]
+  },
+  {
+    "name": "Marvel Society (Nerul Sector 50)",
+    "coords": [
+      19.440446,
+      72.823182
+    ]
+  },
+  {
+    "name": "Marvel Soham",
+    "coords": [
+      18.98414,
+      73.028719
+    ]
+  },
+  {
+    "name": "Mathadi Bhavan",
+    "coords": [
+      19.079068,
+      73.009173
+    ]
+  },
+  {
+    "name": "Mathadi Bhavan / Commodity Exchange",
+    "coords": [
+      19.079068,
+      73.009173
+    ]
+  },
+  {
+    "name": "Mathama Phule Sabhagruha",
+    "coords": [
+      19.072192,
+      73.002245
+    ]
+  },
+  {
+    "name": "Mata Bal Hospital",
+    "coords": [
+      19.100992,
+      72.998319
+    ]
+  },
+  {
+    "name": "Meenatai Thakare Hospital",
+    "coords": [
+      19.033859,
+      73.020807
+    ]
+  },
+  {
+    "name": "Mega Mart / O.E.S International School",
+    "coords": [
+      19.091789,
+      73.005378
+    ]
+  },
+  {
+    "name": "Megh Malhar Society",
+    "coords": [
+      19.117887,
+      72.995224
+    ]
+  },
+  {
+    "name": "Meridian Society",
+    "coords": [
+      19.041125,
+      73.009755
+    ]
+  },
+  {
+    "name": "Metro Bridge Taloja",
+    "coords": [
+      19.073176,
+      73.096172
+    ]
+  },
+  {
+    "name": "Metro Mall Junction",
+    "coords": [
+      19.229164,
+      73.122168
+    ]
+  },
+  {
+    "name": "Mhaseshwar Mandir",
+    "coords": [
+      18.966221,
+      72.995062
+    ]
+  },
+  {
+    "name": "Mhatrewadi / Patilwadi",
+    "coords": [
+      19.149714,
+      73.054737
+    ]
+  },
+  {
+    "name": "Milap Nagar Corner",
+    "coords": [
+      19.21197,
+      73.107464
+    ]
+  },
+  {
+    "name": "Milind Nagar (J.V.L.R)",
+    "coords": [
+      19.126318,
+      72.890548
+    ]
+  },
+  {
+    "name": "Millenium Hospital (Kousa)",
+    "coords": [
+      19.162529,
+      73.028773
+    ]
+  },
+  {
+    "name": "Minds Space",
+    "coords": [
+      19.163314,
+      72.999791
+    ]
+  },
+  {
+    "name": "Mindspace (Capgemini)",
+    "coords": [
+      19.176512,
+      72.991105
+    ]
+  },
+  {
+    "name": "Modi Hospital",
+    "coords": [
+      19.160831,
+      72.99862
+    ]
+  },
+  {
+    "name": "Mogalwadi",
+    "coords": [
+      18.791114,
+      73.339518
+    ]
+  },
+  {
+    "name": "Mohopada",
+    "coords": [
+      18.895789,
+      73.17634
+    ]
+  },
+  {
+    "name": "Monark",
+    "coords": [
+      19.218226,
+      73.119024
+    ]
+  },
+  {
+    "name": "Morave Phata",
+    "coords": [
+      18.978087,
+      73.037109
+    ]
+  },
+  {
+    "name": "Moreshwar Heritage",
+    "coords": [
+      18.978073,
+      73.02449
+    ]
+  },
+  {
+    "name": "Morivali Mhada Colony",
+    "coords": [
+      19.190077,
+      73.195832
+    ]
+  },
+  {
+    "name": "Morva Phata",
+    "coords": [
+      19.291881,
+      72.814465
+    ]
+  },
+  {
+    "name": "Motha Khanda Gaon",
+    "coords": [
+      19.006186,
+      73.103779
+    ]
+  },
+  {
+    "name": "Motha Ulwa Village",
+    "coords": [
+      18.98531,
+      73.037744
+    ]
+  },
+  {
+    "name": "Motha Ulwa Village",
+    "coords": [
+      18.98531,
+      73.037744
+    ]
+  },
+  {
+    "name": "Mothi Jui Phata",
+    "coords": [
+      19.014882,
+      73.083957
+    ]
+  },
+  {
+    "name": "Motiram Shankar Patekar Chowk",
+    "coords": [
+      19.163264,
+      72.996701
+    ]
+  },
+  {
+    "name": "MSEB Gas Tarmaine",
+    "coords": [
+      18.875907,
+      72.968181
+    ]
+  },
+  {
+    "name": "MSEB Gas Turbine",
+    "coords": [
+      19.17469,
+      72.993389
+    ]
+  },
+  {
+    "name": "Muktai Nagar Majiwada",
+    "coords": [
+      19.210533,
+      72.977348
+    ]
+  },
+  {
+    "name": "Mukund Company Bridge",
+    "coords": [
+      19.181873,
+      72.995431
+    ]
+  },
+  {
+    "name": "Mulund Railway Station (E)",
+    "coords": [
+      19.171296,
+      72.958461
+    ]
+  },
+  {
+    "name": "Mulund Railway Station (W)",
+    "coords": [
+      19.173011,
+      72.956729
+    ]
+  },
+  {
+    "name": "Mulund Station (W)",
+    "coords": [
+      19.173746,
+      72.958011
+    ]
+  },
+  {
+    "name": "Municipal Hospital Mulund",
+    "coords": [
+      19.171879,
+      72.960103
+    ]
+  },
+  {
+    "name": "Municipal School",
+    "coords": [
+      19.179239,
+      72.841976
+    ]
+  },
+  {
+    "name": "Municipal School Sector 7",
+    "coords": [
+      19.101537,
+      72.917956
+    ]
+  },
+  {
+    "name": "Murbadevi Chowk Ghansoli",
+    "coords": [
+      19.125984,
+      72.991665
+    ]
+  },
+  {
+    "name": "N.D.Studio / Adivasi Pada",
+    "coords": [
+      18.899016,
+      73.257869
+    ]
+  },
+  {
+    "name": "N.H.P School",
+    "coords": [
+      19.158013,
+      72.992329
+    ]
+  },
+  {
+    "name": "N.M Sez / Morave Junction",
+    "coords": [
+      18.978658,
+      73.022929
+    ]
+  },
+  {
+    "name": "N.M.Sez / Gomaji Kasturi",
+    "coords": [
+      18.981218,
+      73.024027
+    ]
+  },
+  {
+    "name": "N.R.I / Nerul Sector 46 & 48",
+    "coords": [
+      19.006054,
+      73.017596
+    ]
+  },
+  {
+    "name": "N.M.M.C Head Office Belapur (Kille Gaon)",
+    "coords": [
+      19.00909,
+      73.027866
+    ]
+  },
+  {
+    "name": "N.M.R.L.",
+    "coords": [
+      19.186232,
+      73.208932
+    ]
+  },
+  {
+    "name": "Nadal",
+    "coords": [
+      18.901242,
+      73.226817
+    ]
+  },
+  {
+    "name": "Nagari Arogya Kendra Kharghar",
+    "coords": [
+      19.041255,
+      73.070103
+    ]
+  },
+  {
+    "name": "Nagri Arogya Kendra (Ulwe)",
+    "coords": [
+      18.976154,
+      73.026717
+    ]
+  },
+  {
+    "name": "Nagzari Gaon",
+    "coords": [
+      19.103687,
+      73.125267
+    ]
+  },
+  {
+    "name": "Nahur Station (E)",
+    "coords": [
+      19.154395,
+      72.946991
+    ]
+  },
+  {
+    "name": "Najrana Compound",
+    "coords": [
+      19.12208,
+      72.84408
+    ]
+  },
+  {
+    "name": "Namaskar Dhaba",
+    "coords": [
+      19.206755,
+      73.134291
+    ]
+  },
+  {
+    "name": "Nandivali",
+    "coords": [
+      19.211978,
+      73.132228
+    ]
+  },
+  {
+    "name": "Narayan Residency",
+    "coords": [
+      19.078835,
+      73.092539
+    ]
+  },
+  {
+    "name": "Naren Phata",
+    "coords": [
+      19.127914,
+      73.124217
+    ]
+  },
+  {
+    "name": "Nashik Bypass Bharat Petroleum",
+    "coords": [
+      19.307352,
+      73.064958
+    ]
+  },
+  {
+    "name": "Nashimat Colony",
+    "coords": [
+      19.169889,
+      73.024565
+    ]
+  },
+  {
+    "name": "National Residency",
+    "coords": [
+      18.98077,
+      73.118867
+    ]
+  }
+]
