@@ -115,7 +115,7 @@ def reverse_populate_stops(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0001_initial'),  # Replace with your latest migration
+        ('core', '0002_alter_stop_latitude_alter_stop_longitude'),  # Updated to correct dependency
     ]
 
     operations = [
