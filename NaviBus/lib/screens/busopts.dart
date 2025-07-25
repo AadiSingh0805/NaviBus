@@ -416,6 +416,10 @@ class _BusOptionsState extends State<BusOptions> {
   Future<void> searchRoutes() async {
     final start = sourceController.text.trim();
     final end = destinationController.text.trim();
+    
+    print('🚏 Source Controller Text: "$start"');
+    print('🎯 Destination Controller Text: "$end"');
+    
     if (start.isEmpty || end.isEmpty) {
       print('Source or destination is empty');
       return;
@@ -425,7 +429,7 @@ class _BusOptionsState extends State<BusOptions> {
       // Use DataService to get the correct backend URL
       final dataService = DataService.instance;
       final backendUrl = await dataService.getCurrentBackendUrl();
-      final url = Uri.parse('$backendUrl/routes/search/?start=$start&end=$end');
+      final url = Uri.parse('$backendUrl/api/routes/search/?start=$start&end=$end');
       print('Calling API: $url');
       
       final response = await http.get(url).timeout(Duration(seconds: 10));
@@ -436,7 +440,7 @@ class _BusOptionsState extends State<BusOptions> {
         List<dynamic> routesWithFare = await Future.wait(routes.map((route) async {
           try {
             final fareUrl = Uri.parse(
-              '$backendUrl/routes/fare/?route_number=${route['route_number']}&source_stop=${Uri.encodeComponent(route['sub_path'][0])}&destination_stop=${Uri.encodeComponent(route['sub_path'][route['sub_path'].length-1])}'
+              '$backendUrl/api/routes/fare/?route_number=${route['route_number']}&source_stop=${Uri.encodeComponent(route['sub_path'][0])}&destination_stop=${Uri.encodeComponent(route['sub_path'][route['sub_path'].length-1])}'
             );
             final fareRes = await http.get(fareUrl).timeout(Duration(seconds: 8));
             if (fareRes.statusCode == 200) {
@@ -505,7 +509,7 @@ class _BusOptionsState extends State<BusOptions> {
       // Use DataService to get the correct backend URL
       final dataService = DataService.instance;
       final backendUrl = await dataService.getCurrentBackendUrl();
-      final url = Uri.parse('$backendUrl/stops/autocomplete/?q=${Uri.encodeComponent(query)}');
+      final url = Uri.parse('$backendUrl/api/stops/autocomplete/?q=${Uri.encodeComponent(query)}');
       
       final response = await http.get(url).timeout(Duration(seconds: 3)); // Reduced timeout
       
@@ -645,7 +649,7 @@ class _BusOptionsState extends State<BusOptions> {
       // Use DataService to get the correct backend URL
       final dataService = DataService.instance;
       final backendUrl = await dataService.getCurrentBackendUrl();
-      final url = Uri.parse('$backendUrl/routes/plan/?start=$start&end=$end');
+      final url = Uri.parse('$backendUrl/api/routes/plan/?start=$start&end=$end');
       print('Calling planner API: $url');
       
       final response = await http.get(url).timeout(Duration(seconds: 10));

@@ -24,7 +24,7 @@ class _AutocompleteTestWidgetState extends State<AutocompleteTestWidget> {
       final dataService = DataService.instance;
       final backendUrl = await dataService.getCurrentBackendUrl();
       final testQuery = 'mum'; // Common test query
-      final url = Uri.parse('$backendUrl/stops/autocomplete/?q=$testQuery');
+      final url = Uri.parse('$backendUrl/api/stops/autocomplete/?q=$testQuery');
       
       print('Testing autocomplete endpoint: $url');
       

@@ -94,7 +94,7 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
       // Use DataService to get the correct backend URL
       final dataService = DataService.instance;
       final backendUrl = await dataService.getCurrentBackendUrl();
-      final url = Uri.parse('$backendUrl/stops/autocomplete/?q=${Uri.encodeComponent(query)}');
+      final url = Uri.parse('$backendUrl/api/stops/autocomplete/?q=${Uri.encodeComponent(query)}');
       
       print('Fetching suggestions from: $url');
       final response = await http.get(url).timeout(Duration(seconds: 3)); // Reduced timeout
@@ -242,7 +242,7 @@ class _MultiRoutePlannerScreenState extends State<MultiRoutePlannerScreen> {
       // Use DataService to get the correct backend URL
       final dataService = DataService.instance;
       final backendUrl = await dataService.getCurrentBackendUrl();
-      final url = Uri.parse('$backendUrl/routes/plan/?start=$start&end=$end');
+      final url = Uri.parse('$backendUrl/api/routes/plan/?start=$start&end=$end');
       print('Calling multi-route planner API: $url');
       
       final response = await http.get(url).timeout(Duration(seconds: 10));

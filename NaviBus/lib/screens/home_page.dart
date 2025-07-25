@@ -305,7 +305,7 @@ class _HomePageState extends State<HomePage> {
       final backendUrl = await dataService.getCurrentBackendUrl();
       
       // Try fuzzy search first for better user experience
-      final fuzzyUrl = Uri.parse('$backendUrl/routes/fuzzy-search/?route_number=${Uri.encodeComponent(routeNumber)}');
+      final fuzzyUrl = Uri.parse('$backendUrl/api/routes/fuzzy-search/?route_number=${Uri.encodeComponent(routeNumber)}');
       
       print('Using fuzzy search URL: $fuzzyUrl');
       final response = await http.get(fuzzyUrl).timeout(Duration(seconds: 10));
@@ -376,7 +376,7 @@ class _HomePageState extends State<HomePage> {
       
       // If fuzzy search didn't work or returned no results, try exact search
       print('Fuzzy search returned no results, trying exact search...');
-      final exactUrl = Uri.parse('$backendUrl/routes/details/?route_number=${Uri.encodeComponent(routeNumber)}');
+      final exactUrl = Uri.parse('$backendUrl/api/routes/details/?route_number=${Uri.encodeComponent(routeNumber)}');
       
       print('Using exact search URL: $exactUrl');
       final exactResponse = await http.get(exactUrl).timeout(Duration(seconds: 10));
@@ -539,7 +539,7 @@ class _HomePageState extends State<HomePage> {
       // Use DataService to get the correct backend URL
       final dataService = DataService.instance;
       final backendUrl = await dataService.getCurrentBackendUrl();
-      final url = Uri.parse('$backendUrl/routes/search/?route_number=$routeNumber');
+      final url = Uri.parse('$backendUrl/api/routes/search/?route_number=$routeNumber');
       
       print('Using backend: $backendUrl');
       final response = await http.get(url);

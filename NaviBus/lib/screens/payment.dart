@@ -45,7 +45,7 @@ class _PaymentState extends State<Payment> {
       final dataService = DataService.instance;
       final backendUrl = await dataService.getCurrentBackendUrl();
       final url = Uri.parse(
-        '$backendUrl/routes/fare/?route_number=$routeNumber&source_stop=$source&destination_stop=$destination'
+        '$backendUrl/api/routes/fare/?route_number=$routeNumber&source_stop=$source&destination_stop=$destination'
       );
       
       final response = await http.get(url).timeout(Duration(seconds: 10));

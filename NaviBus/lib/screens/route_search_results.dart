@@ -41,7 +41,7 @@ class _RouteSearchResultsPageState extends State<RouteSearchResultsPage> {
       final backendUrl = await dataService.getCurrentBackendUrl();
       
       // Try fuzzy search first
-      final fuzzyUrl = Uri.parse('$backendUrl/routes/fuzzy-search/?route_number=${Uri.encodeComponent(widget.searchQuery)}');
+      final fuzzyUrl = Uri.parse('$backendUrl/api/routes/fuzzy-search/?route_number=${Uri.encodeComponent(widget.searchQuery)}');
       final response = await http.get(fuzzyUrl).timeout(Duration(seconds: 10));
       
       if (response.statusCode == 200) {
