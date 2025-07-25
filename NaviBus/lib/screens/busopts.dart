@@ -192,7 +192,7 @@ class _BusOptionsState extends State<BusOptions> {
     try {
       final dataService = DataService.instance;
       final backendUrl = await dataService.getCurrentBackendUrl();
-      final url = Uri.parse('$backendUrl/api/stops/nearby/?lat=$lat&lng=$lng&radius=2');
+      final url = Uri.parse('$backendUrl/api/stops/nearby/?lat=$lat&lon=$lng&radius=2');
       
       print('🔍 Fetching nearby stops from: $url');
       

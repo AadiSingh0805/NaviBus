@@ -5,8 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DataService {
-  static const String _baseUrl = 'http://10.0.2.2:8000/api';
-  static const String _productionUrl = 'https://navibus-lwpp.onrender.com/api'; // Your live Render backend
+  static const String _baseUrl = 'http://10.0.2.2:8000';
+  static const String _productionUrl = 'https://navibus-lwpp.onrender.com'; // Your live Render backend
   static const Duration _requestTimeout = Duration(seconds: 10);
   static const Duration _cacheTimeout = Duration(hours: 6); // Cache for 6 hours
   
@@ -55,7 +55,7 @@ class DataService {
   Future<bool> _isLocalBackendAvailable() async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/health/'),
+        Uri.parse('$_baseUrl/api/health/'),
         headers: {'Content-Type': 'application/json'},
       ).timeout(Duration(seconds: 3));
       return response.statusCode == 200;
@@ -94,7 +94,7 @@ class DataService {
   Future<bool> _isBackendReachable(String baseUrl) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/health/'),
+        Uri.parse('$baseUrl/api/health/'),
         headers: {'Content-Type': 'application/json'},
       ).timeout(Duration(seconds: 5));
       return response.statusCode == 200;

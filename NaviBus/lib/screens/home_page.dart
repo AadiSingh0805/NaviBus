@@ -112,11 +112,185 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// Navigate to BusOptions with GPS functionality
-  void _navigateWithGPS() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const BusOptions(),
+  void _navigateWithGPS() async {
+    try {
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              ),
+              SizedBox(width: 12),
+              Text('Finding nearby bus stops...'),
+            ],
+          ),
+          duration: Duration(seconds: 5),
+          backgroundColor: Color(0xFF042F40),
+        ),
+      );
+
+      // Get current location if not available
+      if (currentPosition == null) {
+        await getCurrentLocation();
+      }
+
+      if (currentPosition == null) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not get your location. Please enable GPS and try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Fetch nearby stops
+      final nearbyStops = await _fetchNearbyStops();
+      
+      // Hide loading indicator
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      if (nearbyStops.isNotEmpty) {
+        _showNearbyStopsModal(nearbyStops);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('No bus stops found nearby. Try increasing the search radius.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error finding nearby stops: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// Fetch nearby stops from backend API
+  Future<List<Map<String, dynamic>>> _fetchNearbyStops() async {
+    try {
+      final dataService = DataService.instance;
+      final backendUrl = await dataService.getCurrentBackendUrl();
+      final url = Uri.parse('$backendUrl/api/stops/nearby/?lat=${currentPosition!.latitude}&lon=${currentPosition!.longitude}&radius=2');
+      
+      print('🔍 Fetching nearby stops from: $url');
+      
+      final response = await http.get(url).timeout(Duration(seconds: 10));
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        List<Map<String, dynamic>> stops = List<Map<String, dynamic>>.from(data['stops'] ?? []);
+        print('✅ Found ${stops.length} nearby stops');
+        return stops;
+      } else {
+        print('❌ API returned status: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('❌ Error fetching nearby stops: $e');
+      return [];
+    }
+  }
+
+  /// Show modal with nearby stops
+  void _showNearbyStopsModal(List<Map<String, dynamic>> stops) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            // Handle bar
+            Container(
+              margin: EdgeInsets.only(top: 10),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Header
+            Padding(
+              padding: EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Icon(Icons.near_me, color: Color(0xFF042F40)),
+                  SizedBox(width: 10),
+                  Text(
+                    'Nearby Bus Stops',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF042F40),
+                    ),
+                  ),
+                  Spacer(),
+                  Text(
+                    '${stops.length} stops',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Stops list
+            Expanded(
+              child: ListView.builder(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                itemCount: stops.length,
+                itemBuilder: (context, index) {
+                  final stop = stops[index];
+                  return Card(
+                    margin: EdgeInsets.only(bottom: 10),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Color(0xFF042F40),
+                        child: Icon(Icons.bus_alert, color: Colors.white, size: 20),
+                      ),
+                      title: Text(
+                        stop['name'] ?? 'Unknown Stop',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        '${stop['distance']?.toStringAsFixed(2) ?? '0.0'} km away',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      trailing: Icon(Icons.directions, color: Color(0xFF042F40)),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BusOptions(),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
