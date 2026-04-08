@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:navibus/screens/feedback.dart';
-import 'package:navibus/screens/busopts.dart';
+import 'package:navibus/screens/busopts_new.dart';
 import 'package:navibus/screens/login.dart';
 import 'package:navibus/screens/profile_page.dart';
 import 'package:navibus/screens/route_search_results.dart';
@@ -280,7 +280,7 @@ class _HomePageState extends State<HomePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => BusOptions(),
+                            builder: (context) => const BusOptionsNew(),
                           ),
                         );
                       },
@@ -793,7 +793,7 @@ class _HomePageState extends State<HomePage> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const BusOptions()),
+              MaterialPageRoute(builder: (context) => const BusOptionsNew()),
             );
           },
           child: Padding(
