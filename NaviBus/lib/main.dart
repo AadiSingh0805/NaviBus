@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:navibus/screens/auth_page.dart';
 import 'package:navibus/widgets/auth_wrapper.dart';
 import 'screens/home_page.dart';
-import 'screens/busopts.dart';
 import 'screens/busopts_new.dart';
 import 'screens/payment.dart';
 
@@ -69,7 +68,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => AuthWrapper(),
         '/auth': (context) => AuthPage(),
         '/home': (context) => HomePage(),
-        '/busopts': (context) => BusOptions(),
+        '/busopts': (context) => BusOptionsNew(),
         '/busopts_new': (context) => BusOptionsNew(),
         '/payment': (context) => const Payment(bus: null),
         '/paymentconfirm': (context) => const Payment(bus: null),
