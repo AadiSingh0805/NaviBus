@@ -1,0 +1,74 @@
+route_id,route_name,bus_type,start_point,end_point,average_fare,first_bus_weekday,last_bus_weekday,frequency_weekday,frequency_sunday,distance_km,no_of_stops,zone_source,zone_dest,region_source,region_dest,schedule_id
+1,5,Non-AC,Chhatrapati Shivaji Maharaj Chowk Bhiwandi,Airoli Bus Station,37.0,05:40:00,21:45:00,22,37,28.5,65,Thane,Navi_Mumbai,Thane_District,Thane_District,1
+2,86,Non-AC,Diva Station,Airoli Bus Station,35.0,08:05:00,22:12:00,45,45,32.1,72,Eastern_Mumbai,Navi_Mumbai,Thane_District,Thane_District,2
+3,105,Non-AC,Panvel Station (W),Bandra Station (W),53.0,06:30:00,19:00:00,70,70,48.7,73,Panvel,Western_Mumbai,Raigad_District,Greater_Mumbai,3
+4,110 EL.AC,AC,World Trade Centre,Bank Of India Sector 35 Kharghar,85.0,06:00:00,22:30:00,25,30,52.3,67,Central_Mumbai,Navi_Mumbai,Greater_Mumbai,Navi_Mumbai,4
+5,125 EL.AC,Electric,Kharghar Jalvayu Vihar,Borivali (E) Station,90.0,06:30:00,19:15:00,32,32,65.8,105,Navi_Mumbai,Western_Mumbai,Navi_Mumbai,Greater_Mumbai,5
+6,45,Non-AC,Taloja Phase 2,Kharghar Railway Station,17.0,06:15:00,22:36:00,19,22,12.4,30,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,6
+7,17 E.AC,Electric,Nerul Station (E),Bamandongri Station (E),27.0,05:07:00,00:25:00,11,11,18.6,19,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,7
+8,22 E.AC,Electric,Vashi Sector 7 Bus Station,Kharghar Jalvayu Vihar,50.0,05:55:00,20:50:00,37,43,35.2,78,Harbour_Line,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,8
+9,76,Non-AC,Panvel Station (W),Karanjade Sector 6 (Jai Sambhav Society),11.0,06:00:00,22:10:00,14,13,8.7,18,Panvel,Panvel,Raigad_District,Raigad_District,9
+10,40,Non-AC,Vashi Station,Dahisar Gaon Naka,29.0,08:10:00,20:03:00,69,69,42.8,47,Harbour_Line,Thane,Navi_Mumbai,Thane_District,10
+11,56 V.AC,AC,Police Commissioner Office (Kalamboli),Mansarovar Railway Station,45.0,06:30:00,21:00:00,35,40,15.2,24,Panvel,Panvel,Raigad_District,Raigad_District,11
+12,107 EL.AC,Electric,World Trade Centre,CBD Belapur Bus Station,80.0,07:00:00,21:30:00,20,25,46.5,69,Central_Mumbai,Navi_Mumbai,Greater_Mumbai,Navi_Mumbai,12
+13,48,Non-AC,Vashivali Gaon (Rasayani),Belapur Station,45.0,05:35:00,20:50:00,30,55,58.3,61,Panvel,Navi_Mumbai,Raigad_District,Navi_Mumbai,13
+14,64,Non-AC,Kalyan Bail Bazar Chowk,Digha Village,37.0,07:20:00,18:40:00,105,120,48.9,60,Thane,Navi_Mumbai,Thane_District,Thane_District,14
+15,114 EL.AC,Electric,World Trade Centre,Ghansoli Depot,65.0,06:45:00,22:15:00,18,22,44.2,63,Central_Mumbai,Navi_Mumbai,Greater_Mumbai,Navi_Mumbai,15
+16,55 E.AC,Electric,Pethali Gaon (Taloja Phase 1),Ghansoli Depot,55.0,05:10:00,21:50:00,18,22,38.7,81,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,16
+17,10,Non-AC,Sanpada Station,Ghansoli Depot,17.0,06:25:00,21:15:00,39,45,14.3,33,Harbour_Line,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,17
+18,61 V.AC,AC,Kalyan Bail Bazar Chowk,Belapur Station,55.0,06:25:00,20:05:00,42,50,52.4,62,Thane,Navi_Mumbai,Thane_District,Navi_Mumbai,18
+19,11,Non-AC,Vashi Station,Thane,29.0,05:57:00,21:20:00,68,68,35.6,55,Harbour_Line,Thane,Navi_Mumbai,Thane_District,19
+20,50,Non-AC,CBD Belapur,Panvel Station,36.0,04:00:00,22:15:00,26,30,18.9,25,Navi_Mumbai,Panvel,Navi_Mumbai,Raigad_District,20
+21,16 E.AC,Electric,Kharghar Sector 8,Nerul Station,35.0,06:15:00,21:45:00,25,30,12.8,18,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,21
+22,62 E.AC,Electric,Kalamboli Circle,Vashi Station,50.0,06:30:00,22:30:00,22,30,22.4,32,Panvel,Harbour_Line,Raigad_District,Navi_Mumbai,22
+23,100 E.AC,Electric,Panvel Bus Station,Belapur Station,50.0,05:35:00,20:25:00,52,52,16.7,28,Panvel,Navi_Mumbai,Raigad_District,Navi_Mumbai,23
+24,117 EL.AC,Electric,Mumbai Central,Kharghar Sector 20,120.0,07:30:00,20:00:00,60,75,68.2,45,Central_Mumbai,Navi_Mumbai,Greater_Mumbai,Navi_Mumbai,24
+25,42 E.AC,Electric,Nerul Sector 15,Kalamboli Highway,55.0,06:15:00,21:15:00,22,45,24.8,35,Navi_Mumbai,Panvel,Navi_Mumbai,Raigad_District,25
+26,59,Non-AC,Kharghar Village,Panvel Market,13.0,06:05:00,21:08:00,16,26,9.8,14,Navi_Mumbai,Panvel,Navi_Mumbai,Raigad_District,26
+27,83,Non-AC,Airoli Station,Thane Station,15.0,06:30:00,19:35:00,23,30,18.5,28,Navi_Mumbai,Thane,Thane_District,Thane_District,27
+28,60,Non-AC,Vashi Highway,Kalamboli Bus Stand,39.0,06:45:00,23:00:00,30,35,26.7,38,Harbour_Line,Panvel,Navi_Mumbai,Raigad_District,28
+29,30 Jada,Non-AC,Kamothe Station,Kharghar Depot,18.0,07:00:00,19:30:00,45,60,11.2,16,Panvel,Navi_Mumbai,Raigad_District,Navi_Mumbai,29
+30,84 V.AC,AC,Belapur Bus Station,Kalyan Station,35.0,08:30:00,20:50:00,40,40,38.9,48,Navi_Mumbai,Thane,Navi_Mumbai,Thane_District,30
+31,65 V.AC,AC,Kalamboli Station,Airoli Depot,55.0,07:25:00,19:00:00,30,35,28.3,42,Panvel,Navi_Mumbai,Raigad_District,Thane_District,31
+32,82 E.AC,Electric,Panvel Highway,Vashi Sector 19,40.0,07:42:00,21:30:00,24,25,32.4,44,Panvel,Harbour_Line,Raigad_District,Navi_Mumbai,32
+33,58,Non-AC,Kharghar Market,Belapur Industrial Area,55.0,05:45:00,21:15:00,25,32,31.8,52,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,33
+34,46,Non-AC,Nerul West,Panvel East,49.0,06:05:00,19:42:00,25,25,28.6,36,Navi_Mumbai,Panvel,Navi_Mumbai,Raigad_District,34
+35,9 E.AC,Electric,Vashi Commercial Complex,Ghansoli IT Park,20.0,05:25:00,23:15:00,12,12,16.4,22,Harbour_Line,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,35
+36,109,Non-AC,Turbhe Industrial Area,Digha Market,24.0,06:15:00,20:10:00,30,35,19.7,28,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,Thane_District,36
+37,49,Non-AC,Kalamboli Phase 2,Belapur Hospital,49.0,06:35:00,21:30:00,30,38,24.9,33,Panvel,Navi_Mumbai,Raigad_District,Navi_Mumbai,37
+38,7,Non-AC,Airoli Sector 12,Thane Court,27.0,07:10:00,21:30:00,30,30,22.1,31,Navi_Mumbai,Thane,Thane_District,Thane_District,38
+39,52,Non-AC,Kharghar Sector 14,Vashi Plaza,23.0,06:45:00,22:35:00,20,22,17.8,26,Navi_Mumbai,Harbour_Line,Navi_Mumbai,Navi_Mumbai,39
+40,14 E.AC,Electric,Nerul Commerce Center,Kalamboli Junction,18.0,06:45:00,19:42:00,25,25,13.5,19,Navi_Mumbai,Panvel,Navi_Mumbai,Raigad_District,40
+41,106 EL.AC,Electric,Fort Mumbai,CBD Belapur,85.0,07:15:00,20:45:00,35,40,41.8,38,Central_Mumbai,Navi_Mumbai,Greater_Mumbai,Navi_Mumbai,41
+42,24 V.AC (AD),AC,Vashi Sector 15,Panvel Highway,42.0,06:00:00,22:00:00,28,32,25.6,35,Harbour_Line,Panvel,Navi_Mumbai,Raigad_District,42
+43,24 V.AC (GD),AC,Ghansoli Village,Kalamboli Market,42.0,06:30:00,21:15:00,32,38,21.7,29,Navi_Mumbai,Panvel,Navi_Mumbai,Raigad_District,43
+44,108 EL.AC,Electric,Nariman Point,Kharghar IT City,90.0,08:00:00,19:30:00,45,50,54.3,42,Central_Mumbai,Navi_Mumbai,Greater_Mumbai,Navi_Mumbai,44
+45,115 V.AC,AC,Belapur Sector 11,Airoli Metro,48.0,07:00:00,20:30:00,35,40,19.4,24,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,Thane_District,45
+46,116 EL.AC,Electric,Churchgate Station,Panvel Industrial Estate,95.0,06:45:00,21:00:00,40,45,58.7,48,Central_Mumbai,Panvel,Greater_Mumbai,Raigad_District,46
+47,13,Non-AC,Kamothe Junction,Vashi Sector 20,22.0,06:20:00,20:15:00,35,42,15.8,21,Panvel,Harbour_Line,Raigad_District,Navi_Mumbai,47
+48,144 E.AC,Electric,Bandra Kurla Complex,Kharghar Business District,65.0,07:30:00,19:45:00,30,35,36.2,29,Central_Mumbai,Navi_Mumbai,Greater_Mumbai,Navi_Mumbai,48
+49,15 E.AC,Electric,Nerul Sector 22,Kalamboli Village,28.0,06:50:00,21:20:00,22,28,16.9,23,Navi_Mumbai,Panvel,Navi_Mumbai,Raigad_District,49
+50,18 E.AC,Electric,Vashi Inorbit Mall,Ghansoli Station,32.0,07:15:00,20:40:00,26,30,18.7,25,Harbour_Line,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,50
+51,2,Non-AC,Airoli Bus Depot,Kalyan Railway Bridge,15.0,05:45:00,22:30:00,20,25,24.8,32,Navi_Mumbai,Thane,Thane_District,Thane_District,51
+52,2 jada,Non-AC,Kamothe West,Panvel Court,12.0,06:15:00,19:45:00,40,50,8.9,12,Panvel,Panvel,Raigad_District,Raigad_District,52
+53,20 E.AC,Electric,Belapur Central,Vashi Metro Station,38.0,06:40:00,21:10:00,24,28,21.4,27,Navi_Mumbai,Harbour_Line,Navi_Mumbai,Navi_Mumbai,53
+54,21 E.AC,Electric,Kharghar Phase 3,Nerul Hospital,33.0,07:00:00,20:30:00,28,32,19.6,26,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,54
+55,23 E.AC,Electric,Kalamboli Industrial Zone,Vashi Corporate Park,41.0,06:25:00,21:45:00,22,26,24.7,31,Panvel,Harbour_Line,Raigad_District,Navi_Mumbai,55
+56,3,Non-AC,Turbhe MIDC,Airoli Sector 8,18.0,06:10:00,20:20:00,30,35,12.4,18,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,Thane_District,56
+57,30,Non-AC,Kamothe Circle,Kharghar Garden,25.0,06:55:00,19:25:00,38,45,14.7,20,Panvel,Navi_Mumbai,Raigad_District,Navi_Mumbai,57
+58,31,Non-AC,Belapur Hospital,Kalamboli School,20.0,07:20:00,18:50:00,42,48,11.8,16,Navi_Mumbai,Panvel,Navi_Mumbai,Raigad_District,58
+59,4,Non-AC,Ghansoli Market,Vashi Tower,19.0,06:35:00,21:05:00,25,30,13.6,19,Navi_Mumbai,Harbour_Line,Navi_Mumbai,Navi_Mumbai,59
+60,4 jada,Non-AC,Nerul Garden,Panvel College,17.0,07:00:00,19:40:00,35,40,10.9,15,Navi_Mumbai,Panvel,Navi_Mumbai,Raigad_District,60
+61,41,Non-AC,Kalamboli Heights,Vashi Business Park,31.0,06:30:00,20:45:00,32,38,21.3,28,Panvel,Harbour_Line,Raigad_District,Navi_Mumbai,61
+62,43,Non-AC,Kharghar Metro,Belapur Mall,26.0,07:10:00,21:25:00,28,33,16.8,22,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,62
+63,44 E.AC,Electric,Nerul Sports Complex,Kalamboli Tech Park,47.0,06:20:00,20:10:00,24,28,23.4,30,Navi_Mumbai,Panvel,Navi_Mumbai,Raigad_District,63
+64,47 E.AC,Electric,Vashi Sector 30,Ghansoli Business Hub,52.0,07:45:00,19:15:00,26,30,27.8,34,Harbour_Line,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,64
+65,53,Non-AC,Belapur Residential,Airoli Commercial,28.0,06:45:00,21:00:00,30,35,19.2,25,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,Thane_District,65
+66,54,Non-AC,Kalamboli Metro Station,Vashi Shopping Center,24.0,07:05:00,20:35:00,32,38,17.6,23,Panvel,Harbour_Line,Raigad_District,Navi_Mumbai,66
+67,66,Non-AC,Kharghar University,Nerul IT Hub,29.0,06:25:00,21:15:00,26,30,18.9,24,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,67
+68,71,Non-AC,Turbhe Station,Ghansoli Township,33.0,07:30:00,19:45:00,34,40,22.1,28,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,68
+69,73,Non-AC,Belapur Market,Kalamboli Depot,27.0,06:50:00,20:25:00,28,32,16.4,21,Navi_Mumbai,Panvel,Navi_Mumbai,Raigad_District,69
+70,75,Non-AC,Vashi Industrial Estate,Airoli Technology Park,35.0,07:15:00,21:30:00,25,30,24.6,32,Harbour_Line,Navi_Mumbai,Navi_Mumbai,Thane_District,70
+71,77,Non-AC,Kharghar Sports City,Nerul Medical Center,38.0,06:40:00,20:55:00,30,35,26.3,34,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,71
+72,8,Non-AC,Kalamboli Bus Terminal,Vashi Express Highway,21.0,06:00:00,22:00:00,22,26,15.7,20,Panvel,Harbour_Line,Raigad_District,Navi_Mumbai,72
+73,81 E.AC,Electric,Belapur Finance District,Ghansoli Tech Valley,58.0,08:00:00,18:30:00,35,40,31.4,38,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,Navi_Mumbai,73

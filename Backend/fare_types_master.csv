@@ -1,0 +1,11 @@
+fare_type_id,fare_code,description,discount_percentage,applicable_to
+1,REGULAR,Regular Adult Fare,0.00,Adult passengers
+2,STUDENT,Student Concession,25.00,Students with valid ID
+3,SENIOR,Senior Citizen Discount,50.00,Passengers above 60 years
+4,CHILD,Child Fare,50.00,Children aged 5-12 years
+5,DISABLED,Disabled Person Concession,75.00,Persons with disability
+6,MONTHLY,Monthly Pass Discount,15.00,Monthly pass holders
+7,WEEKLY,Weekly Pass Discount,10.00,Weekly pass holders
+8,DAILY,Daily Pass,5.00,Daily unlimited travel
+9,EMPLOYEE,NMMT Employee,90.00,NMMT staff and family
+10,POLICE,Police Personnel,80.00,Police and security forces

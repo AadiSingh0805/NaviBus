@@ -1,0 +1,114 @@
+# NaviBus Dimensional Data Model CSV
+# Fields marked with [MOCK] need faker.js data generation
+# Fields marked with [DERIVED] are calculated from existing data
+# Fields marked with [AVAILABLE] come from production_data.json
+
+# ========== DIM_TIME ==========
+time_id,date,day,month,quarter,year,day_of_week,holiday_flag,season
+# [MOCK] - Generate dates for 2024-2025 with holidays and seasons
+
+# ========== DIM_PASSENGER ==========
+passenger_id,age_group,gender,ticket_type,concession_flag,time_id,fare_type_id,route_id,bus_id
+# [MOCK] age_group: Child(0-12), Adult(13-59), Senior(60+)
+# [MOCK] gender: Male, Female, Other
+# [MOCK] ticket_type: Single, Return, Daily, Weekly, Monthly
+# [MOCK] concession_flag: TRUE/FALSE (students, senior citizens)
+
+# ========== DIM_FARE_TYPE ==========
+fare_type_id,fare_code,disc_perc
+1,REGULAR,0.00
+2,STUDENT,25.00
+3,SENIOR,50.00
+4,CHILD,50.00
+5,DISABLED,75.00
+6,MONTHLY,15.00
+7,WEEKLY,10.00
+
+# ========== DIM_BUS ==========
+bus_id,bus_number,bus_type,fuel_type,capacity,time_id,route_id,location_id
+# [DERIVED] bus_type from route_number (AC/Non-AC detection)
+# [MOCK] bus_number: Format like MH04AB1234
+# [MOCK] fuel_type: Diesel, CNG, Electric
+# [MOCK] capacity: 40-60 for Non-AC, 30-45 for AC
+
+# ========== DIM_ROUTE ==========
+route_id,route_name,distance_km,start_point,end_point,no_of_stops,schedule_id
+# [AVAILABLE] route_id = pk from routes.busroute
+# [AVAILABLE] route_name = route_number from production data
+# [MOCK] distance_km: Calculate based on route type and stops
+# [AVAILABLE] start_point = start_stop name
+# [AVAILABLE] end_point = end_stop name
+# [DERIVED] no_of_stops = count from routestop data
+1,5,,Chhatrapati Shivaji Maharaj Chowk Bhiwandi,Airoli Bus Station,,1
+2,86,,Bhayander (West)rly Station,Airoli Bus Station,,2
+3,105,,Vashi Rly.Stn.,Vashi Rly.Stn. Sector 17,,3
+4,110 EL.AC,,Ghansoli Depot,Ghansoli Depot,,4
+5,125 EL.AC,,Kharghar Village,Karave Bus Stn.,,5
+6,45,,Sector 15,CBD Belapur Rly.Stn.,,6
+7,17 E.AC,,Ghansoli Depot,Vashi Rly.Stn. Via R.Sac.27/5,,7
+8,22 E.AC,,Nerul (East) Sec 46,Kharghar Village,,8
+9,76,,Vashi Rly.Stn.,Kalamboli Old Panvel - Kalamboli Road Bus Station,,9
+10,40,,Kopar Khairane Bus Station,Kopar Khairane,,10
+
+# ========== DIM_LOCATION ==========
+location_id,source,destination,zone_name,region_name
+# [AVAILABLE] source/destination from stop names
+# [MOCK] zone_name: Central, Western, Eastern, Harbour
+# [MOCK] region_name: Mumbai, Thane, Panvel, Navi Mumbai
+
+# ========== DIM_SCHEDULE ==========
+schedule_id,scheduled_departure_time,scheduled_arrival_time,day_type
+# [AVAILABLE] scheduled_departure_time = first_bus_time_weekday
+# [MOCK] scheduled_arrival_time = calculate based on route distance
+# [DERIVED] day_type = Weekday/Sunday based on available timings
+1,05:40:00,,Weekday
+2,05:40:00,,Sunday  
+3,08:05:00,22:12:00,Weekday
+4,08:05:00,22:12:00,Sunday
+5,06:30:00,19:00:00,Weekday
+6,06:30:00,19:00:00,Sunday
+7,,,Weekday
+8,,,Sunday
+9,06:30:00,19:15:00,Weekday
+10,06:30:00,19:15:00,Sunday
+
+# ========== SAMPLE ROUTE DATA WITH DERIVED FIELDS ==========
+# Route 5: Non-AC, estimated 25km, 15 stops
+# Route 86: Non-AC, estimated 30km, 20 stops  
+# Route 105: Non-AC, estimated 15km, 8 stops
+# Route 110 EL.AC: AC Express, estimated 40km, 12 stops
+# Route 125 EL.AC: AC Express, estimated 35km, 18 stops
+
+# ========== FAKER.JS REQUIREMENTS ==========
+# MOCK DATA NEEDED:
+# 1. Time Dimension (365 days * 2 years = 730 records)
+#    - Dates from 2024-01-01 to 2025-12-31
+#    - Holiday flags for Indian holidays
+#    - Seasons: Winter, Summer, Monsoon, Post-Monsoon
+#
+# 2. Passenger Data (10,000-50,000 records)
+#    - Age distribution: 20% Child, 65% Adult, 15% Senior
+#    - Gender distribution: 45% Male, 50% Female, 5% Other
+#    - Ticket types based on demographics
+#
+# 3. Bus Fleet (200-500 buses)
+#    - Maharashtra registration numbers
+#    - Fuel type distribution: 60% Diesel, 35% CNG, 5% Electric
+#    - Capacity based on bus type
+#
+# 4. Location Zones
+#    - Zone mapping for all 1,251 stops
+#    - Regional classifications
+#
+# 5. Distance Calculations
+#    - Estimate based on route type and stop count
+#    - AC routes typically longer distance
+#    - Express routes have fewer stops but longer distance
+
+# ========== BUSINESS RULES FOR MOCKING ==========
+# - AC buses have 20-30% higher fares
+# - Express routes (EL.AC) have fewer stops but longer distances
+# - Peak hours: 7-10 AM, 5-8 PM have higher passenger loads
+# - Monsoon season affects frequency and delays
+# - Student concessions highest during academic months
+# - Senior citizen travel peaks during non-rush hours

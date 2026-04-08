@@ -1,0 +1,15 @@
+bus_id,bus_number,route_id,bus_type,fuel_type,capacity,manufacturing_year,last_maintenance,operational_status
+# [MOCK] - Generate bus numbers in Maharashtra format: MH04AB1234
+# [DERIVED] - bus_type from route data (AC/Non-AC)
+# [MOCK] - fuel_type distribution: 60% Diesel, 35% CNG, 5% Electric
+# [MOCK] - capacity: Non-AC (40-60), AC (30-45)
+# [MOCK] - manufacturing_year: 2015-2024
+# [MOCK] - last_maintenance: Random dates in last 3 months
+# [MOCK] - operational_status: Active, Maintenance, Out_of_Service
+
+# Sample entries (to be expanded with faker.js):
+1,,1,Non-AC,,45,2020,,Active
+2,,1,Non-AC,,45,2019,,Active
+3,,2,Non-AC,,50,2021,,Active
+4,,4,AC,,35,2022,,Active
+5,,5,AC,,40,2023,,Active

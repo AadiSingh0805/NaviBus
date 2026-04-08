@@ -1,0 +1,21 @@
+location_id,stop_name,zone_name,region_name,latitude,longitude,amenities
+# [AVAILABLE] - stop_name from core.stop data
+# [MOCK] - zone_name: Central_Mumbai, Western_Mumbai, Eastern_Mumbai, Harbour_Line, Thane, Panvel, Navi_Mumbai
+# [MOCK] - region_name: Greater_Mumbai, Thane_District, Raigad_District
+# [MOCK] - latitude/longitude: Generate realistic coordinates for Mumbai region
+# [MOCK] - amenities: Shelter, Seating, Display_Board, Toilet, Parking, Food_Stall
+
+# Key zones for mocking:
+# Central Mumbai: Chhatrapati Shivaji Terminus, Mumbai Central, Dadar
+# Western Mumbai: Borivali, Andheri, Bandra
+# Eastern Mumbai: Kurla, Ghatkopar, Mulund  
+# Harbour Line: Vashi, Panvel, Kharghar
+# Thane: Thane Station, Kalwa, Bhiwandi
+# Navi Mumbai: Airoli, Ghansoli, Belapur
+
+# Sample entries (derived from production data):
+1,Chhatrapati Shivaji Maharaj Chowk Bhiwandi,Thane,Thane_District,,,"Shelter,Seating"
+2,Airoli Bus Station,Navi_Mumbai,Thane_District,,,"Shelter,Seating,Display_Board,Toilet"
+3,Najarana Compound,Thane,Thane_District,,,"Shelter"
+4,Bhayander (West)rly Station,Western_Mumbai,Thane_District,,,"Shelter,Seating,Display_Board"
+5,Vashi Rly.Stn.,Harbour_Line,Navi_Mumbai,,,"Shelter,Seating,Display_Board,Toilet,Food_Stall"

@@ -1,0 +1,25 @@
+passenger_id,age_group,gender,ticket_type,concession_flag,boarding_time,travel_date,route_id,fare_type_id,actual_fare,source_stop,destination_stop
+# [MOCK] - passenger_id: Unique identifier
+# [MOCK] - age_group: Child(0-12), Adult(13-59), Senior(60+)
+# [MOCK] - gender: Male, Female, Other (45%:50%:5%)
+# [MOCK] - ticket_type: Single, Return, Daily, Weekly, Monthly
+# [DERIVED] - concession_flag: TRUE for Student/Senior/Child/Disabled
+# [MOCK] - boarding_time: Realistic time distribution
+# [MOCK] - travel_date: Date from time dimension
+# [AVAILABLE] - route_id: From routes data
+# [DERIVED] - fare_type_id: Based on age_group and concession
+# [CALCULATED] - actual_fare: base_fare * (1 - discount_percentage)
+# [MOCK] - source_stop, destination_stop: Random stops on route
+
+# Distribution guidelines:
+# Age: 20% Child, 65% Adult, 15% Senior
+# Peak hours: 40% of travel during 7-10 AM, 5-8 PM
+# Concessions: 30% of passengers eligible
+# Ticket types: 70% Single, 15% Return, 10% Daily, 3% Weekly, 2% Monthly
+
+# Sample entries:
+1,Adult,Female,Single,FALSE,08:15:00,2024-01-15,1,1,37.0,1,2
+2,Child,Male,Single,TRUE,09:30:00,2024-01-15,1,4,18.5,1,2
+3,Senior,Female,Single,TRUE,10:45:00,2024-01-15,2,3,17.5,63,2
+4,Adult,Male,Monthly,FALSE,07:45:00,2024-01-16,5,6,76.5,235,247
+5,Student,Female,Single,TRUE,16:30:00,2024-01-16,7,2,20.25,346,347

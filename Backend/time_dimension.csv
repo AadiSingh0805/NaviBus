@@ -1,0 +1,19 @@
+time_id,date,day,month,quarter,year,day_of_week,holiday_flag,season,peak_hour_flag
+# [MOCK] - Generate for 2024-2025 (730 days)
+# [DERIVED] - day, month, quarter, year from date
+# [DERIVED] - day_of_week: Monday-Sunday
+# [MOCK] - holiday_flag: Indian national holidays + local Mumbai holidays
+# [DERIVED] - season: Summer(Mar-May), Monsoon(Jun-Sep), Winter(Oct-Feb)
+# [DERIVED] - peak_hour_flag: TRUE for 7-10 AM, 5-8 PM
+
+# Key Indian holidays to include:
+# Republic Day (26 Jan), Independence Day (15 Aug), Gandhi Jayanti (2 Oct)
+# Diwali, Holi, Eid, Christmas, Ganesh Chaturthi, Navratri
+# Regional: Gudi Padwa, Maharashtra Day (1 May)
+
+# Sample entries:
+1,2024-01-01,Monday,January,Q1,2024,Monday,TRUE,Winter,FALSE
+2,2024-01-02,Tuesday,January,Q1,2024,Tuesday,FALSE,Winter,FALSE
+3,2024-01-26,Friday,January,Q1,2024,Friday,TRUE,Winter,FALSE
+4,2024-03-15,Friday,March,Q1,2024,Friday,FALSE,Summer,FALSE
+5,2024-06-15,Saturday,June,Q2,2024,Saturday,FALSE,Monsoon,FALSE
