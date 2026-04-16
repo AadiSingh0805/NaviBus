@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:navibus/screens/auth_page.dart';
-import 'package:navibus/widgets/auth_wrapper.dart';
 import 'screens/home_page.dart';
 import 'screens/busopts.dart';
 import 'screens/busopts_new.dart';
 import 'screens/payment.dart';
+import 'screens/profile_page.dart';
+import 'screens/tickets_page.dart';
+import 'screens/notification_control_page.dart';
+import 'services/notification_service.dart';
 
 // Ensure LoginPage is imported from the correct file
 
@@ -16,17 +17,14 @@ Future<void> main() async {
   // Performance optimizations
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(
-      statusBarColor: Color(0xFF042F40),
+      statusBarColor: Color(0xFFD62828),
       statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Color(0xFF042F40),
-      systemNavigationBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Colors.white,
+      systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
-  
-  await Supabase.initialize(
-    url: 'https://gbkbvwbzwehpioqzleup.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia2J2d2J6d2VocGlvcXpsZXVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzNTU2MjksImV4cCI6MjA2NTkzMTYyOX0.1WA5rcsSQMcejlkJcGJqxHpAajw_9lXSdsBXaKNgUSE',
-  );
+
+  await NotificationService.instance.initialize();
   
   runApp(MyApp());
 }
@@ -43,13 +41,19 @@ class MyApp extends StatelessWidget {
       builder: (context, child) {
         // Disable font scaling for better performance and consistent UI
         return MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+          data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(1.0)),
           child: child!,
         );
       },
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        primaryColor: Color(0xFF042F40),
+        primaryColor: const Color(0xFFD62828),
+        scaffoldBackgroundColor: const Color(0xFFF3F3F5),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFD62828),
+          primary: const Color(0xFFD62828),
+          secondary: const Color(0xFFF77F00),
+          surface: Colors.white,
+        ),
         visualDensity: VisualDensity.adaptivePlatformDensity,
         // Performance optimizations for animations
         pageTransitionsTheme: PageTransitionsTheme(
@@ -63,16 +67,23 @@ class MyApp extends StatelessWidget {
           bodyColor: Colors.black87,
           displayColor: Colors.black87,
         ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFFD62828),
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
       ),
-      initialRoute: '/',
+      initialRoute: '/home',
       routes: {
-        '/': (context) => AuthWrapper(),
-        '/auth': (context) => AuthPage(),
+        '/': (context) => const HomePage(),
         '/home': (context) => HomePage(),
         '/busopts': (context) => BusOptions(),
         '/busopts_new': (context) => BusOptionsNew(),
         '/payment': (context) => const Payment(bus: null),
         '/paymentconfirm': (context) => const Payment(bus: null),
+        '/profile': (context) => const ProfilePage(),
+        '/tickets': (context) => const TicketsPage(),
+        '/notifications': (context) => const NotificationControlPage(),
       },
     );
   }

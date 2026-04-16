@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
-import 'paymentopts.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:navibus/screens/live_ride_page.dart';
+import 'package:navibus/screens/payment.dart';
+import 'package:navibus/services/notification_service.dart';
+import 'package:share_plus/share_plus.dart';
 
 class BusDetails extends StatefulWidget {
   final dynamic bus;
+
   const BusDetails({super.key, required this.bus});
 
   @override
@@ -10,411 +15,738 @@ class BusDetails extends StatefulWidget {
 }
 
 class _BusDetailsState extends State<BusDetails> {
-  int adults = 1;
-  int children = 0;
+  bool _isSharing = false;
+  String? _lastSharedLocation;
 
-  int calculateTotalFare(int fare) {
-    // First child is free, next children are half fare
-    int childFare = 0;
-    if (children > 0) {
-      childFare = ((children - 1) * (fare * 0.5)).round();
+  int _computeEta(dynamic bus) {
+    final freq = int.tryParse((bus['frequency_weekday'] ?? '15').toString()) ?? 15;
+    return freq > 4 ? freq - 4 : freq;
+  }
+
+  int _mockWomenSeats(String routeNumber) {
+    final hash = routeNumber.codeUnits.fold<int>(0, (sum, value) => sum + value);
+    return 2 + (hash % 4);
+  }
+
+  int _mockPwdSeats(String routeNumber) {
+    final hash = routeNumber.codeUnits.fold<int>(0, (sum, value) => sum + value);
+    return 1 + (hash % 3);
+  }
+
+  Future<bool> _ensureLocationPermission() async {
+    final isServiceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!isServiceEnabled) {
+      return false;
     }
-    return (adults * fare) + childFare;
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<void> _shareLocationAndBusInfo({
+    required String routeNumber,
+    required String source,
+    required String destination,
+    required String nextStop,
+    required int etaMinutes,
+  }) async {
+    if (_isSharing) {
+      return;
+    }
+
+    setState(() {
+      _isSharing = true;
+    });
+
+    try {
+      final hasPermission = await _ensureLocationPermission();
+      if (!hasPermission) {
+        throw Exception('GPS permission denied or location is disabled');
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      final lat = position.latitude.toStringAsFixed(6);
+      final lon = position.longitude.toStringAsFixed(6);
+      final mapsLink = 'https://maps.google.com/?q=$lat,$lon';
+
+      final message =
+          'I am currently on NaviBus $routeNumber\n'
+          'Route: $source -> $destination\n'
+          'Next stop: $nextStop (ETA ~$etaMinutes min)\n'
+          'My live location: $lat, $lon\n'
+          '$mapsLink';
+
+      await Share.share(
+        message,
+        subject: 'Live bus location update',
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _lastSharedLocation = '$lat, $lon';
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Shared bus and live location successfully.'),
+          backgroundColor: Color(0xFF2E7D32),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not share location: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSharing = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _sendArrivalAlert({
+    required String routeNumber,
+    required String nextStop,
+    required int etaMinutes,
+  }) async {
+    final delaySeconds = etaMinutes > 1 ? 10 : 5;
+
+    await NotificationService.instance.sendAfter(
+      title: 'Bus $routeNumber arrival alert',
+      body: 'Bus $routeNumber is approaching $nextStop. ETA around $etaMinutes min.',
+      delay: Duration(seconds: delaySeconds),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Arrival alert scheduled in $delaySeconds seconds.'),
+        backgroundColor: const Color(0xFF2E7D32),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final bus = widget.bus;
-    final stops = (bus['stops'] ?? bus['sub_path']) ?? [];
-    final fare = bus['fare'] ?? 0;
-    final busType = bus['bus_type'] ?? 'N/A';
-    final isSunday = DateTime.now().weekday == DateTime.sunday;
-    final freq = isSunday ? bus['frequency_sunday'] : bus['frequency_weekday'];
-    final firstBus = isSunday ? bus['first_bus_time_sunday'] : bus['first_bus_time_weekday'];
-    final lastBus = isSunday ? bus['last_bus_time_sunday'] : bus['last_bus_time_weekday'];
-    String nextBusTime = 'N/A';
-    try {
-      if (firstBus != null && lastBus != null && freq != null) {
-        final now = TimeOfDay.now();
-        final first = _parseTimeOfDay(firstBus);
-        final last = _parseTimeOfDay(lastBus);
-        final freqInt = int.tryParse(freq.toString()) ?? 0;
-        if (first != null && last != null && freqInt > 0) {
-          final nowMinutes = now.hour * 60 + now.minute;
-          final firstMinutes = first.hour * 60 + first.minute;
-          final lastMinutes = last.hour * 60 + last.minute;
-          if (nowMinutes > lastMinutes + freqInt) {
-            nextBusTime = 'N/A';
-          } else if (nowMinutes < firstMinutes) {
-            nextBusTime = firstBus;
-          } else {
-            int nextMinutes = ((nowMinutes - firstMinutes) ~/ freqInt + 1) * freqInt + firstMinutes;
-            if (nextMinutes > lastMinutes) {
-              nextBusTime = 'N/A';
-            } else {
-              final h = (nextMinutes ~/ 60).toString().padLeft(2, '0');
-              final m = (nextMinutes % 60).toString().padLeft(2, '0');
-              nextBusTime = '$h:$m';
-            }
-          }
-        }
-      }
-    } catch (e) {
-      nextBusTime = 'N/A';
-    }
+    final bus = widget.bus ?? {};
+    final routeNumber = (bus['route_number'] ?? bus['bus_no'] ?? 'C-1').toString();
+    final path = List<dynamic>.from(bus['stops'] ?? bus['sub_path'] ?? []);
+    final source = path.isNotEmpty ? path.first.toString() : 'Vashi Station';
+    final destination = path.length > 1 ? path.last.toString() : 'Nerul Sea Shore';
+    final nextStop = path.length > 2 ? path[1].toString() : destination;
+    final fare = bus['fare'] ?? 25;
+    final capacity = (bus['bus_type'] ?? 'Medium').toString();
+    final etaMinutes = _computeEta(bus);
+    final frequency = int.tryParse((bus['frequency_weekday'] ?? '12').toString()) ?? 12;
+    final womenReservedSeats = bus['women_reserved_seats'] ?? _mockWomenSeats(routeNumber);
+    final pwdReservedSeats = bus['pwd_reserved_seats'] ?? _mockPwdSeats(routeNumber);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bus Details', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF042F40),
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Card(
-              elevation: 0,
-              color: Colors.white.withValues(alpha: 0.7),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  gradient: LinearGradient(
-                    colors: [Colors.white.withValues(alpha: 0.6), Colors.blue.shade50.withValues(alpha: 0.5)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+      backgroundColor: const Color(0xFFF3F3F5),
+      body: Column(
+        children: [
+          Expanded(
+            flex: 46,
+            child: Stack(
+              children: [
+                Container(
+                  color: const Color(0xFFF3D7DC),
+                  child: CustomPaint(
+                    painter: _RouteLinePainter(),
+                    child: const SizedBox.expand(),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.blueGrey.withValues(alpha: 0.08),
-                        blurRadius: 18,
-                        spreadRadius: 4),
-                  ],
-                  border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.15), width: 1.2),
                 ),
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
+                      children: [
+                        _circleIconButton(
+                          icon: Icons.arrow_back_ios_new,
+                          onTap: () => Navigator.pop(context),
+                        ),
+                        const Spacer(),
+                        _circleIconButton(
+                          icon: Icons.map_outlined,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => LiveRidePage(bus: bus),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _circleIconButton(
+                          icon: Icons.share_outlined,
+                          onTap: () {
+                            _shareLocationAndBusInfo(
+                              routeNumber: routeNumber,
+                              source: source,
+                              destination: destination,
+                              nextStop: nextStop,
+                              etaMinutes: etaMinutes,
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 84,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: _labelPill(source),
+                  ),
+                ),
+                Positioned(
+                  top: 138,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Column(
+                      children: [
+                        const Icon(Icons.circle, size: 10, color: Color(0xFFD62828)),
+                        const SizedBox(height: 34),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFD62828),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'Bus $routeNumber',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFFFCCD5)),
+                          ),
+                          child: const Icon(Icons.near_me_rounded, color: Color(0xFFD62828)),
+                        ),
+                        const SizedBox(height: 34),
+                        const Icon(Icons.circle_outlined, size: 10, color: Color(0xFFD62828)),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 30,
+                  left: 0,
+                  right: 0,
+                  child: Center(child: _labelPill(destination)),
+                ),
+                Positioned(
+                  top: 122,
+                  right: 14,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.circle, size: 8, color: Color(0xFF4CAF50)),
+                        SizedBox(width: 6),
+                        Text('Live • Just now', style: TextStyle(fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 54,
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.directions_bus, size: 40, color: Colors.blueAccent),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFD62828),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            routeNumber,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Text('Route: ${bus['route_number']}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Bus $routeNumber',
+                                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+                              ),
+                              Text(
+                                '$source → $destination',
+                                style: const TextStyle(
+                                  color: Color(0xFF6B7280),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.blueAccent,
-                            borderRadius: BorderRadius.circular(8),
+                            color: const Color(0xFF4CAF50),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Text(busType, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          child: const Text(
+                            'Live',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _metricCard(
+                            icon: Icons.timer_outlined,
+                            label: 'ETA',
+                            value: '$etaMinutes min',
+                            iconColor: const Color(0xFFD62828),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _metricCard(
+                            icon: Icons.location_on_outlined,
+                            label: 'Distance',
+                            value: '${(etaMinutes * 0.28).toStringAsFixed(1)} km',
+                            iconColor: const Color(0xFFE77F00),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _metricCard(
+                            icon: Icons.people_outline,
+                            label: 'Capacity',
+                            value: capacity,
+                            iconColor: const Color(0xFFD62828),
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEAF7EC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFCAE6CF)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF4CAF50),
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                            child: const Icon(Icons.near_me_rounded, color: Colors.white),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Next Stop', style: TextStyle(color: Color(0xFF2E7D32))),
+                                Text(
+                                  nextStop,
+                                  style: const TextStyle(fontWeight: FontWeight.w800),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '${frequency > 2 ? frequency - 2 : frequency} min',
+                                style: const TextStyle(
+                                  color: Color(0xFFD62828),
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const Text(
+                                '${0.5} km',
+                                style: TextStyle(color: Color(0xFF6B7280), fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.location_on, color: Colors.green),
-                        const SizedBox(width: 6),
-                        Expanded(child: Text('From: ${stops.isNotEmpty ? stops.first : 'N/A'}')),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFEEF0),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.woman_2_outlined, color: Color(0xFFD62828), size: 17),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Women seats: $womenReservedSeats',
+                                  style: const TextStyle(
+                                    color: Color(0xFFD62828),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F0FF),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.accessible_outlined, color: Color(0xFF1D4ED8), size: 17),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'PWD seats: $pwdReservedSeats',
+                                  style: const TextStyle(
+                                    color: Color(0xFF1D4ED8),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                    Row(
-                      children: [
-                        const Icon(Icons.flag, color: Colors.redAccent),
-                        const SizedBox(width: 6),
-                        Expanded(child: Text('To: ${stops.isNotEmpty ? stops.last : 'N/A'}')),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text('Stops:', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    const SizedBox(height: 6),
-                    StopsTimeline(stops: stops),
-                    const SizedBox(height: 18),
-                    Row(
-                      children: [
-                        const Icon(Icons.access_time, color: Colors.blue),
-                        const SizedBox(width: 6),
-                        Text('First Bus: ${firstBus ?? 'N/A'}'),
-                        const SizedBox(width: 18),
-                        const Icon(Icons.repeat, color: Colors.orange),
-                        const SizedBox(width: 6),
-                        Text('Avg Frequency: ${freq ?? 'N/A'} min'),
-                        const SizedBox(width: 18),
-                        const Icon(Icons.schedule, color: Colors.deepPurple),
-                        const SizedBox(width: 6),
-                        Text('Next Bus: $nextBusTime'),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    Text('Fare per Adult: ₹$fare', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    if (_lastSharedLocation != null) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF7F7F8),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          'Last shared location: $_lastSharedLocation',
+                          style: const TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        const Text('Adults:'),
-                        IconButton(
-                          icon: const Icon(Icons.remove),
-                          onPressed: adults > 1 ? () => setState(() => adults--) : null,
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => LiveRidePage(bus: bus),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.map_outlined),
+                            label: const Text('Live Ride Map'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF111827),
+                              side: const BorderSide(color: Color(0xFFD1D5DB)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
                         ),
-                        Text('$adults'),
-                        IconButton(
-                          icon: const Icon(Icons.add),
-                          onPressed: () => setState(() => adults++),
-                        ),
-                        const SizedBox(width: 24),
-                        const Text('Children:'),
-                        IconButton(
-                          icon: const Icon(Icons.remove),
-                          onPressed: children > 0 ? () => setState(() => children--) : null,
-                        ),
-                        Text('$children'),
-                        IconButton(
-                          icon: const Icon(Icons.add),
-                          onPressed: () => setState(() => children++),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _isSharing
+                                ? null
+                                : () {
+                                    _shareLocationAndBusInfo(
+                                      routeNumber: routeNumber,
+                                      source: source,
+                                      destination: destination,
+                                      nextStop: nextStop,
+                                      etaMinutes: etaMinutes,
+                                    );
+                                  },
+                            icon: _isSharing
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(Icons.share_outlined),
+                            label: const Text('Share to Family'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2E7D32),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    Text('Total Fare: ₹${calculateTotalFare(fare)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.green)),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 8),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Upcoming Stops',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: path.length > 1 ? path.length - 1 : 0,
+                        itemBuilder: (context, index) {
+                          final stop = path[index + 1].toString();
+                          final stopEta = (index + 1) * frequency;
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            child: Row(
+                              children: [
+                                Icon(Icons.location_on_outlined, color: Colors.grey.shade400),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    stop,
+                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Text(
+                                  '$stopEta min',
+                                  style: const TextStyle(
+                                    color: Color(0xFFD62828),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => PaymentOptions(bus: bus)),
+                            MaterialPageRoute(builder: (context) => Payment(bus: bus)),
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          backgroundColor: const Color(0xFFF77F00),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: const Text(
-                          "Proceed to Payment",
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        child: Text(
+                          'Book Ticket on This Bus • ₹$fare',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          _sendArrivalAlert(
+                            routeNumber: routeNumber,
+                            nextStop: nextStop,
+                            etaMinutes: etaMinutes,
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF111827),
+                          side: const BorderSide(color: Color(0xFFE5E7EB)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Set Arrival Alert'),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-            // --- Other Details Card ---
-            Text('Other Details:', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 8),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                gradient: LinearGradient(
-                  colors: [Colors.blueGrey.shade50.withValues(alpha: 0.7), Colors.white.withValues(alpha: 0.6)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blueGrey.withValues(alpha: 0.10),
-                    blurRadius: 16,
-                    spreadRadius: 2,
-                  ),
-                ],
-                border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.10), width: 1),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12), // reduced horizontal padding
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.calendar_today, size: 18, color: Colors.blueGrey),
-                        const SizedBox(width: 8),
-                        Expanded(child: InfoRow(label: 'Weekday First Bus', value: bus['first_bus_time_weekday'] ?? 'N/A')),
-                      ],
-                    ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.nightlight_round, size: 18, color: Colors.blueGrey),
-                        const SizedBox(width: 8),
-                        Expanded(child: InfoRow(label: 'Weekday Last Bus', value: bus['last_bus_time_weekday'] ?? 'N/A')),
-                      ],
-                    ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.sunny, size: 18, color: Colors.orangeAccent),
-                        const SizedBox(width: 8),
-                        Expanded(child: InfoRow(label: 'Sunday First Bus', value: bus['first_bus_time_sunday'] ?? 'N/A')),
-                      ],
-                    ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.nightlight, size: 18, color: Colors.orangeAccent),
-                        const SizedBox(width: 8),
-                        Expanded(child: InfoRow(label: 'Sunday Last Bus', value: bus['last_bus_time_sunday'] ?? 'N/A')),
-                      ],
-                    ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.timer, size: 18, color: Colors.blue),
-                        const SizedBox(width: 8),
-                        Expanded(child: InfoRow(label: 'Weekday Frequency', value: '${bus['frequency_weekday'] ?? 'N/A'} min')),
-                      ],
-                    ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.timer, size: 18, color: Colors.orange),
-                        const SizedBox(width: 8),
-                        Expanded(child: InfoRow(label: 'Sunday Frequency', value: '${bus['frequency_sunday'] ?? 'N/A'} min')),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class StopsTimeline extends StatelessWidget {
-  final List stops;
-  const StopsTimeline({super.key, required this.stops});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        gradient: LinearGradient(
-          colors: [Colors.blue.shade50.withValues(alpha: 0.7), Colors.white.withValues(alpha: 0.7)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blueGrey.withValues(alpha: 0.07),
-            blurRadius: 10,
-            spreadRadius: 2,
           ),
         ],
-        border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.10), width: 1),
-      ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: stops.length,
-        separatorBuilder: (context, index) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          child: Divider(height: 1, color: Colors.blueGrey.shade100),
-        ),
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: index == 0
-                        ? Colors.green.withValues(alpha: 0.15)
-                        : index == stops.length - 1
-                            ? Colors.redAccent.withValues(alpha: 0.15)
-                            : Colors.blueGrey.withValues(alpha: 0.10),
-                    shape: BoxShape.circle,
-                  ),
-                  padding: const EdgeInsets.all(6),
-                  child: Icon(
-                    index == 0
-                        ? Icons.radio_button_checked
-                        : index == stops.length - 1
-                            ? Icons.flag
-                            : Icons.circle,
-                    color: index == 0
-                        ? Colors.green
-                        : index == stops.length - 1
-                            ? Colors.redAccent
-                            : Colors.blueGrey,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Text(
-                      stops[index],
-                      style: TextStyle(
-                        fontWeight: index == 0 || index == stops.length - 1 ? FontWeight.bold : FontWeight.normal,
-                        color: index == 0
-                            ? Colors.green
-                            : index == stops.length - 1
-                                ? Colors.redAccent
-                                : Colors.black87,
-                        fontSize: 15,
-                        letterSpacing: 0.1,
-                      ),
-                    ),
-                  ),
-                ),
-                if (index == 0)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 4),
-                    child: Text('Start', style: TextStyle(color: Colors.green, fontWeight: FontWeight.w500, fontSize: 12)),
-                  ),
-                if (index == stops.length - 1)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 4),
-                    child: Text('End', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w500, fontSize: 12)),
-                  ),
-              ],
-            ),
-          );
-        },
       ),
     );
   }
-}
 
-class InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-  const InfoRow({super.key, required this.label, required this.value});
+  Widget _circleIconButton({required IconData icon, required VoidCallback onTap}) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(99),
+      onTap: onTap,
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(99),
+        ),
+        child: Icon(icon, size: 18, color: const Color(0xFF333333)),
+      ),
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
+  Widget _labelPill(String label) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 180),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+      ),
+    );
+  }
+
+  Widget _metricCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color iconColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F7F8),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: Text(label, style: const TextStyle(color: Colors.black54), overflow: TextOverflow.ellipsis)),
-          Flexible(child: Text(value, style: const TextStyle(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
+          Icon(icon, size: 18, color: iconColor),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFF8A8FA3),
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );
   }
 }
 
-// Helper function at bottom of file:
-TimeOfDay? _parseTimeOfDay(String? time) {
-  if (time == null) return null;
-  final parts = time.split(":");
-  if (parts.length < 2) return null;
-  final hour = int.tryParse(parts[0]);
-  final minute = int.tryParse(parts[1]);
-  if (hour == null || minute == null) return null;
-  return TimeOfDay(hour: hour, minute: minute);
+class _RouteLinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFE06A7A)
+      ..strokeWidth = 2.4
+      ..style = PaintingStyle.stroke;
+
+    final centerX = size.width / 2;
+    canvas.drawLine(Offset(centerX, 120), Offset(centerX, size.height - 54), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -1,9 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:navibus/screens/Feedback.dart';
 import 'package:navibus/screens/paymentopts.dart';
-import 'package:http/http.dart' as http;
-import 'package:navibus/services/data_service.dart';
 
 class Payment extends StatefulWidget {
   final dynamic bus;
@@ -15,218 +11,234 @@ class Payment extends StatefulWidget {
 }
 
 class _PaymentState extends State<Payment> {
-  List<String> stops = [];
-  int fare = 0;
   int adults = 1;
   int children = 0;
+  int seniors = 0;
+  DateTime travelDate = DateTime.now();
+
+  late final String routeNumber;
+  late final String source;
+  late final String destination;
+  late final int farePerPerson;
 
   @override
   void initState() {
     super.initState();
-    loadBusData();
+    final bus = widget.bus ?? {};
+    final path = List<dynamic>.from(bus['sub_path'] ?? bus['stops'] ?? []);
+
+    routeNumber = (bus['route_number'] ?? bus['bus_no'] ?? 'C-1').toString();
+    source = path.isNotEmpty ? path.first.toString() : 'Vashi Station';
+    destination = path.length > 1 ? path.last.toString() : 'Nerul Sea Shore';
+    farePerPerson = ((bus['fare'] ?? 25) as num).toInt();
   }
 
-  Future<void> loadBusData() async {
-    try {
-      // Use backend API to get fare and stops
-      final routeNumber = widget.bus['route_number'] ?? widget.bus['bus_no'];
-      final stopsList = widget.bus['sub_path'] ?? [];
-      final source = stopsList.isNotEmpty ? stopsList.first : '';
-      final destination = stopsList.isNotEmpty ? stopsList.last : '';
-      if (routeNumber == null || source == '' || destination == '') {
-        setState(() {
-          stops = ["Unknown"];
-          fare = 0;
-        });
-        return;
-      }
-      
-      // Use DataService to get the correct backend URL
-      final dataService = DataService.instance;
-      final backendUrl = await dataService.getCurrentBackendUrl();
-      final url = Uri.parse(
-        '$backendUrl/api/routes/fare/?route_number=$routeNumber&source_stop=$source&destination_stop=$destination'
-      );
-      
-      final response = await http.get(url).timeout(Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          stops = List<String>.from(data['stops'] ?? []);
-          fare = data['fare'] ?? 0;
-        });
-      } else {
-        setState(() {
-          stops = ["Unknown"];
-          fare = 0;
-        });
-      }
-    } catch (e) {
+  int get totalPassengers => adults + children + seniors;
+
+  int get totalAmount {
+    final adultAmount = adults * farePerPerson;
+    final childAmount = (children * farePerPerson * 0.5).round();
+    final seniorAmount = (seniors * farePerPerson * 0.7).round();
+    return adultAmount + childAmount + seniorAmount;
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: travelDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 45)),
+    );
+
+    if (picked != null) {
       setState(() {
-        stops = ["Unknown"];
-        fare = 0;
+        travelDate = picked;
       });
-      print("Error loading bus data: $e");
     }
   }
 
-  int calculateTotalFare() {
-    return (adults * fare) + (children * (fare * 0.5).round());
+  void _goToPaymentOptions() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PaymentOptions(
+          bus: {
+            ...(widget.bus ?? {}),
+            'route_number': routeNumber,
+            'source': source,
+            'destination': destination,
+          },
+          totalAmount: totalAmount,
+          passengerCount: totalPassengers,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset('assets/logo.png', height: 40), // Added the logo
-            const SizedBox(width: 10),
-            const Text("NAVI BUS", style: TextStyle(color: Colors.white)),
-          ],
-        ),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF042F40),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.support_agent, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => FeedbackPage()),
-              );
-            },
+      backgroundColor: const Color(0xFFF3F3F5),
+      body: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: Color(0xFFD62828),
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(18)),
+            ),
+            padding: const EdgeInsets.fromLTRB(14, 56, 14, 16),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                    ),
+                    const Text(
+                      'Book Ticket',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              routeNumber,
+                              style: const TextStyle(
+                                color: Color(0xFFD62828),
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            '$farePerPerson',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        '$source  →  $destination',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
-      body: stops.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(12),
               child: Column(
                 children: [
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                  _cardContainer(
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          "Selected Route",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          'Select Passengers',
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
                         ),
-                        const SizedBox(height: 15),
-                        Column(
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.directions_bus, size: 30, color: Colors.blueAccent),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    stops.first,
-                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                                const Icon(Icons.location_on, size: 30, color: Colors.green),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    stops.last,
-                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                        const SizedBox(height: 10),
+                        _counterRow(
+                          icon: Icons.person_outline,
+                          title: 'Adults',
+                          subtitle: '12+ years',
+                          count: adults,
+                          onMinus: adults > 1 ? () => setState(() => adults--) : null,
+                          onPlus: () => setState(() => adults++),
                         ),
-                        const SizedBox(height: 15),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.blueGrey.shade100),
-                          ),
-                          child: Column(
-                            children: stops
-                                .map((stop) => Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                      child: Row(
-                                        children: [
-                                          const Icon(Icons.circle, size: 10, color: Colors.grey),
-                                          const SizedBox(width: 10),
-                                          Expanded(child: Text(stop)),
-                                        ],
-                                      ),
-                                    ))
-                                .toList(),
-                          ),
+                        const Divider(height: 20),
+                        _counterRow(
+                          icon: Icons.child_care_outlined,
+                          title: 'Children',
+                          subtitle: '5-11 years (50% off)',
+                          count: children,
+                          onMinus: children > 0 ? () => setState(() => children--) : null,
+                          onPlus: () => setState(() => children++),
+                        ),
+                        const Divider(height: 20),
+                        _counterRow(
+                          icon: Icons.elderly_outlined,
+                          title: 'Seniors',
+                          subtitle: '60+ years (30% off)',
+                          count: seniors,
+                          onMinus: seniors > 0 ? () => setState(() => seniors--) : null,
+                          onPlus: () => setState(() => seniors++),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 30),
-                  Container(
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF042F40),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(25),
-                        topRight: Radius.circular(25),
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(20),
+                  const SizedBox(height: 12),
+                  _cardContainer(
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text("Payment Details", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Column(
-                            children: [
-                              buildPassengerRow("Adults", adults, (value) => setState(() => adults = value)),
-                              buildPassengerRow("Children", children, (value) => setState(() => children = value)),
-                              const Divider(),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text("Total", style: TextStyle(fontWeight: FontWeight.bold)),
-                                    Text("₹${calculateTotalFare()}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                        const Text(
+                          'Journey Details',
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
                         ),
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => PaymentOptions(bus: widget.bus)),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              padding: const EdgeInsets.symmetric(vertical: 15),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        const SizedBox(height: 12),
+                        const Row(
+                          children: [
+                            Icon(Icons.calendar_today_outlined, color: Color(0xFF6B7280), size: 18),
+                            SizedBox(width: 8),
+                            Text(
+                              'Travel Date',
+                              style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                            child: const Text(
-                              "Proceed to Payment",
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(10),
+                          onTap: _pickDate,
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F3F5),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${travelDate.day.toString().padLeft(2, '0')}-${travelDate.month.toString().padLeft(2, '0')}-${travelDate.year}',
+                              style: const TextStyle(fontWeight: FontWeight.w700),
                             ),
                           ),
                         ),
@@ -236,30 +248,144 @@ class _PaymentState extends State<Payment> {
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: Container(
+        color: Colors.white,
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$totalPassengers Passenger(s)',
+                    style: const TextStyle(
+                      color: Color(0xFF6B7280),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    '₹$totalAmount',
+                    style: const TextStyle(
+                      color: Color(0xFFD62828),
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _goToPaymentOptions,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF77F00),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text(
+                    'Proceed to Payment',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget buildPassengerRow(String label, int count, Function(int) onChanged) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 16)),
-          Row(
+  Widget _cardContainer({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _counterRow({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required int count,
+    required VoidCallback? onMinus,
+    required VoidCallback onPlus,
+  }) {
+    return Row(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFEEF0),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Icon(icon, color: const Color(0xFFD62828)),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              IconButton(
-                icon: const Icon(Icons.remove, color: Colors.red),
-                onPressed: count > 0 ? () => onChanged(count - 1) : null,
-              ),
-              Text('$count', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              IconButton(
-                icon: const Icon(Icons.add, color: Colors.green),
-                onPressed: () => onChanged(count + 1),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  color: Color(0xFF6B7280),
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
-        ],
+        ),
+        _counterButton(icon: Icons.remove, onTap: onMinus),
+        SizedBox(
+          width: 30,
+          child: Text(
+            '$count',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+          ),
+        ),
+        _counterButton(icon: Icons.add, onTap: onPlus, highlighted: true),
+      ],
+    );
+  }
+
+  Widget _counterButton({
+    required IconData icon,
+    required VoidCallback? onTap,
+    bool highlighted = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(99),
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: highlighted ? const Color(0xFFD62828) : const Color(0xFFE6E7EA),
+          borderRadius: BorderRadius.circular(99),
+        ),
+        child: Icon(
+          icon,
+          color: highlighted ? Colors.white : const Color(0xFF6B7280),
+          size: 18,
+        ),
       ),
     );
   }
