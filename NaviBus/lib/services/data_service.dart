@@ -16,6 +16,135 @@ class DataService {
   static const String _stopsDataKey = 'stops_data_cache';
   static const String _useProductionKey = 'use_production_backend';
 
+  static const List<Map<String, dynamic>> _mockRouteCatalog = [
+    {
+      'route_number': 'C-1',
+      'bus_no': 'C-1',
+      'bus_type': 'NON_AC',
+      'fare': 20,
+      'fare_general': 20,
+      'fare_ladies': 14,
+      'frequency_weekday': '12',
+      'frequency_sunday': '18',
+      'first_bus_time_weekday': '05:45',
+      'last_bus_time_weekday': '22:50',
+      'first_bus_time_sunday': '06:15',
+      'last_bus_time_sunday': '22:20',
+      'stops': [
+        'Vashi Station',
+        'Sanpada',
+        'Nerul',
+        'Seawoods',
+        'CBD Belapur',
+      ],
+    },
+    {
+      'route_number': 'AC-12',
+      'bus_no': 'AC-12',
+      'bus_type': 'AC',
+      'fare': 35,
+      'fare_general': 35,
+      'fare_ladies': 26,
+      'frequency_weekday': '18',
+      'frequency_sunday': '25',
+      'first_bus_time_weekday': '06:10',
+      'last_bus_time_weekday': '23:15',
+      'first_bus_time_sunday': '06:45',
+      'last_bus_time_sunday': '22:35',
+      'stops': [
+        'Airoli Sector 8',
+        'Rabale',
+        'Ghansoli',
+        'Kopar Khairane',
+        'Vashi Station',
+      ],
+    },
+    {
+      'route_number': 'NMMT-44',
+      'bus_no': 'NMMT-44',
+      'bus_type': 'NON_AC',
+      'fare': 24,
+      'fare_general': 24,
+      'fare_ladies': 18,
+      'frequency_weekday': '15',
+      'frequency_sunday': '22',
+      'first_bus_time_weekday': '05:30',
+      'last_bus_time_weekday': '22:40',
+      'first_bus_time_sunday': '06:00',
+      'last_bus_time_sunday': '22:00',
+      'stops': [
+        'Panvel',
+        'Kharghar',
+        'CBD Belapur',
+        'Nerul',
+        'Vashi Station',
+      ],
+    },
+    {
+      'route_number': 'S-77',
+      'bus_no': 'S-77',
+      'bus_type': 'NON_AC',
+      'fare': 26,
+      'fare_general': 26,
+      'fare_ladies': 20,
+      'frequency_weekday': '14',
+      'frequency_sunday': '20',
+      'first_bus_time_weekday': '05:50',
+      'last_bus_time_weekday': '22:55',
+      'first_bus_time_sunday': '06:20',
+      'last_bus_time_sunday': '22:25',
+      'stops': [
+        'Thane Station',
+        'Airoli',
+        'Rabale',
+        'Ghansoli',
+        'Kopar Khairane',
+      ],
+    },
+    {
+      'route_number': 'AC-88',
+      'bus_no': 'AC-88',
+      'bus_type': 'AC',
+      'fare': 42,
+      'fare_general': 42,
+      'fare_ladies': 32,
+      'frequency_weekday': '20',
+      'frequency_sunday': '28',
+      'first_bus_time_weekday': '06:20',
+      'last_bus_time_weekday': '23:00',
+      'first_bus_time_sunday': '06:50',
+      'last_bus_time_sunday': '22:30',
+      'stops': [
+        'Belapur Depot',
+        'Seawoods',
+        'Nerul',
+        'Sanpada',
+        'Vashi Plaza',
+      ],
+    },
+    {
+      'route_number': 'R-15',
+      'bus_no': 'R-15',
+      'bus_type': 'NON_AC',
+      'fare': 18,
+      'fare_general': 18,
+      'fare_ladies': 13,
+      'frequency_weekday': '10',
+      'frequency_sunday': '16',
+      'first_bus_time_weekday': '05:40',
+      'last_bus_time_weekday': '22:20',
+      'first_bus_time_sunday': '06:10',
+      'last_bus_time_sunday': '21:55',
+      'stops': [
+        'Nerul East',
+        'Juinagar',
+        'Sanpada',
+        'Vashi Station',
+        'Mankhurd Check Naka',
+      ],
+    },
+  ];
+
   static DataService? _instance;
   static DataService get instance => _instance ??= DataService._();
   DataService._();
@@ -255,7 +384,10 @@ class DataService {
       final response = await http.get(url).timeout(_requestTimeout);
       
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        final decoded = List<dynamic>.from(json.decode(response.body));
+        if (decoded.isNotEmpty) {
+          return decoded;
+        }
       }
     } catch (e) {
       print('Backend search failed: $e, using local fallback');
@@ -287,8 +419,22 @@ class DataService {
         
         if (startIndex != -1 && endIndex != -1 && startIndex < endIndex) {
           final subPath = routeStops.sublist(startIndex, endIndex + 1);
+          final busType = (route['bus_type'] ??
+                  (routeNumber.contains('AC') ? 'AC' : 'NON_AC'))
+              .toString();
+          final fareGeneral =
+              int.tryParse((route['fare_general'] ?? route['fare'] ?? 20).toString()) ??
+                  20;
+          final fareLadies = int.tryParse((route['fare_ladies'] ?? '').toString());
+
           matchingRoutes.add({
             ...route,
+            ..._buildMockOperationalFields(
+              routeNumber: routeNumber,
+              busType: busType,
+              fareGeneral: fareGeneral,
+              fareLadies: fareLadies,
+            ),
             'sub_path': subPath,
             'route_number': routeNumber,
           });
@@ -296,7 +442,135 @@ class DataService {
       }
     }
     
-    return matchingRoutes;
+    if (matchingRoutes.isNotEmpty) {
+      return matchingRoutes;
+    }
+
+    return _searchRoutesFromMockCatalog(start, end);
+  }
+
+  List<dynamic> _searchRoutesFromMockCatalog(String start, String end) {
+    final normalizedStart = start.toLowerCase();
+    final normalizedEnd = end.toLowerCase();
+
+    final exactMatches = <Map<String, dynamic>>[];
+    final fuzzyMatches = <Map<String, dynamic>>[];
+
+    for (final mockRoute in _mockRouteCatalog) {
+      final routeStops = List<String>.from(mockRoute['stops'] as List<dynamic>);
+      final startIndex = routeStops.indexWhere(
+        (stop) => stop.toLowerCase().contains(normalizedStart),
+      );
+      final endIndex = routeStops.indexWhere(
+        (stop) => stop.toLowerCase().contains(normalizedEnd),
+      );
+
+      if (startIndex != -1 && endIndex != -1 && startIndex < endIndex) {
+        final subPath = routeStops.sublist(startIndex, endIndex + 1);
+        exactMatches.add(_buildMockRouteResult(mockRoute, subPath, true));
+        continue;
+      }
+
+      final hasPartialStart = routeStops.any(
+        (stop) => stop.toLowerCase().contains(normalizedStart),
+      );
+      final hasPartialEnd = routeStops.any(
+        (stop) => stop.toLowerCase().contains(normalizedEnd),
+      );
+
+      if (hasPartialStart || hasPartialEnd) {
+        fuzzyMatches.add(_buildMockRouteResult(mockRoute, routeStops, false));
+      }
+    }
+
+    if (exactMatches.isNotEmpty) {
+      return exactMatches;
+    }
+
+    if (fuzzyMatches.isNotEmpty) {
+      return fuzzyMatches;
+    }
+
+    return _mockRouteCatalog
+        .map(
+          (route) => _buildMockRouteResult(
+            route,
+            List<String>.from(route['stops'] as List<dynamic>),
+            false,
+          ),
+        )
+        .toList();
+  }
+
+  Map<String, dynamic> _buildMockRouteResult(
+    Map<String, dynamic> route,
+    List<String> subPath,
+    bool exactMatch,
+  ) {
+    final routeNumber = route['route_number'].toString();
+    final busType = (route['bus_type'] ?? 'NON_AC').toString();
+    final fareGeneral =
+        int.tryParse((route['fare_general'] ?? route['fare'] ?? 20).toString()) ??
+            20;
+    final fareLadies = int.tryParse((route['fare_ladies'] ?? '').toString());
+
+    return {
+      ...route,
+      ..._buildMockOperationalFields(
+        routeNumber: routeNumber,
+        busType: busType,
+        fareGeneral: fareGeneral,
+        fareLadies: fareLadies,
+      ),
+      'route_number': routeNumber,
+      'bus_no': routeNumber,
+      'sub_path': subPath,
+      'stops': subPath,
+      'num_stops': subPath.length,
+      'source': exactMatch ? 'mock_exact_match' : 'mock_fallback',
+    };
+  }
+
+  Map<String, dynamic> _buildMockOperationalFields({
+    required String routeNumber,
+    required String busType,
+    required int fareGeneral,
+    int? fareLadies,
+  }) {
+    final hash = routeNumber.codeUnits.fold<int>(0, (sum, value) => sum + value);
+    final womenSeatsTotal = 6;
+    final womenSeatsAvailable = hash % (womenSeatsTotal + 1);
+    final pwdSeatsTotal = 2;
+    final pwdSeatsAvailable = hash % (pwdSeatsTotal + 1);
+    final pregnantSeatsAvailable = (hash % 4) != 0;
+    final occupancy = 45 + (hash % 50);
+    final delayExpected = hash % 5 == 0;
+    final delayMinutes = delayExpected ? 3 + (hash % 9) : 0;
+    final etaMinutes = 5 + (hash % 14) + delayMinutes;
+    final ladiesFare = fareLadies ?? (fareGeneral * 0.75).round();
+
+    return {
+      'eta_minutes': etaMinutes,
+      'passenger_occupancy_percent': occupancy,
+      'passenger_occupancy_level': occupancy >= 85
+          ? 'High'
+          : occupancy >= 60
+              ? 'Moderate'
+              : 'Low',
+      'women_reserved_seats_total': womenSeatsTotal,
+      'women_reserved_seats_available': womenSeatsAvailable,
+      'women_reserved_available': womenSeatsAvailable > 0,
+      'pwd_reserved_seats_total': pwdSeatsTotal,
+      'pwd_reserved_seats_available': pwdSeatsAvailable,
+      'pwd_reserved_available': pwdSeatsAvailable > 0,
+      'pregnant_women_special_seat_available': pregnantSeatsAvailable,
+      'delay_expected': delayExpected,
+      'delay_minutes': delayMinutes,
+      'bus_type': busType,
+      'fare_general': fareGeneral,
+      'fare_ladies': ladiesFare,
+      'fare': fareGeneral,
+    };
   }
 
   /// Get fare information with fallback
@@ -339,12 +613,24 @@ class DataService {
     );
     
     if (route == null) {
-      return {'error': 'Route not found', 'fare': 0, 'stops': []};
+      return {
+        'error': 'Route not found',
+        'fare': 0,
+        'fare_general': 0,
+        'fare_ladies': 0,
+        'stops': []
+      };
     }
     
     final routeStops = stops[routeNumber] as List<dynamic>?;
     if (routeStops == null) {
-      return {'error': 'Route stops not found', 'fare': 0, 'stops': []};
+      return {
+        'error': 'Route stops not found',
+        'fare': 0,
+        'fare_general': 0,
+        'fare_ladies': 0,
+        'stops': []
+      };
     }
     
     // Find stop indices
@@ -356,21 +642,35 @@ class DataService {
     );
     
     if (startIndex == -1 || endIndex == -1 || startIndex >= endIndex) {
-      return {'error': 'Invalid stops', 'fare': 0, 'stops': []};
+      return {
+        'error': 'Invalid stops',
+        'fare': 0,
+        'fare_general': 0,
+        'fare_ladies': 0,
+        'stops': []
+      };
     }
     
     final numStops = endIndex - startIndex;
     final subPath = routeStops.sublist(startIndex, endIndex + 1);
     
     // Simple fare calculation (you can make this more sophisticated)
-    int baseFare = route['fare'] ?? 20;
-    int calculatedFare = (baseFare * (numStops / 5)).round().clamp(5, baseFare);
+    final baseFare = int.tryParse((route['fare_general'] ?? route['fare'] ?? 20).toString()) ??
+        20;
+    final calculatedFare = (baseFare * (numStops / 5)).round().clamp(5, baseFare);
+    final ladiesFare =
+        int.tryParse((route['fare_ladies'] ?? '').toString()) ??
+            (calculatedFare * 0.75).round();
     
     return {
       'fare': calculatedFare,
+      'fare_general': calculatedFare,
+      'fare_ladies': ladiesFare,
       'stops': subPath,
       'num_stops': numStops,
-      'bus_type': routeNumber.contains('AC') ? 'AC' : 'NON_AC',
+      'bus_type': (route['bus_type'] ??
+              (routeNumber.contains('AC') ? 'AC' : 'NON_AC'))
+          .toString(),
     };
   }
 
@@ -414,6 +714,16 @@ class DataService {
         }
       }
     });
+
+    for (final route in _mockRouteCatalog) {
+      final routeStops = route['stops'] as List<dynamic>;
+      for (final stop in routeStops) {
+        final stopName = stop.toString();
+        if (stopName.toLowerCase().contains(queryLower)) {
+          suggestions.add(stopName);
+        }
+      }
+    }
     
     return suggestions.take(10).toList();
   }

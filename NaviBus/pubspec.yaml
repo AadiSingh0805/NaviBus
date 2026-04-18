@@ -38,6 +38,8 @@ dependencies:
   shared_preferences: ^2.2.2  # For caching data locally
   flutter_local_notifications: ^17.2.2
   share_plus: ^10.0.2
+  sensors_plus: ^6.1.2
+  image_picker: ^1.1.2
 
 
   # The following adds the Cupertino Icons font to your application.

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'screens/home_page.dart';
-import 'screens/busopts.dart';
 import 'screens/busopts_new.dart';
 import 'screens/payment.dart';
 import 'screens/profile_page.dart';
 import 'screens/tickets_page.dart';
+import 'screens/Feedback.dart';
 import 'screens/notification_control_page.dart';
 import 'services/notification_service.dart';
 
@@ -77,12 +77,13 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const HomePage(),
         '/home': (context) => HomePage(),
-        '/busopts': (context) => BusOptions(),
-        '/busopts_new': (context) => BusOptionsNew(),
+        '/busopts': (context) => const BusOptionsNew(),
+        '/busopts_new': (context) => const BusOptionsNew(),
         '/payment': (context) => const Payment(bus: null),
         '/paymentconfirm': (context) => const Payment(bus: null),
         '/profile': (context) => const ProfilePage(),
         '/tickets': (context) => const TicketsPage(),
+        '/feedback': (context) => const FeedbackPage(),
         '/notifications': (context) => const NotificationControlPage(),
       },
     );

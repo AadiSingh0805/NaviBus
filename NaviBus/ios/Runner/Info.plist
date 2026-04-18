@@ -41,6 +41,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>NaviBus uses the camera to capture ticket passes and complaint photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>NaviBus uses your photo library to attach ticket passes and complaint images.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>NaviBus stores captured pass and complaint images on your device.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

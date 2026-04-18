@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:navibus/screens/bus_details.dart';
 import 'package:navibus/screens/payment.dart';
 import 'package:navibus/services/data_service.dart';
+import 'package:navibus/services/sensor_input_service.dart';
 import 'package:navibus/widgets/app_bottom_nav.dart';
 
 class BusOptions extends StatefulWidget {
@@ -22,6 +25,11 @@ class _BusOptionsState extends State<BusOptions> {
   final TextEditingController sourceController = TextEditingController();
   final TextEditingController destinationController = TextEditingController();
   final DataService _dataService = DataService.instance;
+  final SensorInputService _sensorInputService = SensorInputService.instance;
+
+  StreamSubscription<SensorInput>? _sensorSubscription;
+  SensorInput? _latestSensorInput;
+  DateTime _lastSensorUiUpdate = DateTime.fromMillisecondsSinceEpoch(0);
 
   bool _isLoading = false;
   String _activeFilter = 'Fastest';
@@ -40,6 +48,7 @@ class _BusOptionsState extends State<BusOptions> {
   @override
   void initState() {
     super.initState();
+    _startSensorInputStream();
     sourceController.text = widget.initialSource ?? '';
     destinationController.text = widget.initialDestination ?? '';
 
@@ -51,9 +60,65 @@ class _BusOptionsState extends State<BusOptions> {
 
   @override
   void dispose() {
+    _sensorSubscription?.cancel();
     sourceController.dispose();
     destinationController.dispose();
     super.dispose();
+  }
+
+  void _startSensorInputStream() {
+    _sensorSubscription?.cancel();
+    _sensorSubscription = _sensorInputService.accelerometerInputStream().listen(
+      (sensorInput) {
+        final now = DateTime.now();
+        if (now.difference(_lastSensorUiUpdate).inMilliseconds < 250) {
+          return;
+        }
+
+        _lastSensorUiUpdate = now;
+
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _latestSensorInput = sensorInput;
+        });
+      },
+      onError: (_) {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _latestSensorInput = null;
+        });
+      },
+    );
+  }
+
+  Map<String, dynamic> _currentSensorSnapshot() {
+    final sensorInput = _latestSensorInput;
+
+    if (sensorInput == null) {
+      return {
+        'available': false,
+        'accelerometer': {
+          'x': 0.0,
+          'y': 0.0,
+          'z': 0.0,
+          'magnitude': 0.0,
+          'shake_level': 0.0,
+        },
+        'captured_at': DateTime.now().toIso8601String(),
+      };
+    }
+
+    return {
+      'available': true,
+      'accelerometer': sensorInput.toMap(),
+      'captured_at': sensorInput.timestamp.toIso8601String(),
+    };
   }
 
   Future<void> _searchRoutes() async {
@@ -76,6 +141,7 @@ class _BusOptionsState extends State<BusOptions> {
 
     try {
       final foundRoutes = await _dataService.searchRoutes(source, destination);
+      final sensorSnapshot = _currentSensorSnapshot();
 
       final enrichedRoutes = await Future.wait(
         foundRoutes.map((route) async {
@@ -99,6 +165,7 @@ class _BusOptionsState extends State<BusOptions> {
               'num_stops': fareData['num_stops'] ?? path.length,
               'women_reserved_seats': _mockWomenSeats(routeNumber),
               'pwd_reserved_seats': _mockPwdSeats(routeNumber),
+              'sensor_input': sensorSnapshot,
             };
           }
 
@@ -111,6 +178,7 @@ class _BusOptionsState extends State<BusOptions> {
             'num_stops': path.length,
             'women_reserved_seats': _mockWomenSeats(routeNumber),
             'pwd_reserved_seats': _mockPwdSeats(routeNumber),
+            'sensor_input': sensorSnapshot,
           };
         }),
       );
@@ -236,6 +304,8 @@ class _BusOptionsState extends State<BusOptions> {
                           label: const Text('Search Routes'),
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      _sensorInputPanel(),
                     ],
                   ),
                 ),
@@ -329,6 +399,79 @@ class _BusOptionsState extends State<BusOptions> {
             fontSize: 12,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _sensorInputPanel() {
+    final sensorInput = _latestSensorInput;
+
+    if (sensorInput == null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.sensors, color: Colors.white, size: 18),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Sensor input unavailable. Move device or check sensor permissions.',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final x = sensorInput.x.toStringAsFixed(2);
+    final y = sensorInput.y.toStringAsFixed(2);
+    final z = sensorInput.z.toStringAsFixed(2);
+    final shakeLevel = sensorInput.shakeLevel.toStringAsFixed(2);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.sensors, color: Colors.white, size: 18),
+              SizedBox(width: 6),
+              Text(
+                'Live Sensor Input (Accelerometer)',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'x: $x  y: $y  z: $z  shake: $shakeLevel',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+        ],
       ),
     );
   }

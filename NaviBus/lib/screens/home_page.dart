@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:navibus/screens/busopts.dart';
+import 'package:navibus/screens/busopts_new.dart';
 import 'package:navibus/screens/live_ride_page.dart';
 import 'package:navibus/widgets/app_bottom_nav.dart';
 import 'package:navibus/widgets/offline_widgets.dart';
@@ -123,7 +123,7 @@ class _HomePageState extends State<HomePage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => BusOptions(
+        builder: (context) => BusOptionsNew(
           initialSource: source,
           initialDestination: destination,
         ),
@@ -329,7 +329,7 @@ class _HomePageState extends State<HomePage> {
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const BusOptions(),
+                              builder: (context) => const BusOptionsNew(),
                             ),
                           ),
                         ),
