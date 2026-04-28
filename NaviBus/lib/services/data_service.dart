@@ -1,15 +1,17 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DataService {
   static const String _baseUrl = 'http://10.0.2.2:8000';
-  static const String _productionUrl = 'https://navibus-lwpp.onrender.com'; // Your live Render backend
+  static const String _productionUrl =
+      'https://navibus-lwpp.onrender.com'; // Your live Render backend
   static const Duration _requestTimeout = Duration(seconds: 10);
   static const Duration _cacheTimeout = Duration(hours: 6); // Cache for 6 hours
-  
+  static const Duration _backendResolutionCacheTimeout = Duration(minutes: 5);
+
   // Cache keys
   static const String _lastUpdateKey = 'last_data_update';
   static const String _routesDataKey = 'routes_data_cache';
@@ -30,13 +32,7 @@ class DataService {
       'last_bus_time_weekday': '22:50',
       'first_bus_time_sunday': '06:15',
       'last_bus_time_sunday': '22:20',
-      'stops': [
-        'Vashi Station',
-        'Sanpada',
-        'Nerul',
-        'Seawoods',
-        'CBD Belapur',
-      ],
+      'stops': ['Vashi Station', 'Sanpada', 'Nerul', 'Seawoods', 'CBD Belapur'],
     },
     {
       'route_number': 'AC-12',
@@ -72,13 +68,7 @@ class DataService {
       'last_bus_time_weekday': '22:40',
       'first_bus_time_sunday': '06:00',
       'last_bus_time_sunday': '22:00',
-      'stops': [
-        'Panvel',
-        'Kharghar',
-        'CBD Belapur',
-        'Nerul',
-        'Vashi Station',
-      ],
+      'stops': ['Panvel', 'Kharghar', 'CBD Belapur', 'Nerul', 'Vashi Station'],
     },
     {
       'route_number': 'S-77',
@@ -114,13 +104,7 @@ class DataService {
       'last_bus_time_weekday': '23:00',
       'first_bus_time_sunday': '06:50',
       'last_bus_time_sunday': '22:30',
-      'stops': [
-        'Belapur Depot',
-        'Seawoods',
-        'Nerul',
-        'Sanpada',
-        'Vashi Plaza',
-      ],
+      'stops': ['Belapur Depot', 'Seawoods', 'Nerul', 'Sanpada', 'Vashi Plaza'],
     },
     {
       'route_number': 'R-15',
@@ -149,44 +133,55 @@ class DataService {
   static DataService get instance => _instance ??= DataService._();
   DataService._();
 
+  String? _cachedBackendUrl;
+  DateTime? _cachedBackendUrlAt;
+
   /// Determine which backend URL to use
   /// Automatically uses production in release mode, development in debug mode
   /// Can be overridden by user preference
   Future<String> _getBackendUrl() async {
+    final cachedUrl = _cachedBackendUrl;
+    final cachedAt = _cachedBackendUrlAt;
+    if (cachedUrl != null && cachedAt != null) {
+      if (DateTime.now().difference(cachedAt) <
+          _backendResolutionCacheTimeout) {
+        return cachedUrl;
+      }
+    }
+
     final prefs = await SharedPreferences.getInstance();
-    
+
     // Check if user has manually set a preference
     if (prefs.containsKey(_useProductionKey)) {
       final useProduction = prefs.getBool(_useProductionKey) ?? false;
-      print('Using manual preference: ${useProduction ? 'Production' : 'Development'}');
-      return useProduction ? _productionUrl : _baseUrl;
+      final resolvedUrl = useProduction ? _productionUrl : _baseUrl;
+      _cachedBackendUrl = resolvedUrl;
+      _cachedBackendUrlAt = DateTime.now();
+      return resolvedUrl;
     }
-    
-    // Auto-detect based on build mode
-    if (kReleaseMode) {
-      // Production build - use production backend
-      print('Release mode: Using production backend');
-      return _productionUrl;
+
+    // Auto-detect based on availability. For now prefer local PC Django backend
+    // unless the user explicitly set the production preference.
+    if (await _isLocalBackendAvailable()) {
+      _cachedBackendUrl = _baseUrl;
+      _cachedBackendUrlAt = DateTime.now();
+      return _baseUrl;
     } else {
-      // Debug build - try local first, fallback to production
-      print('Debug mode: Checking local backend availability...');
-      if (await _isLocalBackendAvailable()) {
-        print('Local backend available: Using local backend');
-        return _baseUrl;
-      } else {
-        print('Local backend not available: Falling back to production backend');
-        return _productionUrl;
-      }
+      _cachedBackendUrl = _productionUrl;
+      _cachedBackendUrlAt = DateTime.now();
+      return _productionUrl;
     }
   }
 
   /// Check if local backend is available
   Future<bool> _isLocalBackendAvailable() async {
     try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/api/health/'),
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(Duration(seconds: 3));
+      final response = await http
+          .get(
+            Uri.parse('$_baseUrl/api/health/'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(Duration(seconds: 3));
       return response.statusCode == 200;
     } catch (e) {
       return false;
@@ -197,14 +192,17 @@ class DataService {
   Future<void> setBackendMode({required bool useProduction}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_useProductionKey, useProduction);
+    _cachedBackendUrl = useProduction ? _productionUrl : _baseUrl;
+    _cachedBackendUrlAt = DateTime.now();
   }
 
   /// Get current backend information
   Future<Map<String, dynamic>> getBackendInfo() async {
     final currentUrl = await _getBackendUrl();
     final isProduction = currentUrl.contains('onrender.com');
-    final isLocal = currentUrl.contains('10.0.2.2') || currentUrl.contains('localhost');
-    
+    final isLocal =
+        currentUrl.contains('10.0.2.2') || currentUrl.contains('localhost');
+
     return {
       'url': currentUrl,
       'isProduction': isProduction,
@@ -222,10 +220,12 @@ class DataService {
   /// Check if backend is reachable
   Future<bool> _isBackendReachable(String baseUrl) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/health/'),
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(Duration(seconds: 5));
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/api/health/'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(Duration(seconds: 5));
       return response.statusCode == 200;
     } catch (e) {
       return false;
@@ -237,7 +237,7 @@ class DataService {
     final prefs = await SharedPreferences.getInstance();
     final lastUpdate = prefs.getInt(_lastUpdateKey);
     if (lastUpdate == null) return false;
-    
+
     final lastUpdateTime = DateTime.fromMillisecondsSinceEpoch(lastUpdate);
     final now = DateTime.now();
     return now.difference(lastUpdateTime) < _cacheTimeout;
@@ -248,11 +248,11 @@ class DataService {
     try {
       final busDataString = await rootBundle.loadString('assets/busdata.json');
       final stopsDataString = await rootBundle.loadString('assets/stops.json');
-      
+
       return {
         'routes': json.decode(busDataString),
         'stops': json.decode(stopsDataString),
-        'source': 'local_assets'
+        'source': 'local_assets',
       };
     } catch (e) {
       print('Error loading local assets: $e');
@@ -266,12 +266,12 @@ class DataService {
       final prefs = await SharedPreferences.getInstance();
       final routesData = prefs.getString(_routesDataKey);
       final stopsData = prefs.getString(_stopsDataKey);
-      
+
       if (routesData != null && stopsData != null) {
         return {
           'routes': json.decode(routesData),
           'stops': json.decode(stopsData),
-          'source': 'cache'
+          'source': 'cache',
         };
       }
     } catch (e) {
@@ -297,33 +297,35 @@ class DataService {
   Future<Map<String, dynamic>?> fetchFromBackend() async {
     try {
       final baseUrl = await _getBackendUrl();
-      
+
       // Fetch routes and stops in parallel
-      final routesFuture = http.get(
-        Uri.parse('$baseUrl/routes/'),
-      ).timeout(_requestTimeout);
-      
-      final stopsFuture = http.get(
-        Uri.parse('$baseUrl/stops/'),
-      ).timeout(_requestTimeout);
+      final routesFuture = http
+          .get(Uri.parse('$baseUrl/api/routes/'))
+          .timeout(_requestTimeout);
+
+      final stopsFuture = http
+          .get(Uri.parse('$baseUrl/api/stops/'))
+          .timeout(_requestTimeout);
 
       final responses = await Future.wait([routesFuture, stopsFuture]);
-      
+
       if (responses[0].statusCode == 200 && responses[1].statusCode == 200) {
         final routesData = json.decode(responses[0].body);
         final stopsData = json.decode(responses[1].body);
-        
+
         final result = {
           'routes': routesData,
           'stops': stopsData,
-          'source': 'backend'
+          'source': 'backend',
         };
-        
+
         // Cache the fresh data
         await _saveToCache(result);
         return result;
       } else {
-        print('Backend returned error: Routes ${responses[0].statusCode}, Stops ${responses[1].statusCode}');
+        print(
+          'Backend returned error: Routes ${responses[0].statusCode}, Stops ${responses[1].statusCode}',
+        );
       }
     } catch (e) {
       print('Error fetching from backend: $e');
@@ -379,10 +381,12 @@ class DataService {
   Future<List<dynamic>> searchRoutes(String start, String end) async {
     try {
       final baseUrl = await _getBackendUrl();
-      final url = Uri.parse('$baseUrl/routes/search/?start=$start&end=$end');
-      
+      final url = Uri.parse(
+        '$baseUrl/api/routes/search/?start=$start&end=$end',
+      );
+
       final response = await http.get(url).timeout(_requestTimeout);
-      
+
       if (response.statusCode == 200) {
         final decoded = List<dynamic>.from(json.decode(response.body));
         if (decoded.isNotEmpty) {
@@ -392,7 +396,7 @@ class DataService {
     } catch (e) {
       print('Backend search failed: $e, using local fallback');
     }
-    
+
     // Fallback: Search in local data
     return await _searchRoutesLocally(start, end);
   }
@@ -402,30 +406,35 @@ class DataService {
     final data = await getAllData();
     final routes = data['routes'] as List<dynamic>;
     final stops = data['stops'] as Map<String, dynamic>;
-    
+
     List<dynamic> matchingRoutes = [];
-    
+
     for (var route in routes) {
       final routeNumber = route['bus_no'].toString();
       final routeStops = stops[routeNumber] as List<dynamic>?;
-      
+
       if (routeStops != null) {
         final startIndex = routeStops.indexWhere(
-          (stop) => stop.toString().toLowerCase().contains(start.toLowerCase())
+          (stop) => stop.toString().toLowerCase().contains(start.toLowerCase()),
         );
         final endIndex = routeStops.indexWhere(
-          (stop) => stop.toString().toLowerCase().contains(end.toLowerCase())
+          (stop) => stop.toString().toLowerCase().contains(end.toLowerCase()),
         );
-        
+
         if (startIndex != -1 && endIndex != -1 && startIndex < endIndex) {
           final subPath = routeStops.sublist(startIndex, endIndex + 1);
-          final busType = (route['bus_type'] ??
-                  (routeNumber.contains('AC') ? 'AC' : 'NON_AC'))
-              .toString();
+          final busType =
+              (route['bus_type'] ??
+                      (routeNumber.contains('AC') ? 'AC' : 'NON_AC'))
+                  .toString();
           final fareGeneral =
-              int.tryParse((route['fare_general'] ?? route['fare'] ?? 20).toString()) ??
-                  20;
-          final fareLadies = int.tryParse((route['fare_ladies'] ?? '').toString());
+              int.tryParse(
+                (route['fare_general'] ?? route['fare'] ?? 20).toString(),
+              ) ??
+              20;
+          final fareLadies = int.tryParse(
+            (route['fare_ladies'] ?? '').toString(),
+          );
 
           matchingRoutes.add({
             ...route,
@@ -441,7 +450,7 @@ class DataService {
         }
       }
     }
-    
+
     if (matchingRoutes.isNotEmpty) {
       return matchingRoutes;
     }
@@ -510,8 +519,10 @@ class DataService {
     final routeNumber = route['route_number'].toString();
     final busType = (route['bus_type'] ?? 'NON_AC').toString();
     final fareGeneral =
-        int.tryParse((route['fare_general'] ?? route['fare'] ?? 20).toString()) ??
-            20;
+        int.tryParse(
+          (route['fare_general'] ?? route['fare'] ?? 20).toString(),
+        ) ??
+        20;
     final fareLadies = int.tryParse((route['fare_ladies'] ?? '').toString());
 
     return {
@@ -537,24 +548,25 @@ class DataService {
     required int fareGeneral,
     int? fareLadies,
   }) {
-    final hash = routeNumber.codeUnits.fold<int>(0, (sum, value) => sum + value);
+    final rnd = Random();
     final womenSeatsTotal = 6;
-    final womenSeatsAvailable = hash % (womenSeatsTotal + 1);
+    final womenSeatsAvailable = rnd.nextInt(womenSeatsTotal + 1);
     final pwdSeatsTotal = 2;
-    final pwdSeatsAvailable = hash % (pwdSeatsTotal + 1);
-    final pregnantSeatsAvailable = (hash % 4) != 0;
-    final occupancy = 45 + (hash % 50);
-    final delayExpected = hash % 5 == 0;
-    final delayMinutes = delayExpected ? 3 + (hash % 9) : 0;
-    final etaMinutes = 5 + (hash % 14) + delayMinutes;
+    final pwdSeatsAvailable = rnd.nextInt(pwdSeatsTotal + 1);
+    final pregnantSeatsAvailable = rnd.nextBool();
+    final occupancy = 20 + rnd.nextInt(80); // 20-99%
+    final delayExpected = rnd.nextBool();
+    final delayMinutes = delayExpected ? 1 + rnd.nextInt(15) : 0;
+    final etaMinutes = 3 + rnd.nextInt(20) + delayMinutes;
     final ladiesFare = fareLadies ?? (fareGeneral * 0.75).round();
 
     return {
       'eta_minutes': etaMinutes,
       'passenger_occupancy_percent': occupancy,
-      'passenger_occupancy_level': occupancy >= 85
-          ? 'High'
-          : occupancy >= 60
+      'passenger_occupancy_level':
+          occupancy >= 85
+              ? 'High'
+              : occupancy >= 60
               ? 'Moderate'
               : 'Low',
       'women_reserved_seats_total': womenSeatsTotal,
@@ -582,46 +594,52 @@ class DataService {
     try {
       final baseUrl = await _getBackendUrl();
       final url = Uri.parse(
-        '$baseUrl/routes/fare/?route_number=$routeNumber&source_stop=$sourceStop&destination_stop=$destinationStop'
+        '$baseUrl/api/routes/fare/?route_number=$routeNumber&source_stop=$sourceStop&destination_stop=$destinationStop',
       );
-      
+
       final response = await http.get(url).timeout(_requestTimeout);
-      
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       }
     } catch (e) {
       print('Backend fare lookup failed: $e, using local calculation');
     }
-    
+
     // Fallback: Calculate fare locally
-    return await _calculateFareLocally(routeNumber, sourceStop, destinationStop);
+    return await _calculateFareLocally(
+      routeNumber,
+      sourceStop,
+      destinationStop,
+    );
   }
 
   /// Local fare calculation
   Future<Map<String, dynamic>> _calculateFareLocally(
-    String routeNumber, String sourceStop, String destinationStop
+    String routeNumber,
+    String sourceStop,
+    String destinationStop,
   ) async {
     final data = await getAllData();
     final routes = data['routes'] as List<dynamic>;
     final stops = data['stops'] as Map<String, dynamic>;
-    
+
     // Find the route
     final route = routes.firstWhere(
       (r) => r['bus_no'].toString() == routeNumber,
       orElse: () => null,
     );
-    
+
     if (route == null) {
       return {
         'error': 'Route not found',
         'fare': 0,
         'fare_general': 0,
         'fare_ladies': 0,
-        'stops': []
+        'stops': [],
       };
     }
-    
+
     final routeStops = stops[routeNumber] as List<dynamic>?;
     if (routeStops == null) {
       return {
@@ -629,61 +647,71 @@ class DataService {
         'fare': 0,
         'fare_general': 0,
         'fare_ladies': 0,
-        'stops': []
+        'stops': [],
       };
     }
-    
+
     // Find stop indices
     final startIndex = routeStops.indexWhere(
-      (stop) => stop.toString().toLowerCase().contains(sourceStop.toLowerCase())
+      (stop) =>
+          stop.toString().toLowerCase().contains(sourceStop.toLowerCase()),
     );
     final endIndex = routeStops.indexWhere(
-      (stop) => stop.toString().toLowerCase().contains(destinationStop.toLowerCase())
+      (stop) =>
+          stop.toString().toLowerCase().contains(destinationStop.toLowerCase()),
     );
-    
+
     if (startIndex == -1 || endIndex == -1 || startIndex >= endIndex) {
       return {
         'error': 'Invalid stops',
         'fare': 0,
         'fare_general': 0,
         'fare_ladies': 0,
-        'stops': []
+        'stops': [],
       };
     }
-    
+
     final numStops = endIndex - startIndex;
     final subPath = routeStops.sublist(startIndex, endIndex + 1);
-    
+
     // Simple fare calculation (you can make this more sophisticated)
-    final baseFare = int.tryParse((route['fare_general'] ?? route['fare'] ?? 20).toString()) ??
+    final baseFare =
+        int.tryParse(
+          (route['fare_general'] ?? route['fare'] ?? 20).toString(),
+        ) ??
         20;
-    final calculatedFare = (baseFare * (numStops / 5)).round().clamp(5, baseFare);
+    final calculatedFare = (baseFare * (numStops / 5)).round().clamp(
+      5,
+      baseFare,
+    );
     final ladiesFare =
         int.tryParse((route['fare_ladies'] ?? '').toString()) ??
-            (calculatedFare * 0.75).round();
-    
+        (calculatedFare * 0.75).round();
+
     return {
       'fare': calculatedFare,
       'fare_general': calculatedFare,
       'fare_ladies': ladiesFare,
       'stops': subPath,
       'num_stops': numStops,
-      'bus_type': (route['bus_type'] ??
-              (routeNumber.contains('AC') ? 'AC' : 'NON_AC'))
-          .toString(),
+      'bus_type':
+          (route['bus_type'] ?? (routeNumber.contains('AC') ? 'AC' : 'NON_AC'))
+              .toString(),
     };
   }
 
   /// Get stop suggestions for autocomplete
   Future<List<String>> getStopSuggestions(String query) async {
     if (query.isEmpty) return [];
-    
+
     try {
       final baseUrl = await _getBackendUrl();
-      final url = Uri.parse('$baseUrl/stops/autocomplete/?q=${Uri.encodeComponent(query)}');
-      
+      final url = Uri.parse(
+        '$baseUrl/api/stops/autocomplete/?q=${Uri.encodeComponent(query)}',
+      );
+
       final response = await http.get(url).timeout(_requestTimeout);
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return List<String>.from(data['results'] ?? []);
@@ -691,7 +719,7 @@ class DataService {
     } catch (e) {
       print('Backend autocomplete failed: $e, using local search');
     }
-    
+
     // Fallback: Search locally
     return await _getStopSuggestionsLocally(query);
   }
@@ -700,10 +728,10 @@ class DataService {
   Future<List<String>> _getStopSuggestionsLocally(String query) async {
     final data = await getAllData();
     final stops = data['stops'] as Map<String, dynamic>;
-    
+
     Set<String> suggestions = {};
     final queryLower = query.toLowerCase();
-    
+
     stops.forEach((routeNumber, routeStops) {
       if (routeStops is List) {
         for (var stop in routeStops) {
@@ -724,7 +752,7 @@ class DataService {
         }
       }
     }
-    
+
     return suggestions.take(10).toList();
   }
 
@@ -732,10 +760,10 @@ class DataService {
   Future<bool> isBackendAvailable() async {
     try {
       final baseUrl = await _getBackendUrl();
-      final response = await http.get(
-        Uri.parse('$baseUrl/routes/'),
-      ).timeout(Duration(seconds: 5));
-      
+      final response = await http
+          .get(Uri.parse('$baseUrl/api/health/'))
+          .timeout(Duration(seconds: 5));
+
       return response.statusCode == 200;
     } catch (e) {
       return false;
@@ -746,7 +774,7 @@ class DataService {
   Future<String> getDataSourceInfo() async {
     final data = await getAllData();
     final source = data['source'] as String;
-    
+
     switch (source) {
       case 'backend':
         return '🟢 Live Data';

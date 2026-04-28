@@ -1,9 +1,0 @@
-Live bus tracking
-Google map integration
-add option to choose how many people (adults,children) etc, maybe women,elderly options
-Non/ac and ac lead to same page
-OTP verify
-navbar options
-update ui for everything, everything looks shit
-can add download ticket button
-add support screen

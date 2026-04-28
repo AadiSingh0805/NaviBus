@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:navibus/screens/bus_details.dart';
 import 'dart:async';
+import 'dart:math';
 import 'package:navibus/services/data_service.dart';
 import 'package:navibus/services/sensor_input_service.dart';
 
@@ -9,11 +10,7 @@ class BusOptionsNew extends StatefulWidget {
   final String? initialSource;
   final String? initialDestination;
 
-  const BusOptionsNew({
-    super.key,
-    this.initialSource,
-    this.initialDestination,
-  });
+  const BusOptionsNew({super.key, this.initialSource, this.initialDestination});
 
   @override
   State<BusOptionsNew> createState() => _BusOptionsNewState();
@@ -50,7 +47,7 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
   // Data service instance
   final DataService _dataService = DataService.instance;
   final SensorInputService _sensorInputService = SensorInputService.instance;
-  
+
   // UI state
   bool _isLoading = false;
   String _dataSourceInfo = '';
@@ -171,7 +168,8 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
       }
 
       Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+        desiredAccuracy: LocationAccuracy.high,
+      );
       setState(() {
         currentPosition = position;
       });
@@ -196,117 +194,125 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
     try {
       final routes = await _dataService.searchRoutes(start, end);
       final sensorSnapshot = _currentSensorSnapshot();
-      
-      // Add fare information to each route
-      List<dynamic> routesWithFare = await Future.wait(routes.map((route) async {
-        try {
-          final routeNumber =
-              (route['route_number'] ?? route['bus_no'] ?? '').toString();
-          final normalizedRouteNumber =
-              routeNumber.trim().isEmpty ? 'N/A' : routeNumber;
-          final path = _extractStops(route['sub_path'] ?? route['stops']);
-          final isMockRoute =
-              (route['source']?.toString().contains('mock') ?? false);
-          final fareBase = route['fare_general'] ?? route['fare'] ?? 20;
 
-          if (path.isEmpty) {
+      // Add fare information to each route
+      List<dynamic> routesWithFare = await Future.wait(
+        routes.map((route) async {
+          try {
+            final routeNumber =
+                (route['route_number'] ?? route['bus_no'] ?? '').toString();
+            final normalizedRouteNumber =
+                routeNumber.trim().isEmpty ? 'N/A' : routeNumber;
+            final path = _extractStops(route['sub_path'] ?? route['stops']);
+            final isMockRoute =
+                (route['source']?.toString().contains('mock') ?? false);
+            final fareBase = route['fare_general'] ?? route['fare'] ?? 20;
+
+            if (path.isEmpty) {
+              return {
+                ...route,
+                'route_number': normalizedRouteNumber,
+                'sub_path': const <dynamic>[],
+                'stops': const <dynamic>[],
+                ..._buildOperationalMockMeta(
+                  routeNumber: normalizedRouteNumber,
+                  busType: route['bus_type'],
+                  fareGeneralRaw: fareBase,
+                  fareLadiesRaw: route['fare_ladies'],
+                  numStops: 0,
+                ),
+                'sensor_input': sensorSnapshot,
+              };
+            }
+
+            if (isMockRoute) {
+              final parsedNumStops =
+                  int.tryParse(
+                    (route['num_stops'] ?? path.length).toString(),
+                  ) ??
+                  path.length;
+
+              return {
+                ...route,
+                'route_number': normalizedRouteNumber,
+                'sub_path': path,
+                'stops': path,
+                'fare': route['fare_general'] ?? route['fare'] ?? fareBase,
+                'num_stops': parsedNumStops,
+                ..._buildOperationalMockMeta(
+                  routeNumber: normalizedRouteNumber,
+                  busType: route['bus_type'],
+                  fareGeneralRaw:
+                      route['fare_general'] ?? route['fare'] ?? fareBase,
+                  fareLadiesRaw: route['fare_ladies'],
+                  numStops: parsedNumStops,
+                ),
+                'sensor_input': sensorSnapshot,
+              };
+            }
+
+            final fareData = await _dataService.getFare(
+              routeNumber: normalizedRouteNumber,
+              sourceStop: path.first.toString(),
+              destinationStop: path.last.toString(),
+            );
+
+            final resolvedStops = _resolveStops(fareData['stops'], path);
+            final resolvedNumStops =
+                int.tryParse(
+                  (fareData['num_stops'] ?? resolvedStops.length).toString(),
+                ) ??
+                resolvedStops.length;
+
             return {
               ...route,
               'route_number': normalizedRouteNumber,
-              'sub_path': const <dynamic>[],
-              'stops': const <dynamic>[],
+              'sub_path': resolvedStops,
+              'stops': resolvedStops,
+              'fare': fareData['fare'] ?? route['fare'] ?? 20,
+              'bus_type': fareData['bus_type'] ?? route['bus_type'],
+              'num_stops': resolvedNumStops,
+              'first_bus_time_weekday': route['first_bus_time_weekday'],
+              'last_bus_time_weekday': route['last_bus_time_weekday'],
+              'first_bus_time_sunday': route['first_bus_time_sunday'],
+              'last_bus_time_sunday': route['last_bus_time_sunday'],
+              'frequency_weekday': route['frequency_weekday'],
+              'frequency_sunday': route['frequency_sunday'],
               ..._buildOperationalMockMeta(
                 routeNumber: normalizedRouteNumber,
-                busType: route['bus_type'],
-                fareGeneralRaw: fareBase,
-                fareLadiesRaw: route['fare_ladies'],
-                numStops: 0,
+                busType: fareData['bus_type'] ?? route['bus_type'],
+                fareGeneralRaw:
+                    fareData['fare_general'] ?? fareData['fare'] ?? fareBase,
+                fareLadiesRaw: fareData['fare_ladies'] ?? route['fare_ladies'],
+                numStops: resolvedNumStops,
               ),
               'sensor_input': sensorSnapshot,
             };
-          }
-
-          if (isMockRoute) {
-            final parsedNumStops =
-                int.tryParse((route['num_stops'] ?? path.length).toString()) ??
-                    path.length;
+          } catch (e) {
+            print('Error fetching fare: $e');
+            final routeNumber =
+                (route['route_number'] ?? route['bus_no'] ?? '').toString();
+            final normalizedRouteNumber =
+                routeNumber.trim().isEmpty ? 'N/A' : routeNumber;
+            final path = _extractStops(route['sub_path'] ?? route['stops']);
 
             return {
               ...route,
               'route_number': normalizedRouteNumber,
               'sub_path': path,
               'stops': path,
-              'fare': route['fare_general'] ?? route['fare'] ?? fareBase,
-              'num_stops': parsedNumStops,
               ..._buildOperationalMockMeta(
                 routeNumber: normalizedRouteNumber,
                 busType: route['bus_type'],
-                fareGeneralRaw: route['fare_general'] ?? route['fare'] ?? fareBase,
+                fareGeneralRaw: route['fare_general'] ?? route['fare'] ?? 20,
                 fareLadiesRaw: route['fare_ladies'],
-                numStops: parsedNumStops,
+                numStops: path.length,
               ),
               'sensor_input': sensorSnapshot,
             };
           }
-
-          final fareData = await _dataService.getFare(
-            routeNumber: normalizedRouteNumber,
-            sourceStop: path.first.toString(),
-            destinationStop: path.last.toString(),
-          );
-
-          final resolvedStops = _resolveStops(fareData['stops'], path);
-          final resolvedNumStops =
-              int.tryParse((fareData['num_stops'] ?? resolvedStops.length).toString()) ??
-                  resolvedStops.length;
-          
-          return {
-            ...route,
-            'route_number': normalizedRouteNumber,
-            'sub_path': resolvedStops,
-            'stops': resolvedStops,
-            'fare': fareData['fare'] ?? route['fare'] ?? 20,
-            'bus_type': fareData['bus_type'] ?? route['bus_type'],
-            'num_stops': resolvedNumStops,
-            'first_bus_time_weekday': route['first_bus_time_weekday'],
-            'last_bus_time_weekday': route['last_bus_time_weekday'],
-            'first_bus_time_sunday': route['first_bus_time_sunday'],
-            'last_bus_time_sunday': route['last_bus_time_sunday'],
-            'frequency_weekday': route['frequency_weekday'],
-            'frequency_sunday': route['frequency_sunday'],
-            ..._buildOperationalMockMeta(
-              routeNumber: normalizedRouteNumber,
-              busType: fareData['bus_type'] ?? route['bus_type'],
-              fareGeneralRaw: fareData['fare_general'] ?? fareData['fare'] ?? fareBase,
-              fareLadiesRaw: fareData['fare_ladies'] ?? route['fare_ladies'],
-              numStops: resolvedNumStops,
-            ),
-            'sensor_input': sensorSnapshot,
-          };
-        } catch (e) {
-          print('Error fetching fare: $e');
-          final routeNumber =
-              (route['route_number'] ?? route['bus_no'] ?? '').toString();
-          final normalizedRouteNumber =
-              routeNumber.trim().isEmpty ? 'N/A' : routeNumber;
-          final path = _extractStops(route['sub_path'] ?? route['stops']);
-
-          return {
-            ...route,
-            'route_number': normalizedRouteNumber,
-            'sub_path': path,
-            'stops': path,
-            ..._buildOperationalMockMeta(
-              routeNumber: normalizedRouteNumber,
-              busType: route['bus_type'],
-              fareGeneralRaw: route['fare_general'] ?? route['fare'] ?? 20,
-              fareLadiesRaw: route['fare_ladies'],
-              numStops: path.length,
-            ),
-            'sensor_input': sensorSnapshot,
-          };
-        }
-      }).toList());
+        }).toList(),
+      );
 
       setState(() {
         filteredBuses = routesWithFare;
@@ -318,10 +324,9 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
       // Update recent searches
       addToRecentSources(start);
       addToRecentDestinations(end);
-      
+
       // Update data source info
       _checkDataSourceInfo();
-      
     } catch (e) {
       setState(() {
         filteredBuses = [];
@@ -329,7 +334,7 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
         _isLoading = false;
       });
       print("Error searching routes: $e");
-      
+
       // Show error message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -358,7 +363,7 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
       await _dataService.forceRefresh();
       await _checkDataSourceInfo();
       await _checkBackendStatus();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -390,13 +395,11 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
     await _dataService.setBackendMode(useProduction: !_isBackendAvailable);
     await _checkBackendStatus();
     await _checkDataSourceInfo();
-    
+
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Backend mode updated'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Backend mode updated')));
     }
   }
 
@@ -418,7 +421,8 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
     setState(() {
       recentSources.remove(stop);
       recentSources.insert(0, stop);
-      if (recentSources.length > maxRecent) recentSources = recentSources.sublist(0, maxRecent);
+      if (recentSources.length > maxRecent)
+        recentSources = recentSources.sublist(0, maxRecent);
       frequentSources[stop] = (frequentSources[stop] ?? 0) + 1;
     });
   }
@@ -427,7 +431,8 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
     setState(() {
       recentDestinations.remove(stop);
       recentDestinations.insert(0, stop);
-      if (recentDestinations.length > maxRecent) recentDestinations = recentDestinations.sublist(0, maxRecent);
+      if (recentDestinations.length > maxRecent)
+        recentDestinations = recentDestinations.sublist(0, maxRecent);
       frequentDestinations[stop] = (frequentDestinations[stop] ?? 0) + 1;
     });
   }
@@ -468,8 +473,10 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
     final now = DateTime.now();
     final isSunday = now.weekday == DateTime.sunday;
     final freq = isSunday ? bus['frequency_sunday'] : bus['frequency_weekday'];
-    final firstBus = isSunday ? bus['first_bus_time_sunday'] : bus['first_bus_time_weekday'];
-    final lastBus = isSunday ? bus['last_bus_time_sunday'] : bus['last_bus_time_weekday'];
+    final firstBus =
+        isSunday ? bus['first_bus_time_sunday'] : bus['first_bus_time_weekday'];
+    final lastBus =
+        isSunday ? bus['last_bus_time_sunday'] : bus['last_bus_time_weekday'];
 
     String nextBusTime = 'N/A';
     try {
@@ -490,11 +497,13 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
             nextBusTime = firstBus;
           } else {
             final minutesSinceFirst = nowMinutes - firstMinutes;
-            final nextBusOffset = ((minutesSinceFirst / freqInt).ceil()) * freqInt;
+            final nextBusOffset =
+                ((minutesSinceFirst / freqInt).ceil()) * freqInt;
             final nextBusMinutes = firstMinutes + nextBusOffset;
             final nextBusHour = nextBusMinutes ~/ 60;
             final nextBusMin = nextBusMinutes % 60;
-            nextBusTime = '${nextBusHour.toString().padLeft(2, '0')}:${nextBusMin.toString().padLeft(2, '0')}';
+            nextBusTime =
+                '${nextBusHour.toString().padLeft(2, '0')}:${nextBusMin.toString().padLeft(2, '0')}';
           }
         }
       }
@@ -528,7 +537,10 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
     return <dynamic>[];
   }
 
-  List<dynamic> _resolveStops(dynamic candidateStops, List<dynamic> fallbackStops) {
+  List<dynamic> _resolveStops(
+    dynamic candidateStops,
+    List<dynamic> fallbackStops,
+  ) {
     final parsed = _extractStops(candidateStops);
     if (parsed.isNotEmpty) {
       return parsed;
@@ -543,26 +555,27 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
     required dynamic fareLadiesRaw,
     required int numStops,
   }) {
-    final hash = routeNumber.codeUnits.fold<int>(0, (sum, value) => sum + value);
+    final rnd = Random();
     final parsedFareGeneral = int.tryParse(fareGeneralRaw.toString()) ?? 20;
     final parsedFareLadies =
         int.tryParse((fareLadiesRaw ?? '').toString()) ??
-            (parsedFareGeneral * 0.75).round();
+        (parsedFareGeneral * 0.75).round();
 
-    final womenAvailable = hash % 7;
-    final pwdAvailable = hash % 3;
-    final pregnantSeatAvailable = (hash % 4) != 0;
-    final occupancy = 42 + (hash % 53);
-    final delayExpected = hash % 5 == 0;
-    final delayMinutes = delayExpected ? 3 + (hash % 10) : 0;
-    final etaMinutes = (5 + (hash % 13) + (numStops ~/ 4)) + delayMinutes;
+    final womenAvailable = rnd.nextInt(7);
+    final pwdAvailable = rnd.nextInt(3);
+    final pregnantSeatAvailable = rnd.nextBool();
+    final occupancy = 20 + rnd.nextInt(80);
+    final delayExpected = rnd.nextBool();
+    final delayMinutes = delayExpected ? 1 + rnd.nextInt(15) : 0;
+    final etaMinutes = (3 + rnd.nextInt(18) + (numStops ~/ 4)) + delayMinutes;
 
     return {
       'eta_minutes': etaMinutes,
       'passenger_occupancy_percent': occupancy,
-      'passenger_occupancy_level': occupancy >= 85
-          ? 'High'
-          : occupancy >= 60
+      'passenger_occupancy_level':
+          occupancy >= 85
+              ? 'High'
+              : occupancy >= 60
               ? 'Moderate'
               : 'Low',
       'women_reserved_seats_available': womenAvailable,
@@ -572,17 +585,16 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
       'pregnant_women_special_seat_available': pregnantSeatAvailable,
       'delay_expected': delayExpected,
       'delay_minutes': delayMinutes,
-      'bus_type': (busType ?? (routeNumber.contains('AC') ? 'AC' : 'NON_AC')).toString(),
+      'bus_type':
+          (busType ?? (routeNumber.contains('AC') ? 'AC' : 'NON_AC'))
+              .toString(),
       'fare_general': parsedFareGeneral,
       'fare_ladies': parsedFareLadies,
       'fare': parsedFareGeneral,
     };
   }
 
-  Widget _availabilityPill({
-    required String label,
-    required bool available,
-  }) {
+  Widget _availabilityPill({required String label, required bool available}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
@@ -723,7 +735,10 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
               children: [
                 Text(
                   'Route $routeNumber Stops',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 if (routeStops.isEmpty)
@@ -768,34 +783,45 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
 
   Widget _buildRouteCard(Map<String, dynamic> bus) {
     final routeStops = _extractStops(bus['sub_path'] ?? bus['stops']);
-    final firstStop = routeStops.isNotEmpty ? routeStops.first.toString() : 'Unknown Source';
-    final lastStop = routeStops.isNotEmpty ? routeStops.last.toString() : 'Unknown Destination';
+    final firstStop =
+        routeStops.isNotEmpty ? routeStops.first.toString() : 'Unknown Source';
+    final lastStop =
+        routeStops.isNotEmpty
+            ? routeStops.last.toString()
+            : 'Unknown Destination';
 
     final routeNumber =
         (bus['route_number'] ?? bus['bus_no'] ?? 'N/A').toString();
     final nextBusTime = getNextBusTime(bus);
     final etaMinutes = bus['eta_minutes'] ?? 'N/A';
     final occupancyPercent = bus['passenger_occupancy_percent'] ?? 'N/A';
-    final occupancyLevel = (bus['passenger_occupancy_level'] ?? 'Unknown').toString();
+    final occupancyLevel =
+        (bus['passenger_occupancy_level'] ?? 'Unknown').toString();
     final delayExpected = bus['delay_expected'] == true;
     final delayMinutes = bus['delay_minutes'] ?? 0;
 
-    final generalFare = (bus['fare_general'] ?? bus['fare'] ?? 'N/A').toString();
+    final generalFare =
+        (bus['fare_general'] ?? bus['fare'] ?? 'N/A').toString();
     final ladiesFare = (bus['fare_ladies'] ?? 'N/A').toString();
 
     final womenSeatsAvailable = bus['women_reserved_available'] == true;
     final pwdSeatsAvailable = bus['pwd_reserved_available'] == true;
-    final pregnantSeatAvailable = bus['pregnant_women_special_seat_available'] == true;
+    final pregnantSeatAvailable =
+        bus['pregnant_women_special_seat_available'] == true;
 
     final womenSeatsCount =
-        int.tryParse((bus['women_reserved_seats_available'] ?? 0).toString()) ?? 0;
+        int.tryParse((bus['women_reserved_seats_available'] ?? 0).toString()) ??
+        0;
     final pwdSeatsCount =
-        int.tryParse((bus['pwd_reserved_seats_available'] ?? 0).toString()) ?? 0;
+        int.tryParse((bus['pwd_reserved_seats_available'] ?? 0).toString()) ??
+        0;
 
     final busType = (bus['bus_type'] ?? 'NON_AC').toString();
     final delayLabel = delayExpected ? 'Delayed +${delayMinutes}m' : 'On Time';
-    final delayColor = delayExpected ? const Color(0xFFB45309) : const Color(0xFF2E7D32);
-    final delayBg = delayExpected ? const Color(0xFFFEF3C7) : const Color(0xFFE8F5E9);
+    final delayColor =
+        delayExpected ? const Color(0xFFB45309) : const Color(0xFF2E7D32);
+    final delayBg =
+        delayExpected ? const Color(0xFFFEF3C7) : const Color(0xFFE8F5E9);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -817,7 +843,10 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFD62828),
                   borderRadius: BorderRadius.circular(10),
@@ -835,17 +864,19 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                 decoration: BoxDecoration(
-                  color: busType.toUpperCase().contains('AC')
-                      ? const Color(0xFFE0F2FE)
-                      : const Color(0xFFEDE9FE),
+                  color:
+                      busType.toUpperCase().contains('AC')
+                          ? const Color(0xFFE0F2FE)
+                          : const Color(0xFFEDE9FE),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   busType.toUpperCase().contains('AC') ? 'AC' : 'NON AC',
                   style: TextStyle(
-                    color: busType.toUpperCase().contains('AC')
-                        ? const Color(0xFF0369A1)
-                        : const Color(0xFF5B21B6),
+                    color:
+                        busType.toUpperCase().contains('AC')
+                            ? const Color(0xFF0369A1)
+                            : const Color(0xFF5B21B6),
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                   ),
@@ -893,7 +924,11 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _metricChip(icon: Icons.schedule, label: 'ETA', value: '$etaMinutes min'),
+              _metricChip(
+                icon: Icons.schedule,
+                label: 'ETA',
+                value: '$etaMinutes min',
+              ),
               _metricChip(
                 icon: Icons.people_alt_outlined,
                 label: 'Occupancy',
@@ -904,7 +939,11 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
                 label: 'Fare',
                 value: '$generalFare / $ladiesFare',
               ),
-              _metricChip(icon: Icons.access_time_filled_rounded, label: 'Next', value: nextBusTime),
+              _metricChip(
+                icon: Icons.access_time_filled_rounded,
+                label: 'Next',
+                value: nextBusTime,
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -1028,16 +1067,17 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
         actions: [
           // Refresh button
           IconButton(
-            icon: _isLoading 
-              ? const SizedBox(
-                  width: 20, 
-                  height: 20, 
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2, 
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : const Icon(Icons.refresh, color: Colors.white),
+            icon:
+                _isLoading
+                    ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                    : const Icon(Icons.refresh, color: Colors.white),
             onPressed: _isLoading ? null : _forceRefresh,
           ),
           // Settings menu
@@ -1048,18 +1088,25 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
                 _toggleBackendMode();
               }
             },
-            itemBuilder: (BuildContext context) => [
-              PopupMenuItem<String>(
-                value: 'toggle_backend',
-                child: Row(
-                  children: [
-                    Icon(_isBackendAvailable ? Icons.cloud_off : Icons.cloud),
-                    const SizedBox(width: 8),
-                    Text(_isBackendAvailable ? 'Use Offline Mode' : 'Use Online Mode'),
-                  ],
-                ),
-              ),
-            ],
+            itemBuilder:
+                (BuildContext context) => [
+                  PopupMenuItem<String>(
+                    value: 'toggle_backend',
+                    child: Row(
+                      children: [
+                        Icon(
+                          _isBackendAvailable ? Icons.cloud_off : Icons.cloud,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _isBackendAvailable
+                              ? 'Use Offline Mode'
+                              : 'Use Online Mode',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
           ),
         ],
       ),
@@ -1073,13 +1120,16 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
               color: Colors.orange,
               child: const Text(
                 '⚠️ Offline Mode: Using cached/local data',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
 
           _sensorInputPanel(),
-          
+
           // Search section
           Container(
             padding: const EdgeInsets.all(16),
@@ -1093,36 +1143,47 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
                       controller: sourceController,
                       decoration: InputDecoration(
                         labelText: 'From',
-                        prefixIcon: const Icon(Icons.my_location, color: Colors.red),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                        suffixIcon: sourceController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  sourceController.clear();
-                                  sourceSuggestions.clear();
-                                  setState(() {});
-                                },
-                              )
-                            : null,
+                        prefixIcon: const Icon(
+                          Icons.my_location,
+                          color: Colors.red,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        suffixIcon:
+                            sourceController.text.isNotEmpty
+                                ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    sourceController.clear();
+                                    sourceSuggestions.clear();
+                                    setState(() {});
+                                  },
+                                )
+                                : null,
                       ),
                       onChanged: (value) {
                         _debounceSource?.cancel();
-                        _debounceSource = Timer(const Duration(milliseconds: 300), () async {
-                          if (value.isNotEmpty) {
-                            final suggestions = await fetchStopSuggestions(value);
-                            setState(() {
-                              sourceSuggestions = suggestions;
-                            });
-                          } else {
-                            setState(() {
-                              sourceSuggestions = [];
-                            });
-                          }
-                        });
+                        _debounceSource = Timer(
+                          const Duration(milliseconds: 300),
+                          () async {
+                            if (value.isNotEmpty) {
+                              final suggestions = await fetchStopSuggestions(
+                                value,
+                              );
+                              setState(() {
+                                sourceSuggestions = suggestions;
+                              });
+                            } else {
+                              setState(() {
+                                sourceSuggestions = [];
+                              });
+                            }
+                          },
+                        );
                       },
                     ),
-                    
+
                     // Source suggestions
                     if (sourceSuggestions.isNotEmpty) ...[
                       const SizedBox(height: 8),
@@ -1139,8 +1200,10 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
                             return ListTile(
                               dense: true,
                               title: Text(sourceSuggestions[index]),
-                              onTap: () =>
-                                  onSourceSuggestionSelected(sourceSuggestions[index]),
+                              onTap:
+                                  () => onSourceSuggestionSelected(
+                                    sourceSuggestions[index],
+                                  ),
                             );
                           },
                         ),
@@ -1148,7 +1211,8 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
                     ],
 
                     // Recent sources
-                    if (recentSources.isNotEmpty && sourceController.text.isEmpty) ...[
+                    if (recentSources.isNotEmpty &&
+                        sourceController.text.isEmpty) ...[
                       const SizedBox(height: 8),
                       const Text(
                         'Recent searches:',
@@ -1156,17 +1220,19 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
                       ),
                       Wrap(
                         spacing: 8,
-                        children: recentSources
-                            .map(
-                              (stop) => ActionChip(
-                                label: Text(
-                                  stop,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                onPressed: () => onSourceSuggestionSelected(stop),
-                              ),
-                            )
-                            .toList(),
+                        children:
+                            recentSources
+                                .map(
+                                  (stop) => ActionChip(
+                                    label: Text(
+                                      stop,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                    onPressed:
+                                        () => onSourceSuggestionSelected(stop),
+                                  ),
+                                )
+                                .toList(),
                       ),
                     ],
                   ],
@@ -1182,34 +1248,44 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
                       controller: destinationController,
                       decoration: InputDecoration(
                         labelText: 'To',
-                        prefixIcon: const Icon(Icons.location_on, color: Colors.red),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                        suffixIcon: destinationController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  destinationController.clear();
-                                  destinationSuggestions.clear();
-                                  setState(() {});
-                                },
-                              )
-                            : null,
+                        prefixIcon: const Icon(
+                          Icons.location_on,
+                          color: Colors.red,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        suffixIcon:
+                            destinationController.text.isNotEmpty
+                                ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    destinationController.clear();
+                                    destinationSuggestions.clear();
+                                    setState(() {});
+                                  },
+                                )
+                                : null,
                       ),
                       onChanged: (value) {
                         _debounceDestination?.cancel();
-                        _debounceDestination =
-                            Timer(const Duration(milliseconds: 300), () async {
-                          if (value.isNotEmpty) {
-                            final suggestions = await fetchStopSuggestions(value);
-                            setState(() {
-                              destinationSuggestions = suggestions;
-                            });
-                          } else {
-                            setState(() {
-                              destinationSuggestions = [];
-                            });
-                          }
-                        });
+                        _debounceDestination = Timer(
+                          const Duration(milliseconds: 300),
+                          () async {
+                            if (value.isNotEmpty) {
+                              final suggestions = await fetchStopSuggestions(
+                                value,
+                              );
+                              setState(() {
+                                destinationSuggestions = suggestions;
+                              });
+                            } else {
+                              setState(() {
+                                destinationSuggestions = [];
+                              });
+                            }
+                          },
+                        );
                       },
                     ),
 
@@ -1229,9 +1305,10 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
                             return ListTile(
                               dense: true,
                               title: Text(destinationSuggestions[index]),
-                              onTap: () => onDestinationSuggestionSelected(
-                                destinationSuggestions[index],
-                              ),
+                              onTap:
+                                  () => onDestinationSuggestionSelected(
+                                    destinationSuggestions[index],
+                                  ),
                             );
                           },
                         ),
@@ -1248,18 +1325,21 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
                       ),
                       Wrap(
                         spacing: 8,
-                        children: recentDestinations
-                            .map(
-                              (stop) => ActionChip(
-                                label: Text(
-                                  stop,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                onPressed: () =>
-                                    onDestinationSuggestionSelected(stop),
-                              ),
-                            )
-                            .toList(),
+                        children:
+                            recentDestinations
+                                .map(
+                                  (stop) => ActionChip(
+                                    label: Text(
+                                      stop,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                    onPressed:
+                                        () => onDestinationSuggestionSelected(
+                                          stop,
+                                        ),
+                                  ),
+                                )
+                                .toList(),
                       ),
                     ],
                   ],
@@ -1273,14 +1353,19 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: _isLoading ? null : searchRoutes,
-                        icon: _isLoading
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.search),
-                        label: Text(_isLoading ? 'Searching...' : 'Search Routes'),
+                        icon:
+                            _isLoading
+                                ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : const Icon(Icons.search),
+                        label: Text(
+                          _isLoading ? 'Searching...' : 'Search Routes',
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
                           foregroundColor: Colors.white,
@@ -1309,25 +1394,26 @@ class _BusOptionsNewState extends State<BusOptionsNew> {
 
           // Results section
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : filteredBuses.isEmpty
+            child:
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : filteredBuses.isEmpty
                     ? const Center(
-                        child: Text(
-                          'No routes found.\nTry searching for different stops.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 14),
-                        itemCount: filteredBuses.length,
-                        itemBuilder: (context, index) {
-                          final bus =
-                              filteredBuses[index].cast<String, dynamic>();
-                          return _buildRouteCard(bus);
-                        },
+                      child: Text(
+                        'No routes found.\nTry searching for different stops.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
                       ),
+                    )
+                    : ListView.builder(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      itemCount: filteredBuses.length,
+                      itemBuilder: (context, index) {
+                        final bus =
+                            filteredBuses[index].cast<String, dynamic>();
+                        return _buildRouteCard(bus);
+                      },
+                    ),
           ),
         ],
       ),
